@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/Translator">
+        <file>translations/virtualBoard_fr.qm</file>
+        <file>translations/virtualBoard_it.qm</file>
+        <file>translations/virtualBoard_ru.qm</file>
+        <file>translations/virtualBoard_en.qm</file>
+    </qresource>
+</RCC>

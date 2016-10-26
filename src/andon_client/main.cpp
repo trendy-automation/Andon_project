@@ -178,7 +178,7 @@ void ServerFound(QHostAddress ServerAddress)
         IM->loadInterface(resp);
     });
 
-/*
+
     //########### Step 1.2 TCP DEVICES ############
     serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
                                           "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
@@ -186,6 +186,58 @@ void ServerFound(QHostAddress ServerAddress)
                           [=](QVariant resp){
         qDebug()<<"lambda TCPDEVICES start";
 
+        QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
+        QJsonObject recordObject=array.at(i).toObject();
+        if (recordObject["DEVICE_TYPE"].toString()=="FTP") {
+            if(!array.isEmpty()) {
+                QJsonObject jsonObj0=array.at(0).toObject();
+                if(jsonObj0.contains("TCPDEVICE_IP") && jsonObj0.contains("LOGIN")
+                                                  && jsonObj0.contains("PASS")) {
+                    //TODO TCPDEVICE_IP, PORT, LOGIN, PASS,
+                    Ftp *ftp=new Ftp("10.208.105.70",21,"FtpUser","andon");
+                    QObject::connect(ftp, &Ftp::transferFinished,[serverRpc](quint32 taskId){
+                        qDebug()<<"transferFinished"<<taskId;
+                        //TODO query PRODUCTION_DECLARATION taskId, 1
+                    });
+                    QObject::connect(ftp, &Ftp::destroyed,[](){qDebug()<<"Ftp::destroyed";});
+
+                    QTimer *fileTimer = new QTimer;
+
+                    QObject::connect(fileTimer,&QTimer::destroyed,
+                                     [](){qDebug()<<"ftp QTimer::destroyed";});
+                    QObject::connect(fileTimer,&QTimer::timeout,
+                                     [serverRpc,ftp,fileTimer](){
+                        qDebug() << "fileTimer,&QTimer::timeout";
+                        serverRpc->Query2Json("SELECT \"SHIFT NUMBER\", PART_NAME, \"PART COUNT\" FROM PRODUCTION_PARTS_HISTORY",
+                                     [ftp](QVariant resp){
+                            qDebug() << "PRODUCTION_PARTS_HISTORY"<<resp;
+                            QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
+                            if(!array.isEmpty()) {
+                                QJsonObject jsonObj0=array.at(0).toObject();
+                                if(jsonObj0.contains("PART_NAME") && jsonObj0.contains("PART COUNT")
+                                                                  && jsonObj0.contains("SHIFT NUMBER")) {
+                                    QBuffer *buffer=new QBuffer;
+                                    buffer->open(QBuffer::WriteOnly);
+                                    for (auto object = array.begin(); object != array.end(); object++) {
+                                        QJsonObject jsonObj=object->toObject();
+                                        buffer->write(jsonObj["PART_NAME"].toString().toLocal8Bit());
+                                        buffer->write("\t");
+                                        buffer->write(QString::number(jsonObj["PART COUNT"].toInt()).toLatin1());
+                                        buffer->write("\r\n");
+                                    }
+                                    //TODO: recognize folder
+                                    ftp->newTask(buffer,QString("Decl_%1.txt").arg(QDateTime().currentDateTime().toString("ddMMyy_hh.mm")),
+                                                 jsonObj0["SHIFT NUMBER"].toInt());
+                                }
+                            }
+                        });
+                    });
+                    fileTimer->start(3600000);
+                }
+            }
+        }
+
+/*
         QJsonDocument jdocKBX100(QJsonDocument::fromJson(resp.toString().toUtf8()));
         QJsonArray tableArray = jdocKBX100.array();
         QJsonObject recordObject;
@@ -415,9 +467,10 @@ void ServerFound(QHostAddress ServerAddress)
                 }
             }
         }
+*/
         qDebug()<<"lambda TCPDEVICES fineshed";
     });
-*/
+
 
     //########### Step 1.3 ############
     serverRpc->Query2Json("SELECT WEBSOCKET_PORT FROM TBL_STATIONS "
@@ -479,47 +532,6 @@ void ServerFound(QHostAddress ServerAddress)
                     });
                 }
            });
-           //TODO to TCPDEVICE lambda
-           Ftp *ftp=new Ftp("10.208.105.70",21,"FtpUser","andon");
-           QObject::connect(ftp, &Ftp::transferFinished,[serverRpc](quint32 taskId){
-               qDebug()<<"transferFinished"<<taskId;
-               //TODO query PRODUCTION_DECLARATION taskId, 1
-           });
-           QObject::connect(ftp, &Ftp::destroyed,[](){qDebug()<<"Ftp::destroyed";});
-
-           QTimer *fileTimer = new QTimer;
-
-           QObject::connect(fileTimer,&QTimer::destroyed,
-                            [](){qDebug()<<"ftp QTimer::destroyed";});
-           QObject::connect(fileTimer,&QTimer::timeout,
-                            [serverRpc,ftp,fileTimer](){
-               qDebug() << "fileTimer,&QTimer::timeout";
-               serverRpc->Query2Json("SELECT \"SHIFT NUMBER\", PART_NAME, \"PART COUNT\" FROM PRODUCTION_PARTS_HISTORY",
-                            [ftp](QVariant resp){
-                   qDebug() << "PRODUCTION_PARTS_HISTORY"<<resp;
-                   QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
-                   if(!array.isEmpty()) {
-                       QJsonObject jsonObj0=array.at(0).toObject();
-                       if(jsonObj0.contains("PART_NAME") && jsonObj0.contains("PART COUNT")
-                                                         && jsonObj0.contains("SHIFT NUMBER")) {
-                           QBuffer *buffer=new QBuffer;
-                           buffer->open(QBuffer::WriteOnly);
-                           for (auto object = array.begin(); object != array.end(); object++) {
-                               QJsonObject jsonObj=object->toObject();
-                               buffer->write(jsonObj["PART_NAME"].toString().toLocal8Bit());
-                               buffer->write("\t");
-                               buffer->write(QString::number(jsonObj["PART COUNT"].toInt()).toLatin1());
-                               buffer->write("\r\n");
-                           }
-                           //TODO: recognize folder
-                           ftp->newTask(buffer,QString("Decl_%1.txt").arg(QDateTime().currentDateTime().toString("ddMMyy_hh.mm")),
-                                        jsonObj0["SHIFT NUMBER"].toInt());
-                       }
-                   }
-               });
-               //fileTimer->stop();
-           });//,Qt::QueuedConnection
-           fileTimer->start(3600000);
            qDebug()<<"lambda OpcUaClient fineshed";
         });
 

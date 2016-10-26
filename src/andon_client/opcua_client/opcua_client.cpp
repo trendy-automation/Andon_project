@@ -41,6 +41,7 @@ OpcUaClient::OpcUaClient(QObject *parent)
             qDebug()<<"Error - !m_pClient";
             m_pClient = m_pProvider->createClient("freeopcua");
         }
+        qDebug()<<1.5;
         bool res = m_pClient->connectToEndpoint(QString("opc.tcp://%1:%2").arg(OPCUA_IP).arg(OPCUA_PORT));
         qDebug()<<2;
         if (!res) {

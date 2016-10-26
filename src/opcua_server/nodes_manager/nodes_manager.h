@@ -33,6 +33,8 @@ public:
 public slots:
 
     //void adjustTemperature();
+signals:
+    //void propertyChanged(const Node& node, const Variant& val, AttributeId attr) Q_DECL_OVERRIDE;
 
 private:
     Variant varConv(const QVariant& v);

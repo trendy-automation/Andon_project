@@ -102,6 +102,7 @@ KeTcpObject::KeTcpObject( ) :
         if (AutoEvent)
             refreshSysTime();
         keSend("$KE"); //TODO remake the connect signal
+        qDebug()<<"Tcp socket connected lambda finish";
     });
 
     QObject::connect(this,&KeTcpObject::inputChanged,[=](int InputNum, bool InputVal){
@@ -424,6 +425,7 @@ void KeTcpObject::watchCodesStart()
 
 QVariantMap KeTcpObject::getProperties(const QStringList &requested)
 {
+    qDebug()<<"getProperties";
     QVariantMap keStatus;
     const QMetaObject *metaObj = KeTcpObject::metaObject();
     for (int i = metaObj->propertyOffset(); i < metaObj->propertyCount(); ++i)

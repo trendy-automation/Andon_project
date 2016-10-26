@@ -6,6 +6,7 @@ include(../shared_classes/message_handler/message_handler.pri)
 include(../shared_classes/single_apprun/single_apprun.pri)
 include(websocket_class/websocket_class.pri)
 include(nodes_manager/nodes_manager.pri)
+include(../../lib/freeopcua/include/opc.pri)
 
 #_______________ message_handler _______________
 DEFINES += DEBUG_NAME='\\"OPC\\"'
@@ -31,7 +32,7 @@ win32 {
     LIBS += -llibopcuaprotocol -llibopcuacore -llibopcuaserver
 }
 
-include(../../lib/freeopcua/include/opc.pri)
+
 
 
 SOURCES += main.cpp 

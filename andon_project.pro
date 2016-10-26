@@ -1,3 +1,3 @@
 TEMPLATE = subdirs
-SUBDIRS += src #lib tests
+SUBDIRS += src #lib
 CONFIG += ordered

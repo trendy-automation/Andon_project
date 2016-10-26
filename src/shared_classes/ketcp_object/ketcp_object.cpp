@@ -270,7 +270,13 @@ int KeTcpObject::actResps(QString response)
         break;
     case 12:
         //TMP temperature float
-        temperature=responseList.at(1).toInt(&ok);
+        tmp = responseList.at(1).toFloat(&ok);
+        if((abs(temperatur)>(abs(tmp)+tolerance)) || (abs(temperatur)<abs(abs(tmp)-tolerance))){
+            temperature=tmp;
+            temperatur=tmp;
+            emit tempChanged(temperatur);
+        }
+        //qDebug()<<"temperatur"<<temperatur;
         break;
     case 13:
         //IMPL,1 counter 1 dec

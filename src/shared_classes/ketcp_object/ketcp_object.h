@@ -238,7 +238,10 @@ private:
     quint32                             counter[4];
     float                               Adc[2]; //TODO Jerome ADC auto bound
     float                               AdcZero[2];
-    float                               temperature;
+    float temperature;
+    float temperatur;
+    float tmp;
+    float tolerance=0.5;
     int                                 delayADC;
     int                                 limitADC;
     QMap<QString,QBitArray>                              intInputMask[10];

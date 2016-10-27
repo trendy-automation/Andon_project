@@ -1,0 +1,304 @@
+#include "opcua_client.h"
+
+#include <QtOpcUa/QOpcUaClient>
+#include <QtOpcUa/QOpcUaMonitoredValue>
+#include <QtOpcUa/QOpcUaMonitoredEvent>
+#include <QtOpcUa/QOpcUaSubscription>
+#include <QtOpcUa/QOpcUaNode>
+#include <QtOpcUa/QOpcUaProvider>
+#include <QtCore/QDebug>
+#include <QtCore/QScopedPointer>
+
+#include <QTimer>
+#include <QTcpServer>
+#include <QTcpSocket>
+#include <QHostAddress>
+
+
+//const QByteArray constObjName = "OBJECT_NAME";
+const QByteArray constPropName = "PROPERTY_NAME";
+const QByteArray constDevId = "TCPDEVICE_ID";
+
+OpcUaClient::OpcUaClient(QObject *parent)
+    : QObject(parent)
+    ,m_pProvider(new QOpcUaProvider(this))
+    , m_subscription(0)
+//    , m_inputCodeMonitorVal(0)
+//    , m_inputCodeMonitorEvt(0)
+//    , m_pSetPointMonitor(0)
+//    , m_pTemperatureMonitor(0)
+//    , m_pStateMonitor(0)
+{
+
+//    m_pProvider = new QOpcUaProvider(this);
+    m_pClient = m_pProvider->createClient("freeopcua");
+
+    if (!m_pClient) {
+        qWarning() << "Could not initialize QtOpcUa plugin: freeopcua";
+        exit(EXIT_FAILURE);
+    }
+
+    QObject::connect(this, &OpcUaClient::serverFound,[this](){
+        bool res = m_pClient->connectToEndpoint(QString("opc.tcp://%1:%2").arg(OPCUA_IP).arg(OPCUA_PORT));
+        if (!res) {
+            qWarning() << QString("Failed to connect to endpoint: opc.tcp://%1:%2").arg(OPCUA_IP).arg(OPCUA_PORT);
+            exit(EXIT_FAILURE);
+        }
+    });
+
+    QObject::connect(m_pClient, &QOpcUaClient::connectedChanged,[this](bool connected){
+        qDebug()<<"connected changed"<<connected;
+//        if (connected)
+        m_isConnected=true;
+        m_subscription = m_pClient->createSubscription(100);
+//        m_EventSubscription = m_pClient->createSubscription(100);
+        QMapIterator<int,QString> nodes(m_nodesMap);
+        while (nodes.hasNext()) {
+            nodes.next();
+            monitorNode(nodes.key(),nodes.value());
+        }
+    });
+
+    QTimer *connectTimer=new QTimer;
+    QTcpSocket *testSocket=new QTcpSocket;
+    QObject::connect(connectTimer,&QTimer::timeout,[=](){
+        qDebug()<<"OPCUA search server";
+        connectTimer->setInterval(OPCUA_INTERVAL);
+            if (testSocket->bind(QHostAddress(OPCUA_IP),OPCUA_PORT)) {
+                testSocket->close();
+                m_isConnected=false;
+            }
+            else {
+                if (!m_isConnected){
+                    if (m_pClient->isConnected()) {
+                        m_pClient->disconnectFromEndpoint();
+                        delete m_subscription;
+                        m_monitorList.clear();
+                    }
+                    qDebug()<<"OPCUA server found";
+                    emit serverFound();
+                }
+            }
+   });
+    connectTimer->start(0);
+
+//    m_oneSecondSubscription = m_pClient->createSubscription(1000);
+//    // get current time from server every 1 second and display it
+
+//    m_timeNode = m_pClient->node(QStringLiteral("ns=0;i=2258"));
+//    m_pTimeMonitor = m_oneSecondSubscription->addValue(m_timeNode);
+//    if (m_pTimeMonitor) {
+//        connect(m_pTimeMonitor, &QOpcUaMonitoredValue::valueChanged, this,
+//                &OpcUaClient::updateVal);
+//    }
+
+
+//    // subscribe to current set point and temperature
+//    m_pSetPointNode = m_pClient->node(SETPOINT_NODE);
+//    m_pSetPointMonitor = m_subscription->addValue(m_pSetPointNode);
+//    if (m_pSetPointMonitor) {
+//        connect(m_pSetPointMonitor, &QOpcUaMonitoredValue::valueChanged, this,
+//                &OpcUaClient::updateSetpoint);
+//    }
+
+//    m_temperatureNode = m_pClient->node(QStringLiteral("ns=3;s=ACControl.CurrentTemp"));
+//    m_pTemperatureMonitor = m_subscription->addValue(m_temperatureNode);
+//    if (m_pTemperatureMonitor) {
+//        connect(m_pTemperatureMonitor, &QOpcUaMonitoredValue::valueChanged,
+//                this, &OpcUaClient::updateTemperature);
+//    }
+
+
+    // connect start/stop logic
+//    connect(ui.stopButton, &QAbstractButton::clicked, this, &OpcUaClient::stop);
+//    connect(ui.startButton, &QAbstractButton::clicked, this, &OpcUaClient::start);
+
+//    m_stateNode = m_pClient->node(QStringLiteral("ns=3;s=ACControl.IsRunning"));
+//    m_pStateMonitor = m_oneSecondSubscription->addValue(m_stateNode);
+//    if (m_pStateMonitor) {
+//        connect(m_pStateMonitor, &QOpcUaMonitoredValue::valueChanged, this,
+//                &OpcUaClient::stateChange);
+//    }
+}
+
+OpcUaClient::~OpcUaClient()
+{
+    delete m_pClient;
+    delete m_pProvider;
+//    delete m_inputCodeMonitorVal;
+    delete m_subscription;
+    m_nodesMap.clear();
+}
+
+void OpcUaClient::monitorNode(int deviceId, const QString &objectName)
+{
+    QOpcUaNode* node = m_pClient->node(QString(objectName).prepend("ns=2;s="));
+    if(node){
+        QStringList properties = node->childIds();
+        QListIterator<QString> prop(properties);
+        qDebug()<<"node name ="<<node->name()<<"properties ="<<properties.count();
+        while (prop.hasNext()) {
+            QOpcUaNode* propertiy = m_pClient->node(prop.next());
+//            propertiy->setProperty(constObjName,objectName);
+            propertiy->setProperty(constDevId,deviceId);
+            subscribePropertiy(propertiy);
+        }
+    }
+    else
+        qDebug()<<"Can not finde object"<<objectName;
+}
+
+bool OpcUaClient::subscribePropertiy(QOpcUaNode *propertiy)
+{
+//    QString *nodeName= new QString(node->name());
+    if (propertiy) {
+//        if (nodeName->contains("inputCode")) {
+//           QScopedPointer<QOpcUaSubscription> subscription(m_pClient->createSubscription(1000));
+//           QOpcUaMonitoredEvent *MonitorEvt=m_EventSubscription->addEvent(node.data());
+//           if (!MonitorEvt) {
+//               qDebug()<<"Failed subscribe to event"<<*nodeName;
+//           }
+//           MonitorEvt=subscription->addEvent(node.data());
+//           if (MonitorEvt) {
+//               qDebug()<<"Subscribe success to event"<<*nodeName;
+//               QObject::connect(MonitorEvt, &QOpcUaMonitoredEvent::newEvent, this, &OpcUaClient::updateValue);
+//               return true;
+//           }
+            m_monitorList.append(m_subscription->addValue(propertiy));
+            if (m_monitorList.last()) {
+//                m_monitorList.last()->setProperty(constObjName,propertiy->property(constObjName));
+                m_monitorList.last()->setProperty(constDevId,propertiy->property(constDevId));
+                m_monitorList.last()->setProperty(constPropName,propertiy->name());
+ //                connect(m_inputCodeMonitorVal, &QOpcUaMonitoredValue::valueChanged, this, &OpcUaClient::updateVal);
+                qDebug()<<"Subscribe success to value"<<propertiy->name();
+                QObject::connect(m_monitorList.last(), &QOpcUaMonitoredValue::valueChanged,
+                        [this](QVariant value){
+                    qDebug()<<"valueChanged"<<value;
+                    QOpcUaMonitoredValue* sender = qobject_cast<QOpcUaMonitoredValue*>(this->sender());
+                    if(sender) {
+                        qDebug()<<"Subscribe success to value"<<sender->property(constDevId).toInt()
+                                <<sender->property(constPropName).toString()<<value;
+                        emit propertyChanged(sender->property(constDevId).toInt(),
+                                             sender->property(constPropName).toString(),value);
+                    }
+                });
+                return true;
+            }
+            else {
+                m_monitorList.removeLast();
+//                qDebug()<<"Can not subscribe to"<<*nodeName;
+            }
+        }
+    qDebug()<<"Can not subscribe to"<<propertiy->name();
+    return false;
+}
+
+//void OpcUaClient::writeValue(int val)
+//{
+//    if (!m_pSetPointNode->setValue(QVariant(static_cast<double>(val))))
+//        qWarning() << "Failed to write new set point value!";
+//}
+
+void OpcUaClient::updateValue(QVector<QVariant> value)
+{
+    qDebug()<<value;
+    //TODO feedback
+}
+
+void OpcUaClient::updateVal(QVariant val)
+{
+    qDebug()<<val;
+    //TODO feedback
+}
+
+void OpcUaClient::appendObject(int deviceId, const QString &objectName)
+{
+    m_nodesMap.insert(deviceId,objectName);
+//    if (m_pClient->isConnected())
+    if (m_isConnected)
+        monitorNode(deviceId,objectName);
+}
+
+/*
+void OpcUaClient::searchServer()
+{
+    QTimer *connectTimer=new QTimer;
+//    connectTimer->setSingleShot(true);
+//    QTcpServer *testServer=new QTcpServer;
+    QTcpSocket *testSocket=new QTcpSocket;
+//    connect(testServer,&QTcpServer::newConnection,testServer,&QTcpServer::close);
+//    connect(testServer,&QTcpServer::newConnection,testServer,&QTcpServer::deleteLater);
+//    connect(testServer,&QTcpServer::newConnection,this,&OpcUaClient::serverFound);
+//    testServer->listen(QHostAddress(OPCUA_IP),OPCUA_PORT);
+    connect(connectTimer,&QTimer::timeout,[=](){
+        connectTimer->setInterval(OPCUA_INTERVAL);
+//            qDebug()<<"OPCUA searchServer";
+            if (testSocket->bind(QHostAddress(OPCUA_IP),OPCUA_PORT)) {
+    //        if (testServer->listen(QHostAddress(OPCUA_IP),OPCUA_PORT)) {
+    //            testServer->close();
+    //            testServer->deleteLater();
+                testSocket->close();
+    //            testSocket->deleteLater();
+                //connectTimer->deleteLater();
+//                connectTimer->start(OPCUA_INTERVAL);
+    //            emit serverFound();
+    //            //TODO use testServer->newConnection() event;
+                if (m_pClient->isConnected())
+                    m_isConnected=false;
+            }
+            else {
+    //            testSocket->deleteLater();
+    //            connectTimer->deleteLater();
+//                if (m_pClient->isConnected())
+//                    m_pClient->disconnectFromEndpoint();
+                if (!m_isConnected){
+                    if (m_pClient->isConnected()) {
+                        m_pClient->disconnectFromEndpoint();
+//                        while(!m_monitorList.isEmpty())
+//                            m_monitorList.removeLast();
+                        delete m_subscription;
+                        m_monitorList.clear();
+                    }
+                    qDebug()<<"OPCUA serverFound";
+                    emit serverFound();
+                }
+            }
+   });
+    connectTimer->start(0);
+}
+*/
+
+
+//void OpcUaClient::updateSetpoint(QVariant val)
+//{
+//    //TODO feedback
+//}
+
+//void OpcUaClient::updateTemperature(QVariant val)
+//{
+//    //TODO feedback
+//}
+
+//void OpcUaClient::start(void)
+//{
+//    QScopedPointer<QOpcUaNode> node(m_pClient->node(QStringLiteral("ns=3;s=ACControl.Start")));
+//    bool res = node->setValue(true);
+//    if (!res)
+//        qDebug("Could not call start method");
+//}
+
+//void OpcUaClient::stop(void)
+//{
+// //    QScopedPointer<QOpcUaNode> node(m_pClient->node(QStringLiteral("ns=3;s=ACControl.Stop")));
+//    QOpcUaNode *node = m_pClient->node(QStringLiteral("ns=3;s=ACControl.Stop");
+//    bool res = node->setValue(true);
+//    if (!res)
+//        qDebug("Could not call stop method");
+
+//}
+
+//void OpcUaClient::stateChange(QVariant state)
+//{
+//    //TODO feedback
+//}
+

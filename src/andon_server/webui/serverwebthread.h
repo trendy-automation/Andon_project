@@ -1,0 +1,217 @@
+#ifndef WEBUITHEARD_H
+#define WEBUITHEARD_H
+
+#include <QThread>
+#include <QStringList>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QVariant>
+#include <QDebug>
+#include <QTime>
+#include <QTimer>
+
+//_______Excel Lib_______________
+#include "xlsxdocument.h"
+#include <QIODevice>
+#include <QDataStream>
+#include <QBuffer>
+#include <QSqlQuery>
+#include <QSqlRecord>
+
+
+#include "mongoose\mongoose.h"
+#include <string.h>
+
+//using namespace std;
+#include <functional>
+#include <QHostAddress>
+#include <QTcpSocket>
+
+
+//#include <QtScript>
+#include <QJSEngine>
+
+
+struct pageInfo
+    {QString pageData;
+     QTime pageTime;};
+static int event_handler(struct mg_connection *conn, enum mg_event ev)
+{
+    if (ev == MG_AUTH)
+        return MG_TRUE;   // Authorize all requests
+    else if (ev == MG_REQUEST)
+        //      qDebug() << "REQUEST" << conn->uri
+        //               << "from" << conn->remote_ip
+        //               << ":" << conn->remote_port;
+        if (strcmp(conn->uri, "/graff")==0) {
+            //qDebug() << "mg_send_file(conn,graff.html)";
+            mg_send_file(conn,"./webui/graff.html","");
+            return MG_MORE;
+        }
+    return MG_FALSE;  // Rest of the events are not processed
+}
+
+
+class WebuiThread : public QThread
+{
+    Q_OBJECT
+public:
+    WebuiThread(QObject *parent=0)    : QThread(parent)
+    {
+        mgserver = mg_create_server(NULL, event_handler);
+        mg_set_option(mgserver, "document_root", WUI_PATH);
+        QObject::connect(&cleanTimer, &QTimer::timeout,[=](){
+            for(auto iter = webuiPages.begin();iter!=webuiPages.end();)
+                if (iter.value().pageTime.elapsed()>cleanTimer.interval()) {
+                    iter=webuiPages.erase(iter);
+                } else ++iter;
+        });
+        cleanTimer.start(WUI_CLAEN_INTERVAL);
+    }
+
+void setEngine(QJSEngine* SharedEngine)
+{
+    engine=SharedEngine;
+}
+signals:
+    void sendText(const QString &sql_query,const QString &query_method);
+    void getSqlQuery(const QString &sql_query,const QString &query_method,
+                     std::function<void(QString jsontext)> functor=[](QString jsontext){});
+    void getSqlQuery(const QString &sql_query,
+                     std::function<void(QSqlQuery *query)> functor=[](QSqlQuery *query){});
+
+    void sendReport2email(const QString &subject, const QString &message,
+                          const QStringList &rcptStringList, QList<QBuffer*> *attachments=0);
+
+
+public slots:
+    QHostAddress serverAddress() const
+    {
+        return QHostAddress::LocalHost;
+    }
+
+    bool listen(QHostAddress address = QHostAddress::AnyIPv4, quint16 port = WUI_PORT)
+    {
+        address=QHostAddress::Any;
+        QTcpSocket tmpSock;
+        if(tmpSock.bind(port)) {
+            tmpSock.close();
+
+            std::string buf = "";
+            char port_char[5];
+            buf += itoa(port, port_char, 10);
+
+            mg_set_option(mgserver, "listening_port", port_char);
+            return true;
+        }
+        else
+            return false;
+    }
+
+/*    void updateWebuiData(const QString &sql_query, const QString &jsontext)
+    {
+        webuiPages.insert(sql_query,{jsontext,QTime::currentTime()});
+        qDebug() << "sql_query"<<sql_query;
+//                 << webuiPages.count()<<update_count;
+        emit sendText(sql_query, jsontext);
+//        if (update_count<932838457459459)
+//            update_count++;
+    }
+  */
+
+    void receiveText(const QString &sql_query, const QString &query_method)
+    {
+//        qDebug() << "sql_query"<<sql_query;
+//                 << "query_method" << query_method << "webuiPages.count()" << webuiPages.count()
+//                 << "recive_count" << recive_count;
+        if (webuiPages.contains(sql_query)) {
+            if (webuiPages.value(sql_query).pageTime.elapsed()<WUI_UPDATE_INTERVAL) {
+//                qDebug() << "webuiPages.contains(sql_query)";
+//                         << webuiPages.count()<<recive_count;
+                if (!webuiPages.value(sql_query).pageData.isEmpty()){
+//                    qDebug() << "emit sendText";
+                    emit sendText(sql_query, webuiPages.value(sql_query).pageData);
+                    return;
+                }
+                else {
+                    qDebug() << "pageData.isEmpty()";
+                }
+            }
+        } else {
+            webuiPages.insert(sql_query,{QString(),QTime::currentTime()});
+        }
+        getSqlQuery(sql_query, query_method, [this, sql_query](QString jsontext){
+            webuiPages.insert(sql_query,{jsontext,QTime::currentTime()});
+            emit sendText(sql_query, jsontext);
+        });
+
+    }
+    void snedReport(const QString &report, const QStringList &emails)
+    {
+        QString sql_query;
+        QString template_file;
+        QString res_file="report.xlsx";
+        QString subject;
+        //SELECT p.DESCRIPTION
+        //FROM DB_REPORT_DESCRIPTION(PROCEDURE_NAME) p
+        if (report==QString("Daily_PDP")) {
+            sql_query=QString("SELECT * FROM PRODUCTION_REPORT_SHIFT_PDP");
+            res_file=QString("PDP %1.xlsx").arg(QDate::currentDate().toString("ddd d MMMM"));
+            subject=QString("Производственный отчёт %1 за %2 смену ")
+                    .arg(QDate::currentDate().toString("ddd d MMMM")).arg(QTime::currentTime().hour()<15?1:2);
+        }
+        if (report==QString("Weekly_PDP")) {
+            sql_query="SELECT * FROM PRODUCTION_REPORT_PDP";
+            template_file="PDP.xlsx";
+            res_file=QString("PDP W%1.xlsx").arg(QDate::currentDate().weekNumber());
+            subject=QString("Производственный отчёт большие тримы за неделю %1").arg(QDate::currentDate().weekNumber()) ;
+        }
+        qDebug() << "snedReport"<<report<<emails<<sql_query;
+        getSqlQuery(sql_query, [this,&subject,&template_file,&res_file,emails]
+                        (QSqlQuery *query){
+                if(query->size()<1)
+                    return;
+                QXlsx::Document * xlsx;
+                if (template_file.isEmpty())
+                    xlsx = new QXlsx::Document();
+                else
+                    xlsx = new QXlsx::Document(template_file);
+                //xlsx->deleteSheet("Data");
+                xlsx->addSheet("Data");
+                xlsx->selectSheet("Data");
+                int i=1;
+                for(int j=0; j < query->record().count(); j++)
+                    xlsx->write(i,j+1,query->record().fieldName(j));
+                while(query->next()) {
+                    i++;
+                    for(int j=0; j < query->record().count(); j++)
+                        xlsx->write(i,j+1,query->value(j));
+                }
+                QBuffer buffer(new QByteArray);
+                xlsx->saveAs(&buffer);
+                buffer.setProperty("FILE_NAME",res_file);
+                emit sendReport2email(subject,"",emails,&(QList<QBuffer*>()<<&buffer));
+            });
+    }
+
+
+private:
+    QJSEngine *engine;
+    QMap<QString,pageInfo> webuiPages;
+    QTimer cleanTimer;
+    struct mg_server *mgserver;
+//    qint64 update_count=0;
+//    qint64 recive_count=0;
+
+protected:
+    virtual void run(void)
+    {
+        for (;;) {
+            mg_poll_server(mgserver, 1000);   // Infinite loop, Ctrl-C to stop
+        }
+        mg_destroy_server(&mgserver);
+    }
+};
+
+#endif // WEBUITHEARD_H

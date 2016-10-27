@@ -1,0 +1,53 @@
+#ifndef CLIENTWEBTHEARD_H
+#define CLIENTWEBTHEARD_H
+
+//#include <QThread>
+#include <QStringList>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QVariant>
+#include <QDebug>
+#include <QTime>
+#include <QTimer>
+
+#include <QtScript>
+#include <functional>
+
+
+class ClientWebThread : public QObject //QThread
+{
+    Q_OBJECT
+public:
+    ClientWebThread(QObject *parent=0)    : QObject(parent) //QThread(parent)
+    {
+    }
+signals:
+
+public slots:
+
+
+    void setEngine(QScriptEngine* SharedEngine)
+    {
+        engine=SharedEngine;
+    }
+
+    void execute(QScriptValue scriptFunctor)
+    {
+        std::function<void(QVariant response)> functor;
+        if(scriptFunctor.isFunction())
+            functor = [scriptFunctor,this] (QVariant response) {
+                QScriptValue(scriptFunctor).call(
+                        engine->globalObject(),QScriptValueList() << engine->toScriptValue(response));
+            };
+        else
+            functor=[] (QVariant response) { qDebug()<<"scriptFunctor is not a function."<<"response"<<response; };
+
+        ServerExecute(RemoteMethodName, InParameterList, functor);
+    }
+
+
+private:
+    QScriptEngine* engine;
+    
+#endif // CLIENTWEBTHEARD_H

@@ -187,14 +187,14 @@ void ServerFound(QHostAddress ServerAddress)
         qDebug()<<"lambda TCPDEVICES start";
 
         QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
-        QJsonObject recordObject=array.at(i).toObject();
-        if (recordObject["DEVICE_TYPE"].toString()=="FTP") {
-            if(!array.isEmpty()) {
-                QJsonObject jsonObj0=array.at(0).toObject();
-                if(jsonObj0.contains("TCPDEVICE_IP") && jsonObj0.contains("LOGIN")
-                                                  && jsonObj0.contains("PASS")) {
-                    //TODO TCPDEVICE_IP, PORT, LOGIN, PASS,
-                    Ftp *ftp=new Ftp("10.208.105.70",21,"FtpUser","andon");
+        for (auto row = array.begin(); row != array.end(); row++) {
+            QJsonObject jsonRow=row->toObject();
+            if (jsonRow.contains("DEVICE_TYPE") && jsonRow.contains("TCPDEVICE_IP")
+                   && jsonRow.contains("LOGIN") && jsonRow.contains("PASS")) {
+                if (jsonRow["DEVICE_TYPE"].toString()=="FTP") {
+                    Ftp *ftp=new Ftp(jsonRow["TCPDEVICE_IP"].toString(),jsonRow["PORT"].toInt(),
+                                     jsonRow["LOGIN"].toString(),jsonRow["PASS"].toString());
+                    ftp->setObjectName(jsonRow["DEVICE_NAME"].toString());
                     QObject::connect(ftp, &Ftp::transferFinished,[serverRpc](quint32 taskId){
                         qDebug()<<"transferFinished"<<taskId;
                         //TODO query PRODUCTION_DECLARATION taskId, 1
@@ -232,7 +232,7 @@ void ServerFound(QHostAddress ServerAddress)
                             }
                         });
                     });
-                    fileTimer->start(3600000);
+                    fileTimer->start(FTP_INTERVAL);
                 }
             }
         }

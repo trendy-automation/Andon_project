@@ -144,9 +144,9 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
                 QVariantMap properties = keObject->getProperties();
                 qDebug() << keObject->getDeviceName() << "ready" << properties.count();
                 std::vector<Node> evtNodes = keNode->GetChildren();
-                for (int i=0; i<properties.count(); ++i){
+                for (uint i=0; i<properties.count(); ++i){
                     bool isExist=false;
-                    for (int j=0;j<evtNodes.size();++j)
+                    for (uint j=0;j<evtNodes.size();++j)
                         if(evtNodes.at(j).GetBrowseName().Name==properties.keys().at(i).toStdString()) {
                             isExist=true;
                             evtNodes.at(j).SetValue(varConv(properties.values().at(i)));

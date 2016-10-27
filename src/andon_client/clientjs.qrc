@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/clientjs">
+        <file>../js/clientjs.js</file>
+        <file>../js/wc_test.html</file>
+    </qresource>
+    <qresource prefix="/qwebchannel">
+        <file>../js/qwebchannel.js</file>
+    </qresource>
+</RCC>

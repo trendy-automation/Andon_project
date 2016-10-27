@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+	<meta http-equiv="Content-Type" content="text/html; charset=WINDOWS-1251">
+
+     <title>Client debug messages logfile &amp; console</title>
+    <script type="text/javascript" src="lib/js/qwebchannel/qwebchannel.js"></script>
+
+    <!-- ExtJS -->
+    <script type="text/javascript" src="ext-6.0.2/build/examples/classic/shared/include-ext.js"></script>
+    <script type="text/javascript" src="ext-6.0.2/build/examples/classic/shared/options-toolbar.js"></script>
+
+    <!-- Shared -->
+    <link rel="stylesheet" type="text/css" href="ext-6.0.2/build/examples/classic/shared/examples.css" />
+
+    <!-- Example -->
+    <script type="text/javascript">
+
+
+Ext.require([
+    'Ext.form.Panel',
+    'Ext.ux.form.ItemSelector',
+    'Ext.tip.QuickTipManager',
+    'Ext.ux.ajax.JsonSimlet',
+    'Ext.ux.ajax.SimManager',
+    'Ext.ux.ajax.Simlet',
+    'Ext.data.proxy.Proxy',
+    'Ext.data.proxy.Ajax',
+    'Ext.data.Store',
+    'Ext.data.reader.Json'
+]);
+
+function GetURLParameter(sParam)
+{
+   var sPageURL = location.search.substring(1);
+   var sURLVariables = sPageURL.split('&');
+   for (var i = 0; i < sURLVariables.length; i++)
+   {
+     var sParameterName = sURLVariables[i].split('=');
+     if (sParameterName[0] == sParam)
+     {
+        return sParameterName[1];
+     }
+   }
+}
+
+var baseUrl;
+if ((location.search.indexOf('client_ip')>-1) &&
+        (location.search.indexOf('ws_port')>-1)) {
+    baseUrl="ws://" + GetURLParameter('client_ip') +
+                                ":" + GetURLParameter('ws_port');
+    }
+else {
+    baseUrl = "ws://"+location.hostname+":12347";
+    }
+
+
+
+
+
+Ext.onReady(function(){
+clientWeb = {};
+activeContextList = Ext.create('Ext.data.ArrayStore', {
+            storeId: 'activeContextStore',
+       fields: ['value','text'],
+            autoLoad: true,
+            proxy: {
+                type: 'ajax',
+                url: 'activeContextList',
+                reader: 'array'
+
+            },
+		 autoLoad: false,
+      sortInfo: {
+          field: 'value',
+    		direction: 'ASC'
+      }
+        });
+
+consoleContextListStore = Ext.create('Ext.data.ArrayStore', {
+            storeId: 'consoleContextList',
+       fields: ['value','text'],
+            proxy: {
+                type: 'ajax',
+                url: 'consoleContextList',
+                reader: 'array'
+            },
+                 autoLoad: false,
+                 listeners: {write: function(store, operation, opts){
+                                 console.log('wrote!');
+                                 if (store.getStoreId()=='logfileContext')
+                                     clientWeb.setLogfileContextList(operation.records);
+                                 if (store.getStoreId()=='consoleContext')
+                                     clientWeb.setConsoleContextList(operation.records);
+                             }
+                 },
+      sortInfo: {
+          field: 'value',
+                direction: 'ASC'
+      }
+        });
+
+logfileContextListStore = Ext.create('Ext.data.ArrayStore', {
+            storeId: 'logfileContextList',
+       fields: ['value','text'],
+            proxy: {
+                type: 'ajax',
+                url: 'logfileContextList',
+                reader: 'array'
+            },
+                 autoLoad: false,
+                 listeners: {write: function(store, operation, opts){
+                                 console.log('wrote!');
+                                 if (store.getStoreId()=='logfileContext')
+                                     clientWeb.setLogfileContextList(operation.records);
+                                 if (store.getStoreId()=='consoleContext')
+                                     clientWeb.setConsoleContextList(operation.records);
+                             }
+                 },
+      sortInfo: {
+          field: 'value',
+                direction: 'ASC'
+      }
+        });
+
+   Ext.tip.QuickTipManager.init();
+    function createDockedItems(fieldId) {
+        return [
+{
+            xtype: 'toolbar',
+            dock: 'bottom',
+            ui: 'footer',
+            defaults: {
+                minWidth: 75
+            },
+            items: ['->', {
+                text: 'Clear',
+                handler: function(){
+                    var field = Ext.getCmp(fieldId);
+                    if (!field.disabled) {
+                        field.clearValue();
+                    }
+                }
+            }, {
+                text: 'Reset',
+                handler: function() {
+                    Ext.getCmp(fieldId).up('form').getForm().reset();
+                }
+            }, {
+                text: 'Save',
+                handler: function(){
+
+                    var form = Ext.getCmp(fieldId).up('form').getForm();
+                    form.getValues(true);
+                    if (form.isValid()){
+                        var newList = form.getValues().items;
+                        if (form.getFields().keys[0]=='logfileContext')
+                            clientWeb.setLogfileContextList(newList);
+                        if (form.getFields().keys[0]=='consoleContext')
+                            clientWeb.setConsoleContextList(newList);
+                   }
+                }
+            }]
+        }];
+    }
+    function createForrms(title,id) {
+                         return Ext.widget('form', {
+                                title: title,
+                                width: 700,
+                                bodyPadding: 10,
+                                height: 400,
+                                //renderTo: 'itemselector_'+id,
+                                renderTo: Ext.getBody(),
+                                layout: 'fit',
+                                items:[{
+                                    xtype: 'itemselector',
+                                    name: 'items',
+                                    id: id,
+                                    anchor: '100%',
+                                    fieldLabel: 'Файлы исходного кода',
+                                    imagePath: '../ux/images/',
+                                    store: activeContextList,
+                                    displayField: 'text',
+                                    valueField: 'value',
+                                    value: [],
+                                    allowBlank: true,
+                                    msgTarget: 'side',
+                                    fromTitle: 'Текущие',
+                                    toTitle: 'Исключения'
+                                }],
+                                dockedItems: createDockedItems(id)
+                            });
+        }
+    isForm1 = createForrms('Вывод тестовых сообщений в консоль','consoleContext');
+    isForm2 = createForrms('Вывод тестовых сообщений в лог','logfileContext');
+
+  var socket = new WebSocket(baseUrl);
+                socket.onclose = function()
+                {
+                    console.error("web channel closed");
+                };
+                socket.onerror = function(error)
+                {
+                    console.error("web channel error: " + error);
+                };
+
+                socket.onopen = function()
+                {
+                     new QWebChannel(socket, function(channel) {
+                        clientWeb = channel.objects.clientWeb;
+                        clientWeb.evaluate('msgHandler.activeContextList',function(list) {
+                            Ext.ux.ajax.SimManager.init({
+                               delay: 300,
+                               defaultSimlet: null
+                               }).register({
+                               'activeContextList': {
+                                data: JSON.parse(list),
+                                stype: 'json'
+                               }
+                            });
+                            activeContextList.load();
+                        });
+
+                        clientWeb.getConsoleContextList(function(list) {
+                            Ext.getCmp('consoleContext').setValue(JSON.parse(list));
+                            });
+                        clientWeb.getLogfileContextList(function(list) {
+                            Ext.getCmp('logfileContext').setValue(JSON.parse(list));
+                            });
+                    });
+                }
+});
+
+    </script>
+    <!-- GC -->
+
+    <style type="text/css">
+        body {font-family:Arial, Helvetica, Sans-Serif; font-size:2vmax ;}
+		html, body {height: 100%;margin:0px;padding:0px;}
+    </style>
+
+</head>
+<body>
+    <div id="itemselector_console" class="demo-ct"></div>
+    <div id="itemselector_logfile" class="demo-ct"></div>
+</body>
+</html>

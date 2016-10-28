@@ -387,15 +387,18 @@ void Ftp::readCmdResult()
 
         switch(code){
             case 200://Type set to I
-                    if(this->property("loginSuccess").toBool()){
-                        this->setProperty("loginSuccess",0);
-                        emit loginSuccess();
-                    }
+//                    if(this->property("loginSuccess").toBool()){
+//                        this->setProperty("loginSuccess",0);
+//                        emit loginSuccess();
+//                    }
                 break;
-            case 230://login success
-                    this->setProperty("loginSuccess",1);
-//                    emit loginSuccess();
-                b_isLogined=true;
+            case 230:{//login success
+//                    this->setProperty("loginSuccess",1);
+                    b_isLogined=true;
+                    emit loginSuccess();
+    //                rawCommand("TYPE I\r\n");
+
+                    }
                 break;
             case 227:{ //build pasv data channel
                     QRegExp regexp("\(?:(\\d{1,3}),(\\d{1,3}),(\\d{1,3}),(\\d{1,3}),(\\d{1,3}),(\\d{1,3})\)");
@@ -427,6 +430,11 @@ void Ftp::readCmdResult()
                 if(toInt && size>0)
                     n_remoteFileSize=size;
                 }break;
+            case 331://pass required
+                p_cmdSocket->write(QString("PASS "+str_password+CHAR_CR).toLatin1());
+                //set global transfer property
+                setTransferProperty();
+                break;
             case 421://FTP timeout
                 b_isLogined=false;
                 emit logout();
@@ -600,11 +608,14 @@ void Ftp::putFile(QBuffer *buffer, const QString &remote_filename, quint32 taskI
 
     //TODO make Queue
     if(!b_isLogined){
-        QTimer::singleShot(200,[this,temp_filename,remote_filename](){
+        QTimer::singleShot(1000,[this,temp_filename,remote_filename](){
             if(b_isLogined)
                 put(temp_filename,remote_filename);
+            else
+                qDebug()<<"FTP user not loggened";
         });
-    }
+    } else
+        put(temp_filename,remote_filename);
     //QTimer::singleShot();
 //        qDebug()<<"connecting putFile lambda";
 //        QMetaObject::Connection m_connection = QObject::connect(this,&Ftp::loginSuccess,[this,m_connection,remote_filename,temp_filename](){

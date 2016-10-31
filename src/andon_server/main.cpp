@@ -56,68 +56,8 @@
 #include <functional>
 #include <QJSEngine>
 
-//QStringList* sl1 = new QStringList("serverwebthread.h");
-//QStringList* sl2 = new QStringList({"sms_service.cpp","serverwebthread.h"});
-//QStringList* sl3 = new QStringList;
 
 
-//#include <QMessageBox>
-
-//    struct FloatTimeStruc
-//    {
-//        QTime      eventTime;
-//        QList<int> eventWeekdays;
-//        char       weekEven;
-//        short      dayOfMonth;
-//    };
-
-//    FloatTimeStruc endOfShift1={QTime::fromString("14:20:00"),
-//                                QList<int>()<<1<<2<<3<<4,0,0};
-//    FloatTimeStruc endOfShift1Even={QTime::fromString("14:20:00"),
-//                                    QList<int>()<<1<<2<<3<<4,1,0};
-//    FloatTimeStruc endOfShift2={QTime::fromString("22:50:00"),
-//                                QList<int>()<<1<<2<<3<<4,0,0};
-//    FloatTimeStruc endOfShift2Even={QTime::fromString("22:50:00"),
-//                                    QList<int>()<<1<<2<<3<<4,1,0};
-//    struct SchedulerStruc
-//    {
-//        std::function<void()> functor;
-//   //        QList<FloatTimeStruc> eventFloatTimes;
-//        QList<QTime>          eventTimes;
-//        QTimer               *eventTimer;
-//    };
-
-//    QList<SchedulerStruc> schedulerList;
-
-
-
-
-
-
-
-//    const int msecsPerDay = 24 * 60 * 60 * 1000;
-
-
-//const QString start_script_name = "server_start";
-
-/*
-bool isRunning(const QString &semaphore,const QString &memory)
-{
-        QSystemSemaphore sema(semaphore, 1);
-        bool isAppRunning;
-        sema.acquire();
-        QSharedMemory shmem(memory);
-        if (shmem.attach()) {
-            isAppRunning = true;
-        }
-        else {
-            shmem.create(1);
-            isAppRunning = false;
-        }
-        sema.release();
-        return isAppRunning;
-}
-*/
 
 
 bool Step_3_OpenDB(DBWrapper *andondb)
@@ -130,35 +70,6 @@ bool Step_3_OpenDB(DBWrapper *andondb)
     return andondb->ConnectDB(QCoreApplication::applicationDirPath(),DATABASE_FILE);
 }
 
-
-//bool isRunning(const QString &semaphore, const QString &memory, QString &pid, QSharedMemory &shmem)
-//{
-//        QSystemSemaphore sema(semaphore, 1);
-//        bool isAppRunning;
-//        sema.acquire();
-//        {
-//            QSharedMemory shmem2(memory);
-//            shmem2.attach();
-//        }
-//        shmem.setKey(memory);
-//        if (shmem.attach()) {
-//            isAppRunning = true;
-//            shmem.lock();
-//            pid = QString((char*)shmem.data());
-//            shmem.unlock();
-//        }
-//        else {
-//            shmem.create(pid.size());
-//            shmem.lock();
-//            char *to = (char*)shmem.data();
-//            const char *from = (char *)pid.toLatin1().data();
-//            memcpy(to, from, pid.size());
-//            shmem.unlock();
-//            isAppRunning = false;
-//        }
-//        sema.release();
-//        return isAppRunning;
-//}
 
 
 
@@ -593,6 +504,7 @@ int main(int argc, char *argv[])
      * Start SendEmail
      *****************************************/
     qDebug()<<"Start SmtpClient";
+    //TODO From DB
 
     SendEmail * emailClient = new SendEmail;
     emailClient->setObjectName("emailClient");

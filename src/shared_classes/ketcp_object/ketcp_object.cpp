@@ -347,7 +347,7 @@ void KeTcpObject::setSysTime(int secs)
     } else if (abs(newTime.secsTo(KeSysStart))>5) {
         res = 2; //Was events
         emit sysTimeRewrited();
-    }
+    } else res = 3;
     KeSysStart=newTime;
     sysTimeTimer.stop();
     if (res==0 && !inputs.isEmpty())

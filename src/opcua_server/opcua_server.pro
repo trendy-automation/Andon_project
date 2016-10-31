@@ -11,7 +11,7 @@ include(../../lib/freeopcua/include/opc.pri)
 #_______________ message_handler _______________
 DEFINES += DEBUG_NAME='\\"OPC\\"'
 DEFINES += APP_NAME='\\"OPC\\"'
-DEFINES += APP_VER='\\"0.2\\"'
+#DEFINES += APP_VER='\\"0.2\\"'
 
 
 TEMPLATE = app

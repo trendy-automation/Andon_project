@@ -111,7 +111,20 @@ void ClientRpcUtility::Query2Json(QString queryText, std::function<void(QVariant
     return ServerExecute("SQLQuery2Json", QVariantList()<<queryText, functor);
 }
 
-
+void ClientRpcUtility::Query2Json(QString queryText, QJSValue scriptFunctor)
+{
+    std::function<void(QVariant response)> functor;
+    if(scriptFunctor.isCallable())
+        functor = [scriptFunctor,this] (QVariant response) {
+            QJSValue(scriptFunctor).call(
+                    QJSValueList() << engine->toScriptValue(response));
+        };
+    else {
+        qDebug()<<"Default scriptFunctor";
+        functor=[] (QVariant response) { qDebug()<<"scriptFunctor is not a function."<<response; };
+    }
+    return ServerExecute("SQLQuery2Json", QVariantList()<<queryText, functor);
+}
 
 void ClientRpcUtility::setserverip(QHostAddress newserveraddress)  {
     serveraddress = newserveraddress;
@@ -120,6 +133,54 @@ void ClientRpcUtility::setserverip(QHostAddress newserveraddress)  {
 void ClientRpcUtility::run(void)
 {
 
+}
+
+QVariant ClientRpcUtility::evaluate(const QString &script)
+{
+    if(engine){
+        QJSValue result = engine->evaluate(script);
+        if (result.isError())
+            qDebug() << "Uncaught exception at line"
+                     << result.property("lineNumber").toInt()
+                     << ":" << result.toString();
+        qDebug()<<result.toVariant();
+        if (result.isVariant())
+            return result.toVariant();
+    }
+    return QVariant();
+}
+
+QVariant ClientRpcUtility::query(const QString &queryText)
+{
+    qDebug() << queryText;
+    QTcpSocket *socket = new QTcpSocket(this);
+    socket->connectToHost(serveraddress.toString(), JSONRPC_SERVER_PORT);
+    qDebug() << 1;
+    if (!socket->waitForConnected()) {
+        qDebug() << "could not connect to server: " << socket->errorString();
+        emit error(socket->errorString());
+        return QVariant();
+    }
+    qDebug() << 2;
+    m_client = new QJsonRpcSocket(socket, this);
+    qDebug() << 3;
+    QJsonRpcServiceReply *reply = m_client->invokeRemoteMethod(
+                QString(JSONRPC_SERVER_SERVICENAME).append(".SQLQuery2Json").append(queryText));
+    qDebug() << 4;
+    QObject::connect(reply, &QJsonRpcServiceReply::finished, [this,reply]()->QVariant{
+
+        if (!reply) {
+            qDebug() << "invalid reply received";
+            return QVariant();
+        }
+        if (!reply->response().result().toVariant().isValid()) {
+            qDebug() << "invalid response received!!!"
+                     << reply->response().errorMessage();
+            return QVariant();
+        }
+        qDebug() << reply->response().result().toVariant();
+        return reply->response().result().toVariant();
+    });
 
 }
 

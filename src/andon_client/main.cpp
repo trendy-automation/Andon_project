@@ -43,6 +43,17 @@ void listenPort(T * obj, int port, int interval, int delay) {
     listenPortTimer->start(delay);
 }
 
+void WebsocketInit(int websocketPort, ClientRpcUtility *serverRpc)
+{
+    QWebSocketServer *webSocketServer = new QWebSocketServer(QStringLiteral("QWebChannel server of client"), QWebSocketServer::NonSecureMode,qApp);
+    webSocketServer->setObjectName("webSocketServer");
+    listenPort<QWebSocketServer>(webSocketServer,websocketPort,3000,2000);
+    WebSocketClientWrapper *clientWrapper = new WebSocketClientWrapper(webSocketServer,qApp);
+    QWebChannel *channel = new QWebChannel(qApp);
+    QObject::connect(clientWrapper, &WebSocketClientWrapper::clientConnected,
+                     channel, &QWebChannel::connectTo);
+    channel->registerObject(QStringLiteral("clientWeb"), serverRpc);
+}
 
 //QVariant ValFromQuery(const QString & query, const QString & ValName) {
 //    serverRpc->Query2Json(query,
@@ -239,7 +250,8 @@ void ServerFound(QHostAddress ServerAddress)
                                     }
                                     QTimer::singleShot(0,[ftp,buffer](){
                                         buffer->setProperty("command",ftp->putBuf(buffer,
-                                            QString("Decl_%1.txt").arg(QDateTime().currentDateTime().toString("ddMMyy_hh.mm")), QFtp::Binary));
+                                            QString("Decl_%1.txt").arg(QDateTime().currentDateTime().toString("ddMMyy_hh.mm")), QFtp::Binary));\
+                                        //TODO query PRODUCTION_DECLARATION taskId, 1
                                     });
                                     QObject::connect(ftp, &QFtp::commandFinished,[ftp,buffer](int command,bool res){
                                         if(command==buffer->property("command").toInt()){
@@ -247,6 +259,7 @@ void ServerFound(QHostAddress ServerAddress)
                                             //TODO query PRODUCTION_DECLARATION taskId, 1
                                             if(res){}
                                             else{}
+                                            ftp->disconnect();
                                         }
                                     });
                                 }
@@ -254,6 +267,7 @@ void ServerFound(QHostAddress ServerAddress)
                         });
                     });
                     fileTimer->start(FTP_INTERVAL);
+//                    qDebug() << "FTP_INTERVAL" << FTP_INTERVAL;
                 }
             }
         }
@@ -498,6 +512,7 @@ void ServerFound(QHostAddress ServerAddress)
                                           " WHERE IP_ADDRESS = :CLIENT_IP;",
                           [=](QVariant resp){
         qDebug()<<"lambda WEBSOCKET start";
+
         QJsonDocument jdocWebsocketPort(QJsonDocument::fromJson(resp.toString().toUtf8()));
 //        qDebug()<<"WEBSOCKET"<< jdocWebsocketPort.toJson();
         QJsonArray tableArray = jdocWebsocketPort.array();
@@ -505,19 +520,7 @@ void ServerFound(QHostAddress ServerAddress)
 //        qDebug()<<"WEBSOCKET"<< recordObject.toVariantMap();
         if(recordObject.contains("WEBSOCKET_PORT")){
             int websocketPort = recordObject["WEBSOCKET_PORT"].toInt();
-            QWebSocketServer *webSocketServer = new QWebSocketServer(QStringLiteral("QWebChannel server of client"), QWebSocketServer::NonSecureMode,qApp);
-            webSocketServer->setObjectName("webSocketServer");
-            listenPort<QWebSocketServer>(webSocketServer,websocketPort,3000,2000);
-            WebSocketClientWrapper *clientWrapper = new WebSocketClientWrapper(webSocketServer,qApp);
-            ClientWebInterface *clientWI = new ClientWebInterface(qApp);
-//            clientWI->setObjectName("clientWI");
-            clientWI->setEngine(engine);
-            QWebChannel *channel = new QWebChannel(qApp);
-            QObject::connect(clientWrapper, &WebSocketClientWrapper::clientConnected,
-                             channel, &QWebChannel::connectTo);
-            channel->registerObject(QStringLiteral("clientWeb"), clientWI);
-//            channel->registerObject(QStringLiteral("clientWeb"), engine);
-
+            WebsocketInit(websocketPort, serverRpc);
         }
         qDebug()<<"lambda WEBSOCKET fineshed";
 

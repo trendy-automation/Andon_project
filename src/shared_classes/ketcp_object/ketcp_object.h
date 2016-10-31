@@ -157,6 +157,7 @@ signals:
     void inputsChanged(const QBitArray &inputs);
     void inputCodeChanged(quint32 inputCode);
     void inputChanged(int InputNum, bool InputVal);
+    void tempChanged(float temperature);
 
     void IOEvent(const QString &ioName,const QVariant &val);
     void DataReceived(const QString &response);

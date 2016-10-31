@@ -42,6 +42,8 @@ DEFINES += WEBCHANEL_PORT=12346
 
 #______________ CLIENT _______________
 #ANDNPRJ_LIBS = -lkeyboardwidget
+#______________ FTP _______________
+DEFINES += FTP_INTERVAL=10800000
 
 #TODO add broadcast sender/resiver
 #______________ OPCUA _______________

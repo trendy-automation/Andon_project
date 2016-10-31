@@ -11,6 +11,7 @@
 #include <QJsonDocument>
 //#include <QtScript>
 #include <QJSEngine>
+#include <QJSValue>
 #include <functional>
 #include <QThread>
 
@@ -36,6 +37,10 @@ public slots:
     void ServerExecute(QString RemoteMethodName, QVariantList InParameterList,
                         QJSValue scriptFunctor);
     void Query2Json(QString queryText, std::function<void(QVariant response)> functor);
+    void Query2Json(QString queryText, QJSValue scriptFunctor);
+    QVariant evaluate(const QString &script);
+    QVariant query(const QString &queryText);
+
 
 signals:
     void error(QString errorString);

@@ -1,7 +1,6 @@
 
 #include "interface_manager.h"
 #include "udpreceiver.h"
-//#include "KeTCP_Client.h"
 #include "Plc_station.h"
 #include "message_handler.h"
 #include "qttelnet.h"
@@ -23,7 +22,7 @@
 #include "qwebchannel.h"
 #include <QtWebSockets/QWebSocketServer>
 #include <QtQml>
-#include "ftp_writer.h"
+#include "qftp.h"
 
 //#include <QAbstractSocket>
 
@@ -192,31 +191,28 @@ void ServerFound(QHostAddress ServerAddress)
             if (jsonRow.contains("DEVICE_TYPE") && jsonRow.contains("TCPDEVICE_IP")
                    && jsonRow.contains("LOGIN") && jsonRow.contains("PASS")) {
                 if (jsonRow["DEVICE_TYPE"].toString()=="FTP") {
-                    Ftp *ftp=new Ftp(jsonRow["TCPDEVICE_IP"].toString(),jsonRow["PORT"].toInt(),
-                                     jsonRow["LOGIN"].toString(),jsonRow["PASS"].toString());
-                    ftp->setObjectName(jsonRow["DEVICE_NAME"].toString());
-                    QObject::connect(ftp, &Ftp::transferFinished,[serverRpc](quint32 taskId){
-                        qDebug()<<"transferFinished"<<taskId;
-                        //TODO query PRODUCTION_DECLARATION taskId, 1
-                    });
-                    QObject::connect(ftp, &Ftp::destroyed,[](){qDebug()<<"Ftp::destroyed";});
-
+//                    Ftp *ftp=new Ftp(jsonRow["TCPDEVICE_IP"].toString(),jsonRow["PORT"].toInt(),
+//                                     jsonRow["LOGIN"].toString(),jsonRow["PASS"].toString());
+//                    ftp->setObjectName(jsonRow["DEVICE_NAME"].toString());
+//                    QObject::connect(ftp, &Ftp::transferFinished,[serverRpc](quint32 taskId){
+//                        qDebug()<<"transferFinished"<<taskId;
+//
+//                    });
+                    QFtp *ftp = new QFtp("10.208.98.100",2144,"ftpemm","ftpemm1");
                     QTimer *fileTimer = new QTimer;
-
-                    QObject::connect(fileTimer,&QTimer::destroyed,
-                                     [](){qDebug()<<"ftp QTimer::destroyed";});
                     QObject::connect(fileTimer,&QTimer::timeout,
                                      [serverRpc,ftp,fileTimer](){
                         qDebug() << "fileTimer,&QTimer::timeout";
-                        serverRpc->Query2Json("SELECT \"SHIFT NUMBER\", PART_NAME, \"PART COUNT\" FROM PRODUCTION_PARTS_HISTORY",
+                        serverRpc->Query2Json("SELECT \"SHIFT NUMBER\", PART_NAME, PART_REFERENCE, "
+                                              "\"PART COUNT\" FROM PRODUCTION_PARTS_HISTORY",
                                      [ftp](QVariant resp){
                             qDebug() << "PRODUCTION_PARTS_HISTORY"<<resp;
                             QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
                             if(!array.isEmpty()) {
                                 QJsonObject jsonObj0=array.at(0).toObject();
-                                if(jsonObj0.contains("PART_NAME") && jsonObj0.contains("PART COUNT")
-                                                                  && jsonObj0.contains("SHIFT NUMBER")) {
-                                    QBuffer *buffer=new QBuffer;
+                                if(jsonObj0.contains("PART_REFERENCE") && jsonObj0.contains("PART_NAME") &&
+                                   jsonObj0.contains("PART COUNT") && jsonObj0.contains("SHIFT NUMBER")) {
+/*                                    QBuffer *buffer=new QBuffer;
                                     buffer->open(QBuffer::WriteOnly);
                                     for (auto object = array.begin(); object != array.end(); object++) {
                                         QJsonObject jsonObj=object->toObject();
@@ -226,8 +222,33 @@ void ServerFound(QHostAddress ServerAddress)
                                         buffer->write("\r\n");
                                     }
                                     //TODO: recognize folder
+                                    //putFile
                                     ftp->newTask(buffer,QString("Decl_%1.txt").arg(QDateTime().currentDateTime().toString("ddMMyy_hh.mm")),
                                                  jsonObj0["SHIFT NUMBER"].toInt());
+*/
+                                    QBuffer *buffer=new QBuffer;
+                                    buffer->open(QBuffer::ReadWrite);
+                                    for (auto object = array.begin(); object != array.end(); object++) {
+                                        QJsonObject jsonObj=object->toObject();
+                                        buffer->write(jsonObj["PART_REFERENCE"].toString().toLocal8Bit());
+                                        buffer->write("\t");
+                                        buffer->write(jsonObj["PART_NAME"].toString().toLocal8Bit());
+                                        buffer->write("\t");
+                                        buffer->write(QString::number(jsonObj["PART COUNT"].toInt()).toLatin1());
+                                        buffer->write("\r\n");
+                                    }
+                                    QTimer::singleShot(0,[ftp,buffer](){
+                                        buffer->setProperty("command",ftp->putBuf(buffer,
+                                            QString("Decl_%1.txt").arg(QDateTime().currentDateTime().toString("ddMMyy_hh.mm")), QFtp::Binary));
+                                    });
+                                    QObject::connect(ftp, &QFtp::commandFinished,[ftp,buffer](int command,bool res){
+                                        if(command==buffer->property("command").toInt()){
+                                            buffer->deleteLater();
+                                            //TODO query PRODUCTION_DECLARATION taskId, 1
+                                            if(res){}
+                                            else{}
+                                        }
+                                    });
                                 }
                             }
                         });
@@ -516,9 +537,9 @@ void ServerFound(QHostAddress ServerAddress)
             }
             QObject::connect(opcuaClient,&OpcUaClient::propertyChanged,
                              [opcuaClient,serverRpc](int deviceId, const QString &propertyName, const QVariant &value){
-                qDebug()<<"propertyChanged deviceId"<<deviceId<<propertyName<<value;
+//                qDebug()<<"propertyChanged deviceId"<<deviceId<<propertyName<<value;
                 if (propertyName=="inputCode" && (value.toInt()!=0)){
-                    qDebug()<<propertyName<<value.toInt();
+//                    qDebug()<<propertyName<<value.toInt();
                     serverRpc->Query2Json(QString(
                                          "SELECT DEVICE_NAME, PART_NAME FROM PRODUCTION_PART_PRODUSED (%1,%2)")
                                              .arg(value.toInt()).arg(deviceId), [](QVariant resp){

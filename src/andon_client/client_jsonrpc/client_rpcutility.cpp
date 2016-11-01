@@ -85,8 +85,9 @@ void ClientRpcUtility::ServerExecute(QString RemoteMethodName, QVariantList InPa
         }
         //qDebug() << "ServerExecute return functor";
         qDebug() << reply->response().result().toVariant();
-        if(functor==[] (QVariant response) {qDebug()<<"response"<<response;})
-            emit server_reply(RemoteMethodName, InParameterList, response);
+        if(functor==0)
+//            return [] (QVariant response) {qDebug()<<"response"<<response;}
+            emit server_reply(RemoteMethodName, InParameterList, reply->response().result().toVariant());
         else
             return functor(reply->response().result().toVariant());
     });

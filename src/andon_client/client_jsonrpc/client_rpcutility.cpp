@@ -85,7 +85,10 @@ void ClientRpcUtility::ServerExecute(QString RemoteMethodName, QVariantList InPa
         }
         //qDebug() << "ServerExecute return functor";
         qDebug() << reply->response().result().toVariant();
-        return functor(reply->response().result().toVariant());
+        if(functor==[] (QVariant response) {qDebug()<<"response"<<response;})
+            emit server_reply(RemoteMethodName, InParameterList, response);
+        else
+            return functor(reply->response().result().toVariant());
     });
 }
 
@@ -132,11 +135,6 @@ void ClientRpcUtility::Query2JsonJS(QString queryText, QJSValue scriptFunctor)
 void ClientRpcUtility::setserverip(QHostAddress newserveraddress)  {
     serveraddress = newserveraddress;
 }
-
-//void ClientRpcUtility::run(void)
-//{
-
-//}
 
 QVariant ClientRpcUtility::evaluate(const QString &script)
 {

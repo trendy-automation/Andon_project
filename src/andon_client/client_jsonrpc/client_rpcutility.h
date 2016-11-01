@@ -13,13 +13,13 @@
 #include <QJSEngine>
 #include <QJSValue>
 #include <functional>
-#include <QThread>
+//#include <QThread>
 
 //QScriptEngine->QJSEngine
 //QScriptValue->QJSValue
 
 class QJsonRpcSocket;
-class ClientRpcUtility : public QThread
+class ClientRpcUtility : public QObject
 {
     Q_OBJECT
 public:
@@ -34,13 +34,11 @@ public slots:
                           QObject * sender_obj=0, QString BackMethodName=0);
     void ServerExecute(QString RemoteMethodName, QVariantList InParameterList,
                         std::function<void(QVariant response)> functor=[] (QVariant response) { qDebug()<<"response"<<response; });
-    void ServerExecute(QString RemoteMethodName, QVariantList InParameterList,
+    void ServerExecuteJS(QString RemoteMethodName, QVariantList InParameterList,
                         QJSValue scriptFunctor);
     void Query2Json(QString queryText, std::function<void(QVariant response)> functor);
-    void Query2Json(QString queryText, QJSValue scriptFunctor);
+    void Query2JsonJS(QString queryText, QJSValue scriptFunctor);
     QVariant evaluate(const QString &script);
-    QVariant query(const QString &queryText);
-
 
 signals:
     void error(QString errorString);
@@ -50,8 +48,8 @@ private:
     QJsonRpcSocket *m_client;
     QHostAddress serveraddress;
     QJSEngine* engine;
-protected:
-    virtual void run(void);
+//protected:
+//    virtual void run(void);
 };
 
 #endif

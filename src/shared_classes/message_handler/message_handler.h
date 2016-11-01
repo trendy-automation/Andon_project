@@ -123,7 +123,7 @@ public:
                         fflush(stdout);
                     }
         }
-        if(!activeContextList->contains(contextFile))
+        if(!activeContextList->contains(contextFile) && !contextFile.isEmpty())
             activeContextList->append(contextFile);
     }
 

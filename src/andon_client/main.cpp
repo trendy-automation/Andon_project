@@ -95,7 +95,7 @@ void ServerFound(QHostAddress ServerAddress)
     InterfaceManager* IM = new InterfaceManager;
     IM->InitVKeyboard();
     ClientRpcUtility *serverRpc = new ClientRpcUtility;
-    serverRpc->start();
+//    serverRpc->start();
     QObject::connect(serverRpc,&ClientRpcUtility::error,[=](QString errorString){
         qDebug()<<errorString;
         IM->setEnabled(false);
@@ -213,11 +213,11 @@ void ServerFound(QHostAddress ServerAddress)
                     QTimer *fileTimer = new QTimer;
                     QObject::connect(fileTimer,&QTimer::timeout,
                                      [serverRpc,ftp,fileTimer](){
-                        qDebug() << "fileTimer,&QTimer::timeout";
+//                        qDebug() << "fileTimer,&QTimer::timeout";
                         serverRpc->Query2Json("SELECT \"SHIFT NUMBER\", PART_NAME, PART_REFERENCE, "
                                               "\"PART COUNT\" FROM PRODUCTION_PARTS_HISTORY",
                                      [ftp](QVariant resp){
-                            qDebug() << "PRODUCTION_PARTS_HISTORY"<<resp;
+//                            qDebug() << "PRODUCTION_PARTS_HISTORY"<<resp;
                             QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
                             if(!array.isEmpty()) {
                                 QJsonObject jsonObj0=array.at(0).toObject();
@@ -613,6 +613,9 @@ int main(int argc, char *argv[])
     qmlRegisterType<InterfaceManager>("com.andon.interfacemanager", 1, 0, "InterfaceManager");
     qmlRegisterType<QTimer>("com.andon.timer", 1, 0, "QTimer");
     qmlRegisterType<MessageHandler>("com.andon.messagehandler", 1, 0, "MessageHandler");
+//    qmlRegisterType<QJSEngine>("com.andon.QJSEngine", 1, 0, "QJSEngine");
+//    qmlRegisterType<QJSValue>("com.andon.QJSValue", 1, 0, "QJSValue");
+//    qmlRegisterSingletonType<QJSValue>("com.andon.QJSValue", 1, 0, "QJSValue",);
 //    qmlRegisterType<MessageHandler>("com.andon.messagehandler", 1, 0, "MessageHandler");
 
     //qRegisterMetaType<QAbstractSocket::SocketError>("QAbstractSocket::SocketError");
@@ -642,9 +645,9 @@ int main(int argc, char *argv[])
         ServerFound(ServerAddress);
         // TODO: solve vkeyboard error "using null output device, none available"
     });
-    QObject::connect(udpreceiver, &UdpReceiver::destroyed,[](){qDebug()<<"UdpReceiver::destroyed";});
-    QObject::connect(&msgHandler, &MessageHandler::destroyed,[](){qDebug()<<"MessageHandler::destroyed";});
-    QObject::connect(&singleApp, &SingleAppRun::destroyed,[](){qDebug()<<"SingleAppRun::destroyed";});
+//    QObject::connect(udpreceiver, &UdpReceiver::destroyed,[](){qDebug()<<"UdpReceiver::destroyed";});
+//    QObject::connect(&msgHandler, &MessageHandler::destroyed,[](){qDebug()<<"MessageHandler::destroyed";});
+//    QObject::connect(&singleApp, &SingleAppRun::destroyed,[](){qDebug()<<"SingleAppRun::destroyed";});
     QObject::connect(&a, &QApplication::aboutToQuit,&msgHandler,&MessageHandler::deleteLater);
 //    QObject::connect(&a, &QApplication::aboutToQuit,[&msgHandler](){msgHandler.deleteLater();});
 

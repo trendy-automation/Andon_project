@@ -22,15 +22,16 @@
 //TODO: my huck. setup include
 #include "../../SmtpClient/src/SmtpMime"
 
-//??????????
-#include "mimepart.h"
-#include "mimehtml.h"
-#include "mimeattachment.h"
-#include "mimemessage.h"
-#include "mimetext.h"
-#include "mimeinlinefile.h"
-#include "mimefile.h"
-//??????????
+//#include "SmtpMime"
+////??????????
+//#include "mimepart.h"
+//#include "mimehtml.h"
+//#include "mimeattachment.h"
+//#include "mimemessage.h"
+//#include "mimetext.h"
+//#include "mimeinlinefile.h"
+//#include "mimefile.h"
+////??????????
 
 #include <QBuffer>
 

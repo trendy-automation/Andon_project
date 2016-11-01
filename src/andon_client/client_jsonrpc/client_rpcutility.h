@@ -33,7 +33,7 @@ public slots:
     void Call_server_proc(QString RemoteMethodName, QString InParameterList,
                           QObject * sender_obj=0, QString BackMethodName=0);
     void ServerExecute(QString RemoteMethodName, QVariantList InParameterList,
-                        std::function<void(QVariant response)> functor=[] (QVariant response) { qDebug()<<"response"<<response; });
+                        std::function<void(QVariant response)> functor=0);
     void ServerExecuteJS(QString RemoteMethodName, QVariantList InParameterList,
                         QJSValue scriptFunctor);
     void Query2Json(QString queryText, std::function<void(QVariant response)> functor);

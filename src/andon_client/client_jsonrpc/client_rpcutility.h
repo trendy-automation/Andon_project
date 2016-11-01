@@ -43,6 +43,7 @@ public slots:
 signals:
     void error(QString errorString);
     void server_proc_reply(QString replyString);
+    void server_reply(const QString &RemoteMethodName, const QVariantList &InParameterList, const QVariant &response);
 
 private:
     QJsonRpcSocket *m_client;

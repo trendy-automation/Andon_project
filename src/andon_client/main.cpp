@@ -25,6 +25,7 @@
 #include "qftp.h"
 
 //#include <QAbstractSocket>
+Q_DECLARE_METATYPE (std::function<void(QVariant)>)
 
 
 template<class T>
@@ -134,6 +135,8 @@ void ServerFound(QHostAddress ServerAddress)
     //serverRpc->setObjectName("serverRpc");
     serverRpc->setserverip(ServerAddress);
     QJSEngine *engine = new QJSEngine;
+    engine->installExtensions(QJSEngine::ConsoleExtension);
+
 //    QJSValue result = myEngine.evaluate('');
 //      if (result.isError())
 //          qDebug() << "Uncaught exception at line"
@@ -147,7 +150,6 @@ void ServerFound(QHostAddress ServerAddress)
         engine->globalObject().setProperty("msgHandler",engine->newQObject(msgHandler));
     engine->globalObject().setProperty("IM",engine->newQObject(IM));
     engine->globalObject().setProperty("serverRpc",engine->newQObject(serverRpc));
-    qDebug() << "serverRpc->query" << serverRpc->query("SELECT * FROM PRODUCTION_PARTS_HISTORY");
 //    QJSValue ScriptFunctor = engine->newFunction(construct_Functor);
 //    QJSValue construct_QTimer = engine->evaluate("function QTimer() {}");
 //    construct_QTimer.setPrototype(engine->newQObject(new QTimer));
@@ -164,6 +166,15 @@ void ServerFound(QHostAddress ServerAddress)
     IM->setServerRpc(serverRpc);
     IM->setEngine(engine);
     serverRpc->setEngine(engine);
+//    qDebug() << "serverRpc->ServerExecute";
+//    serverRpc->ServerExecute("SQLQuery2Json",
+//           QVariantList()<<"SELECT * FROM PRODUCTION_PARTS_HISTORY",
+//           engine->evaluate("(function foo(resp) { console.log('SQLQuery2Json result',resp);})"));
+//    serverRpc->ServerExecute("SQLQuery2Json",
+//           QVariantList()<<"SELECT * FROM PRODUCTION_PARTS_HISTORY",
+//           engine->evaluate("(function foo() { print('foo'); })"));
+
+
     if (QApplication::applicationDirPath().toLower().contains("build")) {
         IM->setGeometry(0,0,800,600);
 //        QJSEngineDebugger * ScriptDebuger = new QJSEngineDebugger;
@@ -612,7 +623,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     qmlRegisterType<InterfaceManager>("com.andon.interfacemanager", 1, 0, "InterfaceManager");
     qmlRegisterType<QTimer>("com.andon.timer", 1, 0, "QTimer");
-    qmlRegisterType<MessageHandler>("com.andon.messagehandler", 1, 0, "MessageHandler");
+//    qmlRegisterType<std::function<void(QVariant)>>("com.andon.functor", 1, 0, "std::function<void(QVariant)>");
 //    qmlRegisterType<QJSEngine>("com.andon.QJSEngine", 1, 0, "QJSEngine");
 //    qmlRegisterType<QJSValue>("com.andon.QJSValue", 1, 0, "QJSValue");
 //    qmlRegisterSingletonType<QJSValue>("com.andon.QJSValue", 1, 0, "QJSValue",);
@@ -623,6 +634,8 @@ int main(int argc, char *argv[])
 
 //    int qtype1 = qRegisterMetaType<QAbstractSocket::SocketError>("SocketError" );
 //    int qtype2 = qRegisterMetaType<QAbstractSocket::SocketState>("SocketState" );
+//    Q_DECLARE_METATYPE (std::function<void(QVariant)>);
+    qRegisterMetaType<std::function<void(QVariant)>>("std::function<void(QVariant)>");
 
     SingleAppRun singleApp;
 

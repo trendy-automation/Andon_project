@@ -497,8 +497,7 @@ QObject *InterfaceManager::addButton(const QVariant &resp, const int &ScreenNum,
     if (!updateTimer->isActive()){
         updateTimer->start();
         QObject::connect(updateTimer,&QTimer::timeout,[=](){
-            RpcTcp->ServerExecute("SQLQuery2Json",
-                                  QVariantList()<<"SELECT OBJECT_NAME, OBJECT_TEXT, USER_COMMENT "
+            RpcTcp->Query2Json("SELECT OBJECT_NAME, OBJECT_TEXT, USER_COMMENT "
                                                          " FROM CLIENT_ACTIVE_BUTTONS(:CLIENT_IP)",
                                   [=](QVariant resp){updateButtons(resp);});
         });

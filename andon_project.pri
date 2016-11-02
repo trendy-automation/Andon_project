@@ -1,3 +1,4 @@
+CONFIG  += c++11
 CONFIG  += c++14
 
 ANDNPRJ_VERSION = 2.2

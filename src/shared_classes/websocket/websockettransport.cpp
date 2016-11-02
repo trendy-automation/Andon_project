@@ -77,7 +77,7 @@ void WebSocketTransport::sendMessage(const QJsonObject &message)
 {
     QJsonDocument doc(message);
     QString msg = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
-    qDebug() <<msg;//.left(40);
+//    qDebug() <<msg;//.left(40);
 //    if (m_socket){
         m_socket->sendTextMessage(msg);
 //        qDebug() << msg.left(80);
@@ -98,7 +98,7 @@ void WebSocketTransport::textMessageReceived(const QString &messageData)
 //    qDebug() << "messageData:" << messageData;//.left(40);
     QJsonParseError error;
     QJsonDocument message = QJsonDocument::fromJson(messageData.toUtf8(), &error);
-    qDebug() << "message:" << message;//.left(40);
+//    qDebug() << "message:" << message;//.left(40);
     if (error.error) {
         qWarning() << "Failed to parse text message as JSON object:" << messageData
                    << "Error is:" << error.errorString();

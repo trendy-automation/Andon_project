@@ -1,5 +1,7 @@
 QT       += core
 
+include($${ANDNPRJ_LIBPATH}/SmtpClient/SmtpClient.pri)
+
 # Location of SMTP Library
 SMTP_LIBRARY_LOCATION = $${ANDNPRJ_LIBPATH}/SmtpClient/
 
@@ -13,6 +15,7 @@ DEPENDPATH += $$SMTP_LIBRARY_LOCATION
 INCLUDEPATH += $${ANDNPRJ_LIBPATH}/SmtpClient/src
 
 INCLUDEPATH+=$$PWD
+
 HEADERS += $$PWD/sendemail.h
 SOURCES += $$PWD/sendemail.cpp
 

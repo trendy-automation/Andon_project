@@ -147,7 +147,7 @@ void ServerFound(QHostAddress ServerAddress)
         engine->globalObject().setProperty("msgHandler",engine->newQObject(msgHandler));
     engine->globalObject().setProperty("IM",engine->newQObject(IM));
     engine->globalObject().setProperty("serverRpc",engine->newQObject(serverRpc));
-
+    qDebug() << "serverRpc->query" << serverRpc->query("SELECT * FROM PRODUCTION_PARTS_HISTORY");
 //    QJSValue ScriptFunctor = engine->newFunction(construct_Functor);
 //    QJSValue construct_QTimer = engine->evaluate("function QTimer() {}");
 //    construct_QTimer.setPrototype(engine->newQObject(new QTimer));

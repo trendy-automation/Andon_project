@@ -18,7 +18,7 @@
 //QScriptEngine->QJSEngine
 //QScriptValue->QJSValue
 
-//Q_DECLARE_METATYPE (std::function<QVariant(QVariant)>)
+//Q_DECLARE_METATYPE (std::function<void(QVariant)>)
 //Q_DECLARE_SMART_POINTER_METATYPE(std::function<QVariant(QVariant)>)
 
 class QJsonRpcSocket;
@@ -40,22 +40,19 @@ public:
 
 public slots:
     void setEngine(QJSEngine *SharedEngine);
-//    void Call_server_proc(QString RemoteMethodName, QString InParameterList,
-//                          QObject * sender_obj=0, QString BackMethodName=0);
-    void ServerExecute(QString RemoteMethodName, QVariantList InParameterList,
+    QJsonRpcServiceReply *ServerExecute(const QString &RemoteMethodName, QVariantList InParameterList,
                         std::function<void(QVariant)> functor=0);
-    QJsonRpcServiceReply *ServerExecuteRet(QString RemoteMethodName, QVariantList InParameterList);
-    QVariant ServerExecuteJS(QString RemoteMethodName, QVariantList InParameterList,
-                        QString scriptFunctor);
-    void Query2Json(QString queryText, std::function<void(QVariant)> functor=0);
-    void Query2JsonJS(QString queryText, QString scriptFunctor);
-    QVariant evaluate(const QString &script);
-    QVariant query(QString queryText);
+    void ServerExecute(const QString &RemoteMethodName, QVariantList InParameterList,
+                        QJSValue scriptFunctor);
+    void Query2Json(const QString &queryText, std::function<void(QVariant)> functor=0);
+    void Query2Json(const QString &queryText, QJSValue scriptFunctor);
+    QVariant query(const QString &queryText);
+    QVariant evaluate(const QString &scriptText);
 
 signals:
     void error(QString errorString);
     void server_proc_reply(QString replyString);
-    void server_reply(const QString &RemoteMethodName, const QVariantList &InParameterList, const QVariant &response);
+//    void Query2Json(const QString &queryText, std::function<void(QVariant)> functor=0);
 
 private:
     QJsonRpcSocket *m_client;

@@ -1,6 +1,6 @@
 QT       += core
 
-include($${ANDNPRJ_LIBPATH}/SmtpClient/SmtpClient.pri)
+#include($${ANDNPRJ_LIBPATH}/SmtpClient/SmtpClient.pri)
 
 # Location of SMTP Library
 SMTP_LIBRARY_LOCATION = $${ANDNPRJ_LIBPATH}/SmtpClient/

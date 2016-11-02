@@ -19,10 +19,9 @@
 
 #include <QObject>
 
-//TODO: my huck. setup include
-#include "../../SmtpClient/src/SmtpMime"
+//#include "../../SmtpClient/src/SmtpMime"
 
-//#include "SmtpMime"
+#include "SmtpMime"
 ////??????????
 //#include "mimepart.h"
 //#include "mimehtml.h"

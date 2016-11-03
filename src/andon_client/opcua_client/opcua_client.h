@@ -33,6 +33,8 @@ public slots:
 signals:
     void serverFound();
     void propertyChanged(int deviceId, const QString &propertyName, const QVariant &value);
+//    void newEvent(QVector<QVariant> value) const;
+
 private:
     bool subscribePropertiy(QOpcUaNode *propertiy);
 

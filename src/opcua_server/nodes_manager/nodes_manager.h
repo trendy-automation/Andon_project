@@ -31,7 +31,6 @@ public:
     void DataChange(uint32_t handle, const Node& node, const Variant& val, AttributeId attr) Q_DECL_OVERRIDE;
 
 public slots:
-
     //void adjustTemperature();
 signals:
     //void propertyChanged(const Node& node, const Variant& val, AttributeId attr) Q_DECL_OVERRIDE;
@@ -53,7 +52,8 @@ private:
     uint32_t    m_idx;
 //    std::unique_ptr<Subscription> sub ;
     std::unique_ptr<Subscription> m_subscription;
-    OpcUa::Event m_eventInjection;
+//    OpcUa::Event m_eventInjection;
+    QMap<Node*,OpcUa::Event> m_events;
 
     //QTimer m_timer;
 };

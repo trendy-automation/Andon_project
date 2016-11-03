@@ -1,6 +1,6 @@
 QJSONRPC_VERSION = 1.1.0
 
-include(http-parser/http-parser.pri)
+#include(http-parser/http-parser.pri)
 DEFINES +=QJSONRPC_ALIVE_TIMEOUT=60000
 
 isEmpty(QJSONRPC_LIBRARY_TYPE) {

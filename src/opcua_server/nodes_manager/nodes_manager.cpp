@@ -10,18 +10,18 @@
 
 using namespace OpcUa;
 
-//class SubClient : public SubscriptionHandler
-//{
-//    void DataChange(uint32_t handle, const Node& node, const Variant& val, AttributeId attr) override
-//    {
-//        Q_UNUSED(handle);
-//        qDebug() << handle << QString::fromStdString(node.ToString()) << QString::fromStdString(val.ToString()) << (uint32_t)attr;
-//        m_server->TriggerEvent(*m_event);
-//    }
-//public:
-//    UaServer *m_server;
-//    OpcUa::Event *m_event;
-//};
+class SubClient : public SubscriptionHandler
+{
+    void DataChange(uint32_t handle, const Node& node, const Variant& val, AttributeId attr) override
+    {
+        qDebug() << handle << QString::fromStdString(node.ToString())
+                 << QString::fromStdString(val.ToString()) << (uint32_t)attr;
+        m_server->TriggerEvent(*m_event);
+    }
+public:
+    UaServer *m_server;
+    OpcUa::Event *m_event;
+};
 
 
 NodesManager::NodesManager(QObject *parent)
@@ -47,13 +47,18 @@ NodesManager::NodesManager(QObject *parent)
 //    qDebug() << 7;
     m_idx = m_server->RegisterNamespace("http://qt-project.org");
 //    m_eventInjection = OpcUa::Event(ObjectId::BaseEventType);
+//    m_eventInjection.Severity = 2;
+//    m_eventInjection.SourceName = "Injection_done";
+//    m_eventInjection.Time = DateTime::Current();
+//    m_eventInjection.Message = LocalizedText(QString("Part with code %1 is injected")
+//        .arg(val.value<quint32>()).toStdString());
 
 //    // Workaround for not having server side methods
-//    SubClient clt;
-//    clt.m_event = &m_eventInjection;
-//    clt.m_server = m_server;
-//    std::unique_ptr<Subscription> sub = m_server->CreateSubscription(100, *this);
-//    sub->SubscribeDataChange(m_root);
+    SubClient clt;
+    clt.m_event = &m_eventInjection;
+    clt.m_server = m_server;
+    std::unique_ptr<Subscription> sub = m_server->CreateSubscription(100, *this);
+    sub->SubscribeDataChange(m_root);
 }
 
 NodesManager::~NodesManager()
@@ -126,13 +131,14 @@ void NodesManager::DataChange(uint32_t handle, const Node &node, const Variant &
 
 void NodesManager::loadKeObject(KeTcpObject *keObject)
 {
+    QString keName = keObject->getDeviceName();
             Node * keNode = new Node(m_root.AddObject(
-                                     QString("ns=2;s=%1").arg(keObject->getDeviceName()).toStdString(),
-                                     keObject->getDeviceName().toStdString()));
-//            qDebug()<<"AddObject"<<QString("ns=2;s=%1").arg(keObject->getDeviceName());
-            QObject::connect(keObject,&KeTcpObject::disconnected,[this,keObject,keNode](){
-                qDebug() << keObject->getDeviceName() << "disconnected";
-//                m_root.GetChild(keObject->getDeviceName().toStdString()).SetValue(Variant());
+                                     QString("ns=2;s=%1").arg(keName).toStdString(),
+                                     keName.toStdString()));
+//            qDebug()<<"AddObject"<<QString("ns=2;s=%1").arg(keName);
+            QObject::connect(keObject,&KeTcpObject::disconnected,[this,keObject,keNode,keName](){
+                qDebug() << keName << "disconnected";
+//                m_root.GetChild(keName.toStdString()).SetValue(Variant());
 //                keNode->SetValue(Variant());
 //                delete keNode;
                 //TODO: clean Object if it is disconnected
@@ -140,33 +146,35 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
             });
 
 //            QMetaObject::Connection m_connection =
-                    QObject::connect(keObject,&KeTcpObject::ready,[this,keObject,keNode](){ //&m_connection
+            QObject::connect(keObject,&KeTcpObject::ready,[this,keObject,keNode,keName](){ //&m_connection
                 QVariantMap properties = keObject->getProperties();
-                qDebug() << keObject->getDeviceName() << "ready" << properties.count();
-                std::vector<Node> evtNodes = keNode->GetChildren();
-                for (uint i=0; i<properties.count(); ++i){
+//                qDebug() << keName << "ready" << properties.count();
+//                std::vector<Node> evtNodes = keNode->GetChildren();
+                for (auto p=properties.constBegin();p!=properties.constEnd();++p){
                     bool isExist=false;
-                    for (uint j=0;j<evtNodes.size();++j)
-                        if(evtNodes.at(j).GetBrowseName().Name==properties.keys().at(i).toStdString()) {
+//                    for (auto n=evtNodes.begin();n!=evtNodes.end();++n)
+                    for (auto &n:keNode->GetChildren())
+                        if(n.GetBrowseName().Name==p.key().toStdString()) {
+                            n.SetValue(varConv(p.value()));
                             isExist=true;
-                            evtNodes.at(j).SetValue(varConv(properties.values().at(i)));
                             break;
                         }
-//                    qDebug() << keObject->getDeviceName() << "ready";
+//                    qDebug() << keName << "ready";
                     if (!isExist) {
-                        qDebug() << properties.keys().at(i).toLatin1() << "=" << properties.values().at(i);
-                        Node propertyNode(keNode->AddProperty(
-                            QString("ns=3;s=%1.%2").arg(keObject->getDeviceName()).arg(properties.keys().at(i)).toStdString(),
-                            properties.keys().at(i).toStdString(), varConv(properties.values().at(i))));
-
-
-//                        if(properties.keys().at(i).toLatin1()=="inputCode") {
-//                            m_eventInjection.SourceNode = propertyNode.GetId();
-//                            //m_subscription->SubscribeDataChange(propertyNode.GetId());
-//                        }
-
-
-    //                    m_subscription->SubscribeDataChange(propertyNode);
+                        qDebug()<< "Add node" << p.key().toLatin1() << "=" << p.value();
+                        Node * propertyNode = new Node(keNode->AddProperty(
+                            QString("ns=3;s=%1.%2").arg(keName).arg(p.key()).toStdString(),
+                            p.key().toStdString(), varConv(p.value())));
+                        if(p.key().toLatin1()=="inputCode") {
+                            qDebug()<<"m_events.insert(propertyNode,new OpcUa::Event(propertyNode))";
+                            OpcUa::Event evt = OpcUa::Event(ObjectId::BaseEventType);
+//                            OpcUa::Event evt = OpcUa::Event(*propertyNode);
+                            evt.Severity = 2;
+                            evt.SourceNode = propertyNode->GetId();
+                            evt.SourceName = propertyNode->GetId().GetStringIdentifier();
+                            evt.Time = DateTime::Current();
+                            m_events.insert(propertyNode,evt);
+                        }
                     }
                 }
 //                QObject::disconnect(m_connection);
@@ -176,29 +184,40 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
 
             QObject::connect(keObject,&KeTcpObject::IOEvent,[this,keObject,keNode](const QString &ioName,const QVariant &val){
                 qDebug()<< keObject->getDeviceName() << ioName << val;
-              std::vector<Node> evtNodes = keNode->GetChildren();
-                //TODO save IDs for properties
-//                Node evtNode=keNode->GetChild(ioName.toStdString());
-              bool isExist = false;
-              for (int i=0;i<evtNodes.size();++i)
-                  if(evtNodes.at(i).GetBrowseName().Name==ioName.toStdString()) {
-//                      if(evtNodes.at(i).GetValue()!=varConv(val))
-                          evtNodes.at(i).SetValue(varConv(val));
-                      isExist = true;
-                  }
-              if (!isExist)
-                  qDebug()<< keObject->getDeviceName() << "missing child" << ioName;
+//              bool isExist = false;
+                for (auto &n:keNode->GetChildren())
+                    if(n.GetBrowseName().Name==ioName.toStdString()) {
+                        n.SetValue(varConv(val));
+//                        isExist = true;
+                        break;
+                    }
+//              if (!isExist)
+//                  qDebug()<< keObject->getDeviceName() << "missing child" << ioName;
 //              else
+                if(m_events.contains(keNode)){
+                    OpcUa::Event evt=m_events.value(keNode);
+                    evt.SetValue(ioName.toStdString(),varConv(val));
+                    evt.Message = LocalizedText(QString("Part with code %1 is injected")
+                        .arg(val.value<quint32>()).toStdString());
+                    evt.Time=DateTime::Current();
+                    m_server->TriggerEvent(evt);
+                    m_events[keNode]=evt;
+
+//                    m_events.value(keNode).SetValue(ioName.toStdString(),varConv(val));
+//                    m_events.value(keNode).Message = LocalizedText(QString("Part with code %1 is injected")
+//                        .arg(val.value<quint32>()).toStdString());
+//                    m_server->TriggerEvent(m_events.value(keNode));
+                    qDebug()<<"event"<<QString::fromStdString(m_events.value(keNode).SourceNode.StringData.Identifier);
+                }
 //                  if(ioName=="inputCode"){
-// //                      qDebug()  << keObject->getDeviceName() << "event inputCode" << val.value<quint32>();
-//                      m_eventInjection.Severity = 2;
-//                      m_eventInjection.SourceNode = keNode->GetId(); //propertyNode.GetId();
-//                      m_eventInjection.SourceName = "Injection_done";
+//                       qDebug()  << keObject->getDeviceName() << "event inputCode" << val.value<quint32>();
 //                      m_eventInjection.Time = DateTime::Current();
 //                      m_eventInjection.Message = LocalizedText(QString("Part with code %1 is injected")
 //                          .arg(val.value<quint32>()).toStdString());
-// //                      m_eventInjection.SetValue(ioName.toStdString(),varConv(val));
-//                      m_server->TriggerEvent(m_eventInjection);
+//                      m_events.insert(keNode);
+
+//                      if(m_eventInjection.SourceNode==keNode->GetId())
+//                          m_server->TriggerEvent(m_eventInjection);
 //                  }
             });
 }

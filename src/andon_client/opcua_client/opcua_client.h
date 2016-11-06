@@ -25,20 +25,23 @@ public:
 
 public slots:
     void monitorNode(int deviceId, const QString &objectName);
-    void updateValue(QVector<QVariant> value);
-    void processValue(QVariant value);
+    void updateValue(QVector<QVariant> value);    
     void appendObject(int deviceId, const QString &objectName);
 
 
 signals:
     void serverFound();
     void propertyChanged(int deviceId, const QString &propertyName, const QVariant &value);
-//    void newEvent(QVector<QVariant> value) const;
+
+private slots:
+    void processValue(QVariant value);
+    void processEvent(QVector<QVariant> value);
 
 private:
-    bool subscribePropertiy(QOpcUaNode *propertiy);
+    bool subscribeProperty(QOpcUaNode *property);
 
-    QList<QOpcUaMonitoredValue*>  m_monitorList;
+    QList<QOpcUaMonitoredValue*>  m_monitoredValues;
+    QList<QOpcUaMonitoredEvent*>  m_monitoredEvents;
     QOpcUaSubscription   *m_valueSubscription;
     QOpcUaSubscription   *m_eventSubscription;
 

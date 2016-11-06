@@ -83,10 +83,10 @@ OpcUaClient::OpcUaClient(QObject *parent)
             else {
                 if (!m_isConnected){
                     if (m_pClient->isConnected()) {
-//                        qDebug()<<"m_monitorList m_valueSubscription deleteLater";
+//                        qDebug()<<"m_monitoredValues m_valueSubscription deleteLater";
                         m_pClient->disconnectFromEndpoint();
-                        while (!m_monitorList.isEmpty())
-                            m_monitorList.takeLast()->deleteLater();
+                        while (!m_monitoredValues.isEmpty())
+                            m_monitoredValues.takeLast()->deleteLater();
                         m_valueSubscription->deleteLater();
                     }
                     qDebug()<<"OPCUA server found";
@@ -111,71 +111,91 @@ void OpcUaClient::monitorNode(int deviceId, const QString &objectName)
 {
     QOpcUaNode* node = m_pClient->node(QString(objectName).prepend("ns=2;s="));
     if(node){
+        m_monitoredEvents.append(m_valueSubscription->addEvent(node));
+//        m_monitoredEvents.append(new QOpcUaMonitoredEvent(node, m_valueSubscription, this));
+        if (m_monitoredEvents.last()) {
+            qDebug()<<"Subscribe success to event"<<node->name()
+                    <<"m_monitoredEvents.last()"<<m_monitoredEvents.last();
+            m_monitoredEvents.last()->setProperty("nodename",node->name());
+            QObject::connect(m_monitoredEvents.last(), &QOpcUaMonitoredEvent::newEvent,
+                             this,&OpcUaClient::processEvent);
+
+//                             [this](QVector<QVariant> value){
+//                QOpcUaMonitoredEvent *sender = qobject_cast<QOpcUaMonitoredEvent *>(QObject::sender());
+//                if(sender) {
+//                qDebug()<<sender->objectName()<<value;
+//                }
+//            });
+
+        }
+        else
+            qDebug()<<"Failed subscribe to event"<<node->name();
+
+
+
+
         QStringList properties = node->childIds();
         //TODO all fields to constant string (inputCode)
         //TODO tag system in DB
         QListIterator<QString> prop(properties);
         qDebug()<<node->name()<<properties.count()<<"properties";
         while (prop.hasNext()) {
-            QString propertiyName(prop.next());
-            if(propertiyName.split(".").last()==constInputCode){
-                QOpcUaNode* propertiyNode = m_pClient->node(propertiyName);
-                propertiyNode->setProperty(constDevId,deviceId);
-                subscribePropertiy(propertiyNode);
+            QString propertyName(prop.next());
+            if(propertyName.split(".").last()==constInputCode){
+                QOpcUaNode* propertyNode = m_pClient->node(propertyName);
+                propertyNode->setProperty(constDevId,deviceId);
+                subscribeProperty(propertyNode);
             }
-            // else qDebug()<<propertiyName<<"not subscribe";
+            // else qDebug()<<propertyName<<"not subscribe";
         }
     }
     else
         qDebug()<<"Can not finde object"<<objectName;
 }
 
-bool OpcUaClient::subscribePropertiy(QOpcUaNode *propertiy)
+bool OpcUaClient::subscribeProperty(QOpcUaNode *property)
 {
 //    QString *nodeName= new QString(node->name());
-    if (propertiy) {
-        QOpcUaMonitoredEvent *monitoredEvent = m_valueSubscription->addEvent(propertiy);
+    if (property) {
+        QOpcUaMonitoredEvent *monitoredEvent = m_valueSubscription->addEvent(property);
         if (monitoredEvent) {
-            qDebug()<<"Subscribe success to event"<<propertiy->name();
-            qDebug()<<"monitoredEvent parent"<<monitoredEvent->parent();
-            monitoredEvent->setParent(this);
-            qDebug()<<"monitoredEvent parent"<<monitoredEvent->parent();
+            qDebug()<<"Subscribe success to event"<<property->name();
             QObject::connect(monitoredEvent, &QOpcUaMonitoredEvent::newEvent,
-                             [=](QVector<QVariant> value){qDebug()<<propertiy->name()<<value;});
+                             [=](QVector<QVariant> value){qDebug()<<property->name()<<value;});
         }
         else
-            qDebug()<<"Failed subscribe to event"<<propertiy->name();
+            qDebug()<<"Failed subscribe to event"<<property->name();
 
-//        if (propertiy->name().compare(constInputCode)==0) {
-//           QOpcUaMonitoredEvent *monitoredEvent=m_eventSubscription->addEvent(propertiy);
+//        if (property->name().compare(constInputCode)==0) {
+//           QOpcUaMonitoredEvent *monitoredEvent=m_eventSubscription->addEvent(property);
 //           if (monitoredEvent) {
-//               qDebug()<<"Subscribe success to event"<<propertiy->name();
+//               qDebug()<<"Subscribe success to event"<<property->name();
 //               QObject::connect(monitoredEvent, &QOpcUaMonitoredEvent::newEvent, this, &OpcUaClient::updateValue);
 //               //return true;
 //           }
 //           else
-//               qDebug()<<"Failed subscribe to event"<<propertiy->name();
+//               qDebug()<<"Failed subscribe to event"<<property->name();
 //        }
             qDebug()<<8;
-            m_monitorList.append(m_valueSubscription->addValue(propertiy));
+            m_monitoredValues.append(m_valueSubscription->addValue(property));
             qDebug()<<9;
-            if (m_monitorList.last()) {
-//                m_monitorList.last()->setProperty(constObjName,propertiy->property(constObjName));
-                m_monitorList.last()->setProperty(constDevId,propertiy->property(constDevId));
-                m_monitorList.last()->setProperty(constPropName,propertiy->name());
-                qDebug()<<"Subscribe success to value"<<propertiy->name();
-                QObject::connect(m_monitorList.last(), &QOpcUaMonitoredValue::valueChanged,
+            if (m_monitoredValues.last()) {
+//                m_monitoredValues.last()->setProperty(constObjName,property->property(constObjName));
+                m_monitoredValues.last()->setProperty(constDevId,property->property(constDevId));
+                m_monitoredValues.last()->setProperty(constPropName,property->name());
+                qDebug()<<"Subscribe success to value"<<property->name();
+                QObject::connect(m_monitoredValues.last(), &QOpcUaMonitoredValue::valueChanged,
                         this,&OpcUaClient::processValue);
 //                        [this](QVariant value){
 //                });
                 return true;
             }
             else {
-                m_monitorList.removeLast();
+                m_monitoredValues.removeLast();
 //                qDebug()<<"Can not subscribe to"<<*nodeName;
             }
         }
-    qDebug()<<"Can not subscribe to"<<propertiy->name();
+    qDebug()<<"Can not subscribe to"<<property->name();
     return false;
 }
 
@@ -192,6 +212,14 @@ void OpcUaClient::processValue(QVariant value)
                              sender->property(constPropName).toString(),value);
     }
 
+}
+
+void OpcUaClient::processEvent(QVector<QVariant> value)
+{
+    QOpcUaMonitoredEvent *sender = qobject_cast<QOpcUaMonitoredEvent *>(QObject::sender());
+    if(sender) {
+        qDebug()<<sender<<sender->property("nodename").toString()<<value;
+    }
 }
 
     void OpcUaClient::updateValue(QVector<QVariant> value)

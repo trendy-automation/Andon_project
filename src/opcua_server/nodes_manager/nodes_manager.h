@@ -51,9 +51,9 @@ private:
     Node m_root;
     uint32_t    m_idx;
 //    std::unique_ptr<Subscription> sub ;
-    std::unique_ptr<Subscription> m_subscription;
-//    OpcUa::Event m_eventInjection;
-    QMap<Node*,OpcUa::Event> m_events;
+//    std::unique_ptr<Subscription> m_subscription;
+    OpcUa::Event m_eventInjection;
+    QMap<Node*,OpcUa::Event*> m_events;
 
     //QTimer m_timer;
 };

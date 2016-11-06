@@ -360,7 +360,8 @@ int main(int argc, char *argv[])
     QWebChannel channel;
     QObject::connect(&clientWrapper, &WebSocketClientWrapper::clientConnected,
                      &channel, &QWebChannel::connectTo);
-    channel.registerObject(QStringLiteral("webui"), WThread);
+    channel.registerObject(QStringLiteral("serverWeb"), WThread);
+    channel.registerObject(QStringLiteral("db"), andondb);
 
     QObject::connect(WThread,static_cast<void (WebuiThread::*)(const QString &sql_query,
                               std::function<void(QSqlQuery *query)> functor)>(&WebuiThread::getSqlQuery),

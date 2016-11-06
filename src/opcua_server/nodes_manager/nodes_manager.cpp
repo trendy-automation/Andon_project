@@ -5,6 +5,8 @@
 #include <QDataStream>
 #include <QBitArray>
 
+#include <QTimer>
+
 //#include <QApplication>
 
 
@@ -32,33 +34,41 @@ NodesManager::NodesManager(QObject *parent)
 //        m_server->Stop();
 //    });
 //    m_server = new UaServer(false /*debug*/);
-//    qDebug() << 1;
+    qDebug() << "" << 1;
     m_server->SetServerName("Andon OPCUA server");
-//    qDebug() << 2;
+    qDebug() << "" << 2;
     m_server->SetEndpoint(QString("opc.tcp://%1:%2").arg(OPCUA_IP).arg(OPCUA_PORT).toStdString());
-//    qDebug() << 3;
+    qDebug() << "" << 3;
     m_server->SetServerURI(QString("urn://%1:%2").arg(OPCUA_IP).arg(OPCUA_PORT).toStdString());
-//    qDebug() << 4;
+    qDebug() << "" << 4;
     m_server->Start();
-//    qDebug() << 5;
+    qDebug() << "" << 5;
     m_server->EnableEventNotification();
-//    qDebug() << 6;
+    qDebug() << "" << 6;
     m_root = m_server->GetObjectsNode();
-//    qDebug() << 7;
+    qDebug() << "" << 7;
     m_idx = m_server->RegisterNamespace("http://qt-project.org");
-//    m_eventInjection = OpcUa::Event(ObjectId::BaseEventType);
-//    m_eventInjection.Severity = 2;
-//    m_eventInjection.SourceName = "Injection_done";
-//    m_eventInjection.Time = DateTime::Current();
-//    m_eventInjection.Message = LocalizedText(QString("Part with code %1 is injected")
-//        .arg(val.value<quint32>()).toStdString());
+    Node triggerVar = m_root.AddVariable("ns=3;s=TriggerVariable", "TriggerVariable", Variant(0));
+    Node triggerNode = m_root.AddObject("ns=3;s=TriggerNode", "TriggerNode");
 
+    m_eventInjection = OpcUa::Event(ObjectId::BaseEventType);
+    m_eventInjection.Severity = 2;
+    m_eventInjection.SourceName = "Injection_done";
+    m_eventInjection.SourceNode=triggerNode.GetId();
+    m_eventInjection.Time = DateTime::Current();
+    m_eventInjection.Message = LocalizedText("Injection event");
+    m_server->TriggerEvent(m_eventInjection);
+
+    qDebug() << "" << 8;
 //    // Workaround for not having server side methods
     SubClient clt;
     clt.m_event = &m_eventInjection;
     clt.m_server = m_server;
+    qDebug() << "" << 9;
     std::unique_ptr<Subscription> sub = m_server->CreateSubscription(100, *this);
-    sub->SubscribeDataChange(m_root);
+    qDebug() << "" << 10;
+    sub->SubscribeDataChange(triggerVar);
+    qDebug() << "" << 11;
 }
 
 NodesManager::~NodesManager()
@@ -136,6 +146,18 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
                                      QString("ns=2;s=%1").arg(keName).toStdString(),
                                      keName.toStdString()));
 //            qDebug()<<"AddObject"<<QString("ns=2;s=%1").arg(keName);
+
+
+            qDebug()<<"m_events.insert(keNode,new OpcUa::Event(keNode))";
+            OpcUa::Event *evt = new OpcUa::Event(ObjectId::BaseEventType);
+            evt->Severity = 2;
+            evt->SourceNode = keNode->GetId();
+            evt->SourceName = keNode->GetId().GetStringIdentifier();
+            evt->Time = DateTime::Current();
+            m_events.insert(keNode,evt);
+
+
+
             QObject::connect(keObject,&KeTcpObject::disconnected,[this,keObject,keNode,keName](){
                 qDebug() << keName << "disconnected";
 //                m_root.GetChild(keName.toStdString()).SetValue(Variant());
@@ -167,12 +189,11 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
                             p.key().toStdString(), varConv(p.value())));
                         if(p.key().toLatin1()=="inputCode") {
                             qDebug()<<"m_events.insert(propertyNode,new OpcUa::Event(propertyNode))";
-                            OpcUa::Event evt = OpcUa::Event(ObjectId::BaseEventType);
-//                            OpcUa::Event evt = OpcUa::Event(*propertyNode);
-                            evt.Severity = 2;
-                            evt.SourceNode = propertyNode->GetId();
-                            evt.SourceName = propertyNode->GetId().GetStringIdentifier();
-                            evt.Time = DateTime::Current();
+                            OpcUa::Event *evt = new OpcUa::Event(ObjectId::BaseEventType);
+                            evt->Severity = 2;
+                            evt->SourceNode = propertyNode->GetId();
+                            evt->SourceName = propertyNode->GetId().GetStringIdentifier();
+                            evt->Time = DateTime::Current();
                             m_events.insert(propertyNode,evt);
                         }
                     }
@@ -185,30 +206,43 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
             QObject::connect(keObject,&KeTcpObject::IOEvent,[this,keObject,keNode](const QString &ioName,const QVariant &val){
                 qDebug()<< keObject->getDeviceName() << ioName << val;
 //              bool isExist = false;
+                if(m_events.contains(keNode)){
+                    OpcUa::Event *evt=m_events.value(keNode);
+                    evt->SetValue(ioName.toStdString(),varConv(val));
+                    evt->Message = LocalizedText(QString("keNode event %1 value")
+                        .arg(val.value<quint32>()).toStdString());
+                    evt->Time=DateTime::Current();
+                    qDebug() << QString("keNode event %1 %2")
+                               .arg(val.value<quint32>()).arg(ioName);
+                    m_server->TriggerEvent(*evt);
+                    //m_events[&n]=evt;
+                }
+
                 for (auto &n:keNode->GetChildren())
                     if(n.GetBrowseName().Name==ioName.toStdString()) {
+                        qDebug()<< ioName << "node found";
                         n.SetValue(varConv(val));
 //                        isExist = true;
+                        if(m_events.contains(&n)){
+                            OpcUa::Event *evt=m_events.value(&n);
+                            evt->SetValue(ioName.toStdString(),varConv(val));
+                            evt->Message = LocalizedText(QString("Part with code %1 is injected")
+                                .arg(val.value<quint32>()).toStdString());
+                            evt->Time=DateTime::Current();
+                            m_server->TriggerEvent(*evt);
+                            //m_events[&n]=evt;
+                        }
                         break;
                     }
 //              if (!isExist)
 //                  qDebug()<< keObject->getDeviceName() << "missing child" << ioName;
 //              else
-                if(m_events.contains(keNode)){
-                    OpcUa::Event evt=m_events.value(keNode);
-                    evt.SetValue(ioName.toStdString(),varConv(val));
-                    evt.Message = LocalizedText(QString("Part with code %1 is injected")
-                        .arg(val.value<quint32>()).toStdString());
-                    evt.Time=DateTime::Current();
-                    m_server->TriggerEvent(evt);
-                    m_events[keNode]=evt;
 
 //                    m_events.value(keNode).SetValue(ioName.toStdString(),varConv(val));
 //                    m_events.value(keNode).Message = LocalizedText(QString("Part with code %1 is injected")
 //                        .arg(val.value<quint32>()).toStdString());
 //                    m_server->TriggerEvent(m_events.value(keNode));
-                    qDebug()<<"event"<<QString::fromStdString(m_events.value(keNode).SourceNode.StringData.Identifier);
-                }
+//                }
 //                  if(ioName=="inputCode"){
 //                       qDebug()  << keObject->getDeviceName() << "event inputCode" << val.value<quint32>();
 //                      m_eventInjection.Time = DateTime::Current();
@@ -219,6 +253,11 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
 //                      if(m_eventInjection.SourceNode==keNode->GetId())
 //                          m_server->TriggerEvent(m_eventInjection);
 //                  }
+            });
+
+
+            QTimer::singleShot(15000,[keObject](){
+                keObject->IOEvent("inputCode",32);
             });
 }
 

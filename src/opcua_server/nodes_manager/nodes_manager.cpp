@@ -187,15 +187,15 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
                         Node * propertyNode = new Node(keNode->AddProperty(
                             QString("ns=3;s=%1.%2").arg(keName).arg(p.key()).toStdString(),
                             p.key().toStdString(), varConv(p.value())));
-                        if(p.key().toLatin1()=="inputCode") {
-                            qDebug()<<"m_events.insert(propertyNode,new OpcUa::Event(propertyNode))";
-                            OpcUa::Event *evt = new OpcUa::Event(ObjectId::BaseEventType);
-                            evt->Severity = 2;
-                            evt->SourceNode = propertyNode->GetId();
-                            evt->SourceName = propertyNode->GetId().GetStringIdentifier();
-                            evt->Time = DateTime::Current();
-                            m_events.insert(propertyNode,evt);
-                        }
+//                        if(p.key().toLatin1()=="inputCode") {
+//                            qDebug()<<"m_events.insert(propertyNode,new OpcUa::Event(propertyNode))";
+//                            OpcUa::Event *evt = new OpcUa::Event(ObjectId::BaseEventType);
+//                            evt->Severity = 2;
+//                            evt->SourceNode = propertyNode->GetId();
+//                            evt->SourceName = propertyNode->GetId().GetStringIdentifier();
+//                            evt->Time = DateTime::Current();
+//                            m_events.insert(propertyNode,evt);
+//                        }
                     }
                 }
 //                QObject::disconnect(m_connection);
@@ -205,12 +205,13 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
 
             QObject::connect(keObject,&KeTcpObject::IOEvent,[this,keObject,keNode](const QString &ioName,const QVariant &val){
                 qDebug()<< keObject->getDeviceName() << ioName << val;
-//              bool isExist = false;
+
                 if(m_events.contains(keNode)){
                     OpcUa::Event *evt=m_events.value(keNode);
-                    evt->SetValue(ioName.toStdString(),varConv(val));
+                    evt->SetValue(keNode->GetBrowseName(),varConv(val));
                     evt->Message = LocalizedText(QString("keNode event %1 value")
                         .arg(val.value<quint32>()).toStdString());
+                    evt->SourceName=ioName.toStdString();
                     evt->Time=DateTime::Current();
                     qDebug() << QString("keNode event %1 %2")
                                .arg(val.value<quint32>()).arg(ioName);
@@ -222,16 +223,14 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
                     if(n.GetBrowseName().Name==ioName.toStdString()) {
                         qDebug()<< ioName << "node found";
                         n.SetValue(varConv(val));
-//                        isExist = true;
-                        if(m_events.contains(&n)){
-                            OpcUa::Event *evt=m_events.value(&n);
-                            evt->SetValue(ioName.toStdString(),varConv(val));
-                            evt->Message = LocalizedText(QString("Part with code %1 is injected")
-                                .arg(val.value<quint32>()).toStdString());
-                            evt->Time=DateTime::Current();
-                            m_server->TriggerEvent(*evt);
-                            //m_events[&n]=evt;
-                        }
+//                        if(m_events.contains(&n)){
+//                            OpcUa::Event *evt=m_events.value(&n);
+//                            evt->SetValue(ioName.toStdString(),varConv(val));
+//                            evt->Message = LocalizedText(QString("Part with code %1 is injected")
+//                                .arg(val.value<quint32>()).toStdString());
+//                            evt->Time=DateTime::Current();
+//                            m_server->TriggerEvent(*evt);
+//                        }
                         break;
                     }
 //              if (!isExist)
@@ -256,9 +255,9 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
             });
 
 
-            QTimer::singleShot(15000,[keObject](){
-                keObject->IOEvent("inputCode",32);
-            });
+//            QTimer::singleShot(15000,[keObject](){
+//                keObject->IOEvent("inputCode",32);
+//            });
 }
 
 Variant NodesManager::varConv(const QVariant& v) {

@@ -206,7 +206,7 @@ int main(int argc, char** argv)
 //    qDebug() << "ConnectDB";
     NodesManager *opcNodes = new NodesManager;
 //    qDebug() << "NodesManager";
-    opcNodes->initNodes();
+//    opcNodes->initNodes();
 //    qDebug("opcNodes->initNodes(server);");
 //    qDebug() << "initNodes";
     andondb->executeQuery("SELECT * FROM TBL_TCPDEVICES "

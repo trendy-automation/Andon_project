@@ -40,10 +40,10 @@ private slots:
 private:
     bool subscribeProperty(QOpcUaNode *property);
 
-    QList<QOpcUaMonitoredValue*>  m_monitoredValues;
-    QList<QOpcUaMonitoredEvent*>  m_monitoredEvents;
+//    QList<QOpcUaMonitoredValue*>  m_monitoredValues;
+//    QList<QOpcUaMonitoredEvent*>  m_monitoredEvents;
     QOpcUaSubscription   *m_valueSubscription;
-    QOpcUaSubscription   *m_eventSubscription;
+//    QOpcUaSubscription   *m_eventSubscription;
 
     QOpcUaClient        *m_pClient;
     QOpcUaProvider      *m_pProvider;

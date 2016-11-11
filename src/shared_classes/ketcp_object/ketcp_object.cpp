@@ -168,7 +168,7 @@ bool KeTcpObject::keSend(QString replay)
     return sockOpn;
 }
 
-int KeTcpObject::actResps(QString response)
+void KeTcpObject::actResps(QString response)
 {
 //    qDebug() << this->getDeviceName() << "KE response:" << response;
     QStringList  responseList=response.split(",");
@@ -321,14 +321,24 @@ int KeTcpObject::actResps(QString response)
     case 19:
         //JConfig from FLASH
         break;
+    case 20:
+        //#
+        break;
+    case 21:
+        //#EVT#EVT
+        break;
     default:
         //TODO: advanced KE switch case
         qDebug() << getDeviceName() << "unknown KE response:" << response;
-        return 0;
+//        ok=false;
+//        return 0;
         break;
     }
-    if (!ok) {qDebug() << getDeviceName() << "Bad KE response:" << response;return 0;} else
-        return KeList.indexOf(responseList[0])+1;
+    if (!ok) {qDebug() << getDeviceName() << "Bad KE response:" << response;
+//        return 0;
+    }
+//    else
+//        return KeList.indexOf(responseList[0])+1;
     //emitIfReady();
 }
 //*******************************************************************************
@@ -431,7 +441,7 @@ void KeTcpObject::watchCodesStart()
 
 QVariantMap KeTcpObject::getProperties(const QStringList &requested)
 {
-    qDebug()<<"getProperties";
+//    qDebug()<<"getProperties";
     QVariantMap keStatus;
     const QMetaObject *metaObj = KeTcpObject::metaObject();
     for (int i = metaObj->propertyOffset(); i < metaObj->propertyCount(); ++i)

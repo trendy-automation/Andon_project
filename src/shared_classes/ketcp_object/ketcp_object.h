@@ -124,7 +124,7 @@ public:
 public slots:
 //    void addIntInputMask(const QString &maskName,const QByteArray &mask);
     QVariantMap getProperties(const QStringList &requested=QStringList());
-    int  actResps(QString response);
+    void actResps(QString response);
     bool keSend(QString replay);
 
 //    bool isConnected(){return isSocketConnected();}
@@ -218,7 +218,7 @@ private:
 //    ConnectionParams par;
     //TODO: translate to QMap<QByteArray,functor> //[](){}
     QStringList      KeList = QString("#PSW;#OK;#ERR;#DAT;#WR;#WRA;#REL;#TIME;#RD;#RID;#RDR;#ADC;#TMP;"
-                                      "#IMPL;#INT;#EVT;#SLINF;#DATA_SAVE;#FLAGS;JConfig from FLASH").split(";");
+                                      "#IMPL;#INT;#EVT;#SLINF;#DATA_SAVE;#FLAGS;JConfig from FLASH;#;#EVT#EVT").split(";");
     QDateTime        KeSysStart;
 
     //Timers

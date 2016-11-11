@@ -21,6 +21,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QVariant>
+#include <QFileInfo>
+
 
 
 
@@ -64,8 +66,12 @@ public:
         QObject::connect(timerFN, &QTimer::timeout, logFile, &QFile::close);
         timerFN->start(msecsPerDay-QTime::currentTime().msecsSinceStartOfDay()+1000);
         qInstallMessageHandler(handleMessages);
+        //TODO Numering of builds
         myMessageHandler(QtDebugMsg,QMessageLogContext(),
             "_________________________________________________________");
+        myMessageHandler(QtDebugMsg,QMessageLogContext(),
+                         QString("Application %1 build %2 runing").arg(DEBUG_NAME)
+                          .arg(QFileInfo(qApp->applicationFilePath()).created().toString("ddMMyy:hh.mm")));
     }
 
     ~MessageHandler(){

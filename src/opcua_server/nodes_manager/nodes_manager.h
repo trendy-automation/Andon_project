@@ -5,19 +5,27 @@
 #include <opc/ua/subscription.h>
 #include <opc/ua/server/server.h>
 #include <opc/ua/event.h>
-#include <opc/ua/protocol/node_management.h>
-#include <opc/ua/protocol/string_utils.h>
+//#include <opc/ua/protocol/node_management.h>
+//#include <opc/ua/protocol/string_utils.h>
 #include <QVariantMap>
 #include "ketcp_object.h"
 
 
-namespace OpcUa
-{
-    class UaServer;
-    class Event;
-}
+//namespace OpcUa
+//{
+//    class UaServer;
+//    class Event;
+//}
+
+QT_BEGIN_NAMESPACE
+class UaServer;
+class Event;
+//class OpcUa;
+QT_END_NAMESPACE
 
 using namespace OpcUa;
+
+//  class SubscriptionHandler //AttributeId
 
 class NodesManager : public QObject, public SubscriptionHandler
 {
@@ -27,8 +35,7 @@ public:
     virtual ~NodesManager();
 //    void initNodes();
     void loadKeObject(KeTcpObject *keObject);
-
-//    void DataChange(uint32_t handle, const Node& node, const Variant& val, AttributeId attr) Q_DECL_OVERRIDE;
+    void DataChange(uint32_t handle, const OpcUa::Node &node, const OpcUa::Variant &val, OpcUa::AttributeId attr);
 
 public slots:
     void readProperties();
@@ -42,7 +49,7 @@ private:
 //    double m_currentTemp;
 //    double m_temperatureSetpoint;
 
-    UaServer *m_server;
+    OpcUa::UaServer m_server;
 //    Node m_currentTempNode;
 //    Node m_setPointNode;
 //    Node m_startNode;
@@ -50,9 +57,9 @@ private:
 //    Node m_stateNode;
     Node m_root;
     uint32_t    m_idx;
-//    std::unique_ptr<Subscription> sub ;
+    std::unique_ptr<Subscription> sub ;
 //    std::unique_ptr<Subscription> m_subscription;
-//    OpcUa::Event m_eventInjection;
+    OpcUa::Event m_eventInputCode;
 //    QMap<Node*,OpcUa::Event*> m_events;
 
     //QTimer m_timer;

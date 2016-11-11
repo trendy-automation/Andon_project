@@ -109,7 +109,7 @@ public:
     int cd(const QString &dir);
     int get(const QString &file, QIODevice *dev=0, TransferType type = Binary);
     int put(const QByteArray &data, const QString &file, TransferType type = Binary);
-    int putBuf(QIODevice *dev, const QString &file, TransferType type = Binary);
+    int putBuf(QIODevice *dev, const QString &file, TransferType type = Binary, int taskId=0);
     int conPut(QIODevice *dev, const QString &file, TransferType type = Binary);
     int remove(const QString &file);
     int mkdir(const QString &dir);

@@ -239,9 +239,10 @@ class QFtpCommand
 {
 public:
     QFtpCommand(QFtp::Command cmd, QStringList raw, const QByteArray &ba);
-    QFtpCommand(QFtp::Command cmd, QStringList raw, QIODevice *dev = 0);
+    QFtpCommand(QFtp::Command cmd, QStringList raw, QIODevice *dev = 0, int task = 0);
     ~QFtpCommand();
 
+    int taskId;
     int id;
     QFtp::Command command;
     QStringList rawCmds;
@@ -266,10 +267,11 @@ QFtpCommand::QFtpCommand(QFtp::Command cmd, QStringList raw, const QByteArray &b
     data.ba = new QByteArray(ba);
 }
 
-QFtpCommand::QFtpCommand(QFtp::Command cmd, QStringList raw, QIODevice *dev)
+QFtpCommand::QFtpCommand(QFtp::Command cmd, QStringList raw, QIODevice *dev, int task)
     : command(cmd), rawCmds(raw), is_ba(false)
 {
     id = idCounter.fetchAndAddRelaxed(1);
+    taskId = task;
     data.dev = dev;
 }
 
@@ -1939,7 +1941,7 @@ int QFtp::put(const QByteArray &data, const QString &file, TransferType type)
     operation (it is safe to delete it when the commandFinished() is
     emitted).
 */
-int QFtp::putBuf(QIODevice *dev, const QString &file, TransferType type)
+int QFtp::putBuf(QIODevice *dev, const QString &file, TransferType type, int taskId)
 {
 //    qDebug()<<"d->state"<<d->state<<ftpHost<<ftpPort;
     if(d->state==QFtp::Unconnected) {
@@ -1961,7 +1963,7 @@ int QFtp::putBuf(QIODevice *dev, const QString &file, TransferType type)
 //    qDebug() << cmds;
     d->pi.opType = Put;
 
-    return d->addCommand(new QFtpCommand(Put, cmds, dev));
+    return d->addCommand(new QFtpCommand(Put, cmds, dev, taskId));
 }
 
 /*!

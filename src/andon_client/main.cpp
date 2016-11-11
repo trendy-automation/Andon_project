@@ -224,64 +224,45 @@ void ServerFound(QHostAddress ServerAddress)
             if (jsonRow.contains("DEVICE_TYPE") && jsonRow.contains("TCPDEVICE_IP")
                    && jsonRow.contains("LOGIN") && jsonRow.contains("PASS")) {
                 if (jsonRow["DEVICE_TYPE"].toString()=="FTP") {
-//                    Ftp *ftp=new Ftp(jsonRow["TCPDEVICE_IP"].toString(),jsonRow["PORT"].toInt(),
-//                                     jsonRow["LOGIN"].toString(),jsonRow["PASS"].toString());
-//                    ftp->setObjectName(jsonRow["DEVICE_NAME"].toString());
-//                    QObject::connect(ftp, &Ftp::transferFinished,[serverRpc](quint32 taskId){
+                    QFtp *ftp = new QFtp(jsonRow["TCPDEVICE_IP"].toString(),jsonRow["PORT"].toInt(),
+                                         jsonRow["LOGIN"].toString(),jsonRow["PASS"].toString());
+//                    QObject::connect(ftp, &QFtp::commandFinished,[serverRpc](int taskId, bool res){
 //                        qDebug()<<"transferFinished"<<taskId;
-//
+
 //                    });
-                    QFtp *ftp = new QFtp("10.208.98.100",2144,"ftpemm","ftpemm1");
                     QTimer *fileTimer = new QTimer;
                     QObject::connect(fileTimer,&QTimer::timeout,
                                      [serverRpc,ftp,fileTimer](){
 //                        qDebug() << "fileTimer,&QTimer::timeout";
-                        serverRpc->Query2Json("SELECT \"SHIFT NUMBER\", PART_NAME, PART_REFERENCE, "
-                                              "\"PART COUNT\" FROM PRODUCTION_PARTS_HISTORY",
-                                     [ftp](QVariant resp){
-//                            qDebug() << "PRODUCTION_PARTS_HISTORY"<<resp;
+                        serverRpc->Query2Json("SELECT PART_REFERENCE, PART_COUNT FROM PRODUCTION_DECLARATING",
+                                     [ftp,serverRpc](QVariant resp){
+//                            qDebug() << "PRODUCTION_DECLARATING"<<resp;
                             QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
                             if(!array.isEmpty()) {
                                 QJsonObject jsonObj0=array.at(0).toObject();
-                                if(jsonObj0.contains("PART_REFERENCE") && jsonObj0.contains("PART_NAME") &&
-                                   jsonObj0.contains("PART COUNT") && jsonObj0.contains("SHIFT NUMBER")) {
-/*                                    QBuffer *buffer=new QBuffer;
-                                    buffer->open(QBuffer::WriteOnly);
-                                    for (auto object = array.begin(); object != array.end(); object++) {
-                                        QJsonObject jsonObj=object->toObject();
-                                        buffer->write(jsonObj["PART_NAME"].toString().toLocal8Bit());
-                                        buffer->write("\t");
-                                        buffer->write(QString::number(jsonObj["PART COUNT"].toInt()).toLatin1());
-                                        buffer->write("\r\n");
-                                    }
-                                    //TODO: recognize folder
-                                    //putFile
-                                    ftp->newTask(buffer,QString("Decl_%1.txt").arg(QDateTime().currentDateTime().toString("ddMMyy_hh.mm")),
-                                                 jsonObj0["SHIFT NUMBER"].toInt());
-*/
+                                if(jsonObj0.contains("PART_REFERENCE") && jsonObj0.contains("PART_COUNT")) {
                                     QBuffer *buffer=new QBuffer;
+                                    int taskId=jsonObj0["ID_TASK"].toInt();
+                                    buffer->setProperty("task", taskId);
                                     buffer->open(QBuffer::ReadWrite);
                                     for (auto object = array.begin(); object != array.end(); object++) {
                                         QJsonObject jsonObj=object->toObject();
-                                        buffer->write(jsonObj["PART_REFERENCE"].toString().toLocal8Bit());
+                                        buffer->write(jsonObj["PART_REFERENCE"].toString().toLatin1());
                                         buffer->write("\t");
-                                        buffer->write(jsonObj["PART_NAME"].toString().toLocal8Bit());
-                                        buffer->write("\t");
-                                        buffer->write(QString::number(jsonObj["PART COUNT"].toInt()).toLatin1());
+                                        buffer->write(jsonObj["PART_COUNT"].toString().toLatin1());
                                         buffer->write("\r\n");
                                     }
-                                    QTimer::singleShot(0,[ftp,buffer](){
+                                    QTimer::singleShot(0,[ftp,buffer,taskId](){
                                         buffer->setProperty("command",ftp->putBuf(buffer,
-                                            QString("Decl_%1.txt").arg(QDateTime().currentDateTime().toString("ddMMyy_hh.mm")), QFtp::Binary));\
+                                            QString("Decl_%1.txt").arg(QDateTime().currentDateTime().toString("ddMMyy_hh.mm")), QFtp::Binary,taskId));
                                         //TODO query PRODUCTION_DECLARATION taskId, 1
                                     });
-                                    QObject::connect(ftp, &QFtp::commandFinished,[ftp,buffer](int command,bool res){
+                                    QObject::connect(ftp, &QFtp::commandFinished,[ftp,buffer,serverRpc](int command,bool res){
                                         if(command==buffer->property("command").toInt()){
+                                            int taskId=buffer->property("task").toInt();
                                             buffer->deleteLater();
-                                            //TODO query PRODUCTION_DECLARATION taskId, 1
-                                            if(res){}
-                                            else{}
-                                            ftp->disconnect();
+                                            if(!res)taskId=-taskId;
+                                            serverRpc->Query2Json(QString("SELECT * FROM PRODUCTION_DECLARATING(%1)").arg(taskId));
                                         }
                                     });
                                 }

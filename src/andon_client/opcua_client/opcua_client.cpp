@@ -207,7 +207,7 @@ bool OpcUaClient::subscribeProperty(QOpcUaNode *property)
             if (monitoredValue) {
                 qDebug()<<"Subscribe success to value"<<property<<monitoredValue;
                 monitoredValue->setObjectName(nodeName);
-                monitoredValue->setParent(m_subscription);
+//                monitoredValue->setParent(m_subscription); Error???
                 monitoredValue->setProperty(constDevId,property->property(constDevId));
                 monitoredValue->setProperty(constCodePropName,property->name());
                 QObject::connect(monitoredValue, &QOpcUaMonitoredValue::valueChanged,

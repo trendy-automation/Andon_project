@@ -207,17 +207,17 @@ bool OpcUaClient::subscribeProperty(QOpcUaNode *property)
             if (monitoredValue) {
                 qDebug()<<"Subscribe success to value"<<property<<monitoredValue;
                 monitoredValue->setObjectName(nodeName);
-//                monitoredValue->setParent(m_subscription); Error???
+//                monitoredValue->setParent(m_subscription);
                 monitoredValue->setProperty(constDevId,property->property(constDevId));
                 monitoredValue->setProperty(constCodePropName,property->name());
+//                QObject::connect(monitoredValue, &QOpcUaMonitoredValue::valueChanged, Error!!!!
+//                        this,&OpcUaClient::processValue);                             Error!!!!
                 QObject::connect(monitoredValue, &QOpcUaMonitoredValue::valueChanged,
-                        this,&OpcUaClient::processValue);
-//                QObject::connect(monitoredValue, &QOpcUaMonitoredValue::valueChanged,
-//                                 [this,monitoredValue](QVariant value){
+                                 [this,monitoredValue](QVariant value){
 //                    qDebug()<<"valueChanged"<<monitoredValue<<value;
-//                    emit propertyChanged(monitoredValue->property(constDevId).toInt(),
-//                                         monitoredValue->property(constCodePropName).toString(),value);
-//                });
+                    emit propertyChanged(monitoredValue->property(constDevId).toInt(),
+                                         monitoredValue->property(constCodePropName).toString(),value);
+                });
 //                QTimer *monTimer=new QTimer;
 //                QObject::connect(monTimer, &QTimer::timeout,
 //                                 [monitoredValue](){

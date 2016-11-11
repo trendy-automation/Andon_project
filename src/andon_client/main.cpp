@@ -25,8 +25,31 @@
 #include "qftp.h"
 
 //#include <QAbstractSocket>
-Q_DECLARE_METATYPE (std::function<void(QVariant)>)
 
+struct QueryTemplate{
+    QStringList fields;
+    QVariantList args;
+};
+//TODO class appLoader;
+//QVariant Query2Json(QString query, );
+//On eventloop
+//void QueryFunctor(QStringList)
+//{
+//    serverRpc->Query2Json(QString(
+//                         "SELECT %1 FROM %2 (%3)")
+//                             .arg(value.toInt()).arg(deviceId), [](QVariant resp){
+//        QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
+// //                        qDebug()<<"PRODUCTION_PART_PRODUSED"<<array.toVariantList();
+//        for (auto object = array.begin(); object != array.end(); object++) {
+//            QJsonObject jsonObj=object->toObject();
+//            if (jsonObj.contains("DEVICE_NAME") && jsonObj.contains("PART_NAME"))
+//                qDebug()<<jsonObj["DEVICE_NAME"].toString()<<jsonObj["PART_NAME"].toString();
+//        }
+//    });
+//}
+//OR signal - slot queryId OR qftp style OR StataMachine
+//QMap<QString,QueryTemplate> queryMap;
+//{{},{}};
 
 template<class T>
 void listenPort(T * obj, int port, int interval, int delay) {
@@ -55,18 +78,6 @@ void WebsocketInit(int websocketPort, ClientRpcUtility *serverRpc)
                      channel, &QWebChannel::connectTo);
     channel->registerObject(QStringLiteral("clientWeb"), serverRpc);
 }
-
-//QVariant ValFromQuery(const QString & query, const QString & ValName) {
-//    serverRpc->Query2Json(query,
-//                          [=](QVariant resp){
-//        QJsonDocument JsonDoc(QJsonDocument::fromJson(resp.toString().toUtf8()));
-//        QJsonObject JsonObj = JsonDoc.object();
-//        if (JsonObj.contains(ValName))
-//            return JsonObj[ValName].toVariant();
-//        else
-//            return QVariant();
-//    });
-//}
 
 void TelnetKanbanDeclare(ClientRpcUtility *serverRpc, QtTelnet *telnetClient, QByteArray kanbanNumber,
                          QByteArray user, QByteArray pass, int idDevice)
@@ -569,6 +580,7 @@ void ServerFound(QHostAddress ServerAddress)
            });
            qDebug()<<"lambda OpcUaClient fineshed";
         });
+
 
 
     QObject::connect(IM, &InterfaceManager::interfaceLoaded, [=] (){

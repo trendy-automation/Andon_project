@@ -3,6 +3,7 @@
 
 #include <QVariant>
 #include <QVector>
+#include <QTimer>
 
 
 QT_BEGIN_NAMESPACE
@@ -13,6 +14,7 @@ class QOpcUaMonitoredValue;
 class QOpcUaMonitoredEvent;
 class QOpcUaSubscription;
 QT_END_NAMESPACE
+
 
 
 class OpcUaClient : public QObject
@@ -42,12 +44,12 @@ private:
 
 //    QList<QOpcUaMonitoredValue*>  m_monitoredValues;
 //    QList<QOpcUaMonitoredEvent*>  m_monitoredEvents;
-    QOpcUaSubscription   *m_valueSubscription;
+    QOpcUaSubscription   *m_subscription;
 //    QOpcUaSubscription   *m_eventSubscription;
-
     QOpcUaClient        *m_pClient;
     QOpcUaProvider      *m_pProvider;
     QMap<int,QString>    m_nodesMap;
+    QTimer              *m_monitorTimer;
     bool                 m_isConnected=false;
 };
 

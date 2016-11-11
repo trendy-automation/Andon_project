@@ -1,5 +1,9 @@
 #include "nodes_manager.h"
-#include <opc/ua/server/server.h>
+//#include <opc/ua/server/server.h>
+//#include <opc/ua/node.h>
+//#include <opc/ua/subscription.h>
+//#include <opc/ua/event.h>
+
 
 #include <QVector>
 #include <QDataStream>
@@ -12,68 +16,74 @@
 
 using namespace OpcUa;
 
-//class SubClient : public SubscriptionHandler
-//{
-//    void DataChange(uint32_t handle, const Node& node, const Variant& val, AttributeId attr) override
-//    {
-//        qDebug() << handle << QString::fromStdString(node.ToString())
-//                 << QString::fromStdString(val.ToString()) << (uint32_t)attr;
-//        m_server->TriggerEvent(*m_event);
-//    }
-//public:
-//    UaServer *m_server;
-//    OpcUa::Event *m_event;
-//};
+/*class SubClient : public SubscriptionHandler
+{
+    void DataChange(uint32_t handle, const Node& node, const Variant& val, AttributeId attr) override
+    {
+        qDebug() << handle << QString::fromStdString(node.ToString())
+                 << QString::fromStdString(val.ToString()) << (uint32_t)attr;
+        if(m_server && m_event)
+            m_server.TriggerEvent(*m_event);
+    }
+public:
+    UaServer m_server;
+    OpcUa::Event *m_event;
+};*/
 
 
 NodesManager::NodesManager(QObject *parent)
-    : QObject(parent), m_server(new UaServer(false /*debug*/))
+    : QObject(parent)//, m_server(new UaServer(false /*debug*/))
 {
 //    QObject::connect(QApplication::instance(), &QApplication::aboutToQuit, [this](){
 //        qDebug("Stopping server");
-//        m_server->Stop();
+//        m_server.Stop();
 //    });
 //    m_server = new UaServer(false /*debug*/);
 //    qDebug() << "" << 1;
-    m_server->SetServerName("Andon OPCUA server");
+    m_server.SetServerName("Andon OPCUA server");
 //    qDebug() << "" << 2;
-    m_server->SetEndpoint(QString("opc.tcp://%1:%2").arg(OPCUA_IP).arg(OPCUA_PORT).toStdString());
+    m_server.SetEndpoint(QString("opc.tcp://%1:%2").arg(OPCUA_IP).arg(OPCUA_PORT).toStdString());
 //    qDebug() << "" << 3;
-    m_server->SetServerURI(QString("urn://%1:%2").arg(OPCUA_IP).arg(OPCUA_PORT).toStdString());
+    m_server.SetServerURI(QString("urn://%1:%2").arg(OPCUA_IP).arg(OPCUA_PORT).toStdString());
 //    qDebug() << "" << 4;
-    m_server->Start();
+    m_server.Start();
 //    qDebug() << "" << 5;
-    m_server->EnableEventNotification();
+    m_server.EnableEventNotification();
 //    qDebug() << "" << 6;
-    m_root = m_server->GetObjectsNode();
+    m_root = m_server.GetObjectsNode();
 //    qDebug() << "" << 7;
-    m_idx = m_server->RegisterNamespace("http://qt-project.org");
+    m_idx = m_server.RegisterNamespace("http://qt-project.org");
 //    Node triggerVar = m_root.AddVariable("ns=3;s=TriggerVariable", "TriggerVariable", Variant(0));
-//    Node triggerNode = m_root.AddObject("ns=3;s=TriggerNode", "TriggerNode");
+    Node triggerNode = m_root.AddObject("ns=3;s=TriggerNode", "TriggerNode");
 
-//    m_eventInjection = OpcUa::Event(ObjectId::BaseEventType);
-//    m_eventInjection.Severity = 2;
-//    m_eventInjection.SourceName = "Injection_done";
-//    m_eventInjection.SourceNode=triggerNode.GetId();
-//    m_eventInjection.Time = DateTime::Current();
-//    m_eventInjection.Message = LocalizedText("Injection event");
-//    m_server->TriggerEvent(m_eventInjection);
+//    m_eventInputCode = OpcUa::Event(ObjectId::BaseEventType);
+//    m_eventInputCode.Severity = 2;
+//    m_eventInputCode.SourceName = "Injection_done";
+//    //m_eventInputCode.SourceNode=triggerNode.GetId();
+//    m_eventInputCode.Time = DateTime::Current();
+//    m_eventInputCode.Message = LocalizedText("Injection event");
+//    QTimer::singleShot(15000,[this](){
+//        m_server.TriggerEvent(m_eventInputCode);
+//    });
+
 
     qDebug() << "" << 8;
 //    // Workaround for not having server side methods
 //    SubClient clt;
-//    clt.m_event = &m_eventInjection;
+//    qDebug() << "" << 8;
+//    clt.m_event = &m_eventInputCode;
+//    qDebug() << "" << 8;
 //    clt.m_server = m_server;
 //    qDebug() << "" << 9;
-//    std::unique_ptr<Subscription> sub = m_server->CreateSubscription(100, *this);
-//    qDebug() << "" << 10;
-//    sub->SubscribeDataChange(triggerVar);
-//    qDebug() << "" << 11;
+    sub = m_server.CreateSubscription(100, *this);
+    qDebug() << "" << 10;
+    //sub->SubscribeDataChange(triggerNode);
+    qDebug() << "" << 11;
 }
 
 NodesManager::~NodesManager()
 {
-    m_server->Stop();
+    m_server.Stop();
 }
 
 
@@ -86,20 +96,20 @@ NodesManager::~NodesManager()
 
 //    m_subscription = server->CreateSubscription(100, *this);
 
-//    m_eventInjection = new Event(ObjectId::BaseEventType); //you should create your own type
-//    m_eventInjection.EventId;
+//    m_eventInputCode = new Event(ObjectId::BaseEventType); //you should create your own type
+//    m_eventInputCode.EventId;
 
 
 //    OpcUa::Event ev(ObjectId::BaseEventType);
-//    m_eventInjection = ev;
-//    m_eventInjection = OpcUa::Event(ObjectId::BaseEventType);
-//    m_eventInjection.SetValue("Injection_done",56);
-//    m_eventInjection.Severity = 2;
-//    m_eventInjection.SourceNode = m_root.GetId(); //propertyNode.GetId();
-//    m_eventInjection.SourceName = "Injection_done";
-//    m_eventInjection.Time = DateTime::Current();
-//    m_eventInjection.Message = LocalizedText("Part_injected");
-//    m_server->TriggerEvent(m_eventInjection);
+//    m_eventInputCode = ev;
+//    m_eventInputCode = OpcUa::Event(ObjectId::BaseEventType);
+//    m_eventInputCode.SetValue("Injection_done",56);
+//    m_eventInputCode.Severity = 2;
+//    m_eventInputCode.SourceNode = m_root.GetId(); //varNode.GetId();
+//    m_eventInputCode.SourceName = "Injection_done";
+//    m_eventInputCode.Time = DateTime::Current();
+//    m_eventInputCode.Message = LocalizedText("Part_injected");
+//    m_server.TriggerEvent(m_eventInputCode);
 
 //    Node acControl = m_root.AddFolder("ns=3;s=ACControl", "ACControl");
 
@@ -119,25 +129,12 @@ NodesManager::~NodesManager()
 //    m_subscription->SubscribeDataChange(m_stopNode);
 //}
 
-//void NodesManager::DataChange(uint32_t handle, const Node &node, const Variant &val, AttributeId attr)
-//{
-//    Q_UNUSED(handle);
-//    Q_UNUSED(attr);
-
-//    qDebug() << handle << QString::fromStdString(node.ToString()) << QString::fromStdString(val.ToString()) << (uint32_t)attr;
-
-//    if (node == m_setPointNode)
-//        m_temperatureSetpoint = val.As<double>();
-
-//    if (node == m_startNode && val.As<bool>()) {
-//        m_timer.metaObject()->invokeMethod(&m_timer, "start");
-//        m_stateNode.SetValue(Variant(true));
-//    }
-//    if (node == m_stopNode && val.As<bool>()) {
-//        m_timer.metaObject()->invokeMethod(&m_timer, "stop");
-//        m_stateNode.SetValue(Variant(false));
-//    }
-//}
+void NodesManager::DataChange(uint32_t handle, const Node& node, const Variant& val, AttributeId attr)
+{
+//    qDebug() << handle << QString::fromStdString(node.ToString())
+//             << QString::fromStdString(node.GetId().GetStringIdentifier())
+//             << QString::fromStdString(val.ToString()) << (uint32_t)attr;
+}
 
 void NodesManager::loadKeObject(KeTcpObject *keObject)
 {
@@ -147,8 +144,8 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
     Node *keNode = new Node(m_root.AddObject(QString("ns=2;s=%1").arg(keName).toStdString(),
                              keName.toStdString()));
     QTimer *keWatchTimer = new QTimer;
-    QObject::connect(keWatchTimer,&QTimer::timeout,[keNode](){
-        qDebug()<<keNode<<keNode->GetChildren().size();
+    QObject::connect(keWatchTimer,&QTimer::timeout,[keName,keNode](){
+        qDebug()<<keName<<keNode<<keNode->GetChildren().size();
     });
     keWatchTimer->start(1800000);
 //    qDebug()<<"m_events.insert(keNode,new OpcUa::Event(keNode))";
@@ -173,23 +170,29 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
 
             QObject::connect(keObject,&KeTcpObject::ready,[this,keObject,keNode,keName](){ //this,&NodesManager::readProperties);
                 QVariantMap properties = keObject->getProperties();
-                qDebug() << &keName << "ready" << properties.count();
-               for (auto p=properties.constBegin();p!=properties.constEnd();++p){
+                qDebug() << keName << "ready" << properties.count();
+                QMapIterator<QString,QVariant> p(properties);
+                //for (auto p=properties.constBegin();p!=properties.constEnd();++p){
+                while (p.hasNext()) {
+                    p.next();
+                    qDebug() << 1;
                     for (Node &v:keNode->GetChildren())
                         if(v.GetBrowseName().Name==p.key().toStdString()) {
+                            qDebug() << 2;
                             v.SetValue(varConv(p.value()));
                             return;
                         }
-                    Node * propertyNode = new Node(keNode->AddProperty(
+                    Node varNode = keNode->AddVariable(
                         QString("ns=3;s=%1.%2").arg(keName).arg(p.key()).toStdString(),
-                        p.key().toStdString(), varConv(p.value())));
-                    qDebug()<< "Add property" << p.key().toLatin1() << "=" << p.value() << propertyNode;
+                        p.key().toStdString(), varConv(p.value()));
+                    qDebug()<< "Add variable" << p.key().toLatin1() << "=" << p.value() << &varNode;
+                    sub->SubscribeDataChange(varNode);
                 }
              });
 
 
             QObject::connect(keObject,&KeTcpObject::IOEvent,
-                             [this,keObject,keNode](const QString &ioName,const QVariant &val){
+                             [this,keObject,keNode,keName](const QString &ioName,const QVariant &val){
 //                qDebug()<< keObject->getDeviceName() << ioName << val;
 
 //                if(m_events.contains(keNode) && keNode){
@@ -201,13 +204,25 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
 //                    evt->Time=DateTime::Current();
 //                    qDebug() << QString("keNode event %1 %2")
 //                               .arg(val.value<quint32>()).arg(ioName);
-//                    m_server->TriggerEvent(*evt);
+//                    m_server.TriggerEvent(*evt);
 //                }
-//               std::vector<Node> nodeVec=keNode->GetChildren();
+
                 for (Node &v:keNode->GetChildren())
                     if(v.GetBrowseName().Name==ioName.toStdString()) {
+                        Variant value=varConv(val);
                         qDebug()<< keObject->getDeviceName() << ioName << val << keNode << &v;
-                        v.SetValue(varConv(val));
+                        v.SetValue(value);
+
+                        m_eventInputCode = OpcUa::Event(ObjectId::BaseEventType);
+                        m_eventInputCode.Severity = 15;
+                        m_eventInputCode.SourceName = keName.toStdString();
+                        m_eventInputCode.Time = DateTime::Current();
+                        m_eventInputCode.Message = LocalizedText(ioName.toStdString());
+                        m_eventInputCode.SetValue(v.GetBrowseName(),value);
+                        m_eventInputCode.LocalTime = DateTime::Current();
+                        m_eventInputCode.ReceiveTime = DateTime::Current();
+                        m_eventInputCode.SourceNode=v.GetId();
+                        m_server.TriggerEvent(m_eventInputCode);
                         return;
                     }
 //                    else

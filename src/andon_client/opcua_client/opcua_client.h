@@ -47,6 +47,7 @@ private:
     QOpcUaSubscription   *m_subscription;
 //    QOpcUaSubscription   *m_eventSubscription;
     QOpcUaClient        *m_pClient;
+    QOpcUaNode          *m_pRoot;
     QOpcUaProvider      *m_pProvider;
     QMap<int,QString>    m_nodesMap;
     QTimer              *m_monitorTimer;

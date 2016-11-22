@@ -54,8 +54,14 @@ NodesManager::NodesManager(QObject *parent)
 //    qDebug() << "" << 7;
     m_idx = m_server.RegisterNamespace("http://qt-project.org");
 //    Node triggerVar = m_root.AddVariable("ns=3;s=TriggerVariable", "TriggerVariable", Variant(0));
-    Node triggerNode = m_root.AddObject("ns=3;s=TriggerNode", "TriggerNode");
-
+//    Node triggerNode = m_root.AddObject("ns=3;s=TriggerNode", "TriggerNode");
+//    qDebug() << "m_root.GetId().GetNamespaceIndex" << m_root.GetId().GetNamespaceIndex();// QString::fromStdString();
+////    qDebug() << "m_root.GetId().GetEncodingValue" << m_root.GetId().GetEncodingValue();// QString::fromStdString();
+////    qDebug() << "m_root.GetId().GetIntegerIdentifier" << m_root.GetId().GetIntegerIdentifier();
+////    qDebug() << "m_root.GetId().GetBinaryIdentifier" << m_root.GetId().GetBinaryIdentifier();
+////    m_root.SetAttribute(AttributeId::BrowseName,DataValue(QualifiedName("Objects")));
+//    m_root.SetAttribute(AttributeId::NodeId,DataValue(NodeId("Objects",0)));
+//    qDebug() << "m_root.GetBrowseName()" << QString::fromStdString(m_root.GetBrowseName().Name);
 //    m_eventInputCode = OpcUa::Event(ObjectId::BaseEventType);
 //    m_eventInputCode.Severity = 2;
 //    m_eventInputCode.SourceName = "Injection_done";
@@ -67,7 +73,7 @@ NodesManager::NodesManager(QObject *parent)
 //    });
 
 
-    qDebug() << "" << 8;
+//    qDebug() << "" << 8;
 //    // Workaround for not having server side methods
 //    SubClient clt;
 //    qDebug() << "" << 8;
@@ -76,9 +82,9 @@ NodesManager::NodesManager(QObject *parent)
 //    clt.m_server = m_server;
 //    qDebug() << "" << 9;
     sub = m_server.CreateSubscription(100, *this);
-    qDebug() << "" << 10;
+//    qDebug() << "" << 10;
     //sub->SubscribeDataChange(triggerNode);
-    qDebug() << "" << 11;
+//    qDebug() << "" << 11;
 }
 
 NodesManager::~NodesManager()
@@ -175,10 +181,10 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
                 //for (auto p=properties.constBegin();p!=properties.constEnd();++p){
                 while (p.hasNext()) {
                     p.next();
-                    qDebug() << 1;
+//                    qDebug() << 1;
                     for (Node &v:keNode->GetChildren())
                         if(v.GetBrowseName().Name==p.key().toStdString()) {
-                            qDebug() << 2;
+//                            qDebug() << 2;
                             v.SetValue(varConv(p.value()));
                             return;
                         }

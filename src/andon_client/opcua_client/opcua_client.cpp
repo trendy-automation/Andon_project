@@ -14,6 +14,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QHostAddress>
+//#include <QApplication>
 
 //#include <keep_alive.h>
 
@@ -27,10 +28,11 @@ const QByteArray constFullNodeName = "propertyName";
 
 OpcUaClient::OpcUaClient(QObject *parent)
     : QObject(parent)
-    ,m_pProvider(new QOpcUaProvider(this))
+    , m_pClient(0)
+    , m_pProvider(new QOpcUaProvider(this))
     , m_subscription(0)
-    ,m_monitorTimer(new QTimer)
-    //, m_eventSubscription(0)
+    , m_monitorTimer(new QTimer)
+    , m_pRoot(0)
 {
 
     m_pClient = m_pProvider->createClient("freeopcua");
@@ -46,38 +48,33 @@ OpcUaClient::OpcUaClient(QObject *parent)
                 qDebug()<<"Error - !m_pClient";
                 m_pClient = m_pProvider->createClient("freeopcua");
             }
-            qDebug()<<1.5;
+            qDebug()<<2;
 //            if (!m_pClient->isConnected()){
                 bool res = m_pClient->connectToEndpoint(QString("opc.tcp://%1:%2").arg(OPCUA_IP).arg(OPCUA_PORT));
 //                for(auto ts:m_pClient->findChildren<QTcpSocket*>()){
 //                    qDebug()<<"tcpSocket found"<<ts;
 //                    keep_alive(ts);
 //                }
-                qDebug()<<2;
+                qDebug()<<5;
                 if (!res) {
                     qWarning() << QString("Failed to connect to endpoint: opc.tcp://%1:%2").arg(OPCUA_IP).arg(OPCUA_PORT);
                     exit(EXIT_FAILURE);
-                } else
+                }
+                qDebug()<<6;
+                if(m_pClient)
                     m_subscription = m_pClient->createSubscription(100);
-//            }
-//            if(!m_subscription)
-//                m_subscription = m_pClient->createSubscription(100);
+                qDebug()<<7;
+//                m_pRoot = m_pClient->node("ns=0;s=Objects");
     });
 
     QObject::connect(m_pClient, &QOpcUaClient::connectedChanged,[this](bool connected){
 //        qDebug()<<"connected changed"<<connected;
         if (connected) {
-//            qDebug()<<3;
+            qDebug()<<3;
             m_isConnected=true;
-//            if(!m_subscription)
-//                m_subscription = m_pClient->createSubscription(100);
-    //        m_eventSubscription = m_pClient->createSubscription(3000);
-
-
-
-        m_monitorTimer->start(0);
-
-
+            m_monitorTimer->start(0);
+//            m_monitorTimer->setSingleShot(true);
+            qDebug()<<4;
         }
         else
             qDebug()<<"connected changed"<<connected;
@@ -88,6 +85,7 @@ OpcUaClient::OpcUaClient(QObject *parent)
                 QMapIterator<int,QString> nodes(m_nodesMap);
                 while (nodes.hasNext()) {
                     nodes.next();
+                    qDebug()<<11;
                     monitorNode(nodes.key(),nodes.value());
                 }
         });
@@ -103,6 +101,10 @@ OpcUaClient::OpcUaClient(QObject *parent)
                     m_pClient->disconnectFromEndpoint();
                     m_isConnected=false;
                     m_monitorTimer->stop();
+                    m_subscription->deleteLater();
+                    m_subscription=0;
+//                    m_pRoot->deleteLater();
+//                    m_pRoot=0;
                     qDebug()<<"OPCUA Server disconnected";
                 }
 //                qDebug()<<"OPCUA WATCHDOG testSocket->bind";
@@ -130,6 +132,7 @@ OpcUaClient::OpcUaClient(QObject *parent)
                         if (!testSocket->bind(QHostAddress(OPCUA_IP),OPCUA_PORT))
                             emit serverFound();
                         connectTimer->start();
+                        qDebug()<<8;
                     });
 
 //                    emit serverFound();
@@ -147,6 +150,7 @@ OpcUaClient::~OpcUaClient()
     delete m_pProvider;
 //    delete m_inputCodeMonitorVal;
     delete m_subscription;
+    delete m_pRoot;
     //delete m_eventSubscription;
     m_nodesMap.clear();
 }
@@ -155,7 +159,17 @@ OpcUaClient::~OpcUaClient()
 
 void OpcUaClient::monitorNode(int deviceId, const QString &objectName)
 {
-    QOpcUaNode* node = m_pClient->node(QString(objectName).prepend("ns=2;s="));
+    qDebug()<<12;
+//    if(m_pRoot && m_subscription){
+//        qDebug()<<"m_pRoot"<<m_pRoot<<"m_subscription"<<m_subscription;
+//        return;
+//    }
+    QString nodeId = QString(objectName).prepend("ns=2;s=");
+//    if(!m_pRoot->childIds().contains(nodeId)){
+//        qDebug()<<"!m_pRoot->childIds().contains(nodeId)";
+//        return;
+//    }
+    QOpcUaNode* node = m_pClient->node(nodeId);
     if(node){
 
 /*
@@ -203,33 +217,37 @@ bool OpcUaClient::subscribeProperty(QOpcUaNode *property)
 {
     QString nodeName = property->property(constFullNodeName).toString();
     if (property) {
-            QOpcUaMonitoredValue *monitoredValue=m_subscription->addValue(property);
-            if (monitoredValue) {
-                qDebug()<<"Subscribe success to value"<<property<<monitoredValue;
-                monitoredValue->setObjectName(nodeName);
-//                monitoredValue->setParent(m_subscription);
-                monitoredValue->setProperty(constDevId,property->property(constDevId));
-                monitoredValue->setProperty(constCodePropName,property->name());
-//                QObject::connect(monitoredValue, &QOpcUaMonitoredValue::valueChanged, Error!!!!
-//                        this,&OpcUaClient::processValue);                             Error!!!!
-                QObject::connect(monitoredValue, &QOpcUaMonitoredValue::valueChanged,
-                                 [this,monitoredValue](QVariant value){
-//                    qDebug()<<"valueChanged"<<monitoredValue<<value;
-                    emit propertyChanged(monitoredValue->property(constDevId).toInt(),
-                                         monitoredValue->property(constCodePropName).toString(),value);
-                });
-//                QTimer *monTimer=new QTimer;
-//                QObject::connect(monTimer, &QTimer::timeout,
-//                                 [monitoredValue](){
-//                    qDebug()<<monitoredValue->property(constCodePropName).toString()<<"dumpObjectInfo";
-// //                            <<"receivers"<<monitoredValue->receivers("valueChanged")
-//                    monitoredValue->dumpObjectInfo();
-//                });
-//                monTimer->start(1800000);
+        QString monValName = QString("MonVal_").append(nodeName);
+            QOpcUaMonitoredValue *monitoredValue =
+                    m_subscription->findChild<QOpcUaMonitoredValue *>(monValName);
+            if (monitoredValue){
+                qDebug() << nodeName << "already subscribed. Value="<<monitoredValue->node().value();
+                //TODO chack monitoredValue connection
                 return true;
             }
-//            else
-//                m_monitoredValues.removeLast();
+            monitoredValue = m_subscription->addValue(property);
+            if (monitoredValue) {
+                qDebug()<<"Subscribe success to value"<<property<<monitoredValue;
+/*   lambda emit propertyChanged
+//                QObject::connect(monitoredValue, &QOpcUaMonitoredValue::valueChanged,
+//                                 [this,monitoredValue](QVariant value){
+//                    qDebug()<<"valueChanged"<<monitoredValue<<value;
+//                    emit propertyChanged(monitoredValue->property(constDevId).toInt(),
+//                                         monitoredValue->property(constCodePropName).toString(),value);
+//                });
+*/
+                monitoredValue->setProperty(constDevId,property->property(constDevId));
+                monitoredValue->setProperty(constCodePropName,property->name());
+                QObject::connect(monitoredValue, &QOpcUaMonitoredValue::valueChanged,
+                        this,&OpcUaClient::processValue);
+                monitoredValue->setObjectName(monValName);
+                monitoredValue->setParent(m_subscription);
+//                if(m_subscription->findChild<QOpcUaMonitoredValue *>(monValName))
+//                    qDebug()<< monValName <<"found in m_subscription";
+//                else
+//                    qDebug()<<QString("MonVal").append(nodeName)<<"not found in m_subscription";
+                return true;
+            }
         }
     qDebug()<<"Can not subscribe to"<<nodeName;
     return false;
@@ -238,11 +256,8 @@ bool OpcUaClient::subscribeProperty(QOpcUaNode *property)
 void OpcUaClient::processValue(QVariant value)
 {
     QOpcUaMonitoredValue *sender = qobject_cast<QOpcUaMonitoredValue *>(QObject::sender());
-//    qDebug()<<"valueChanged"<<value
-//                            <<sender->property(constDevId).toInt()
-//                            <<sender->property(constCodePropName).toString();
     if(sender) {
-//        qDebug()<<"sender qobject_cast OK"<<sender->property(constDevId).toInt()
+//        qDebug()<<"Device"<<sender->property(constDevId).toInt()
 //                <<sender->property(constCodePropName).toString()<<value;
         emit propertyChanged(sender->property(constDevId).toInt(),
                              sender->property(constCodePropName).toString(),value);
@@ -275,8 +290,8 @@ void OpcUaClient::processEvent(QVector<QVariant> value)
 
 void OpcUaClient::appendObject(int deviceId, const QString &objectName)
 {
-    //    if (m_isConnected)
+    qDebug()<<10;
     m_nodesMap.insert(deviceId,objectName);
-    if (m_pClient->isConnected())
+    if (m_isConnected)
         monitorNode(deviceId,objectName);
 }

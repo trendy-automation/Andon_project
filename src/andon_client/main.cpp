@@ -547,14 +547,14 @@ void ServerFound(QHostAddress ServerAddress)
                 if (propertyName=="inputCode" && (value.toInt()!=0)){
 //                    qDebug()<<propertyName<<value.toInt();
                     serverRpc->Query2Json(QString(
-                                         "SELECT DEVICE_NAME, PART_NAME FROM PRODUCTION_PART_PRODUSED (%1,%2)")
+                                         "SELECT DISTINCT DEVICE_NAME, MOLD_NAME FROM PRODUCTION_PART_PRODUSED (%1,%2)")
                                              .arg(value.toInt()).arg(deviceId), [](QVariant resp){
                         QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
 //                        qDebug()<<"PRODUCTION_PART_PRODUSED"<<array.toVariantList();
                         for (auto object = array.begin(); object != array.end(); object++) {
                             QJsonObject jsonObj=object->toObject();
-                            if (jsonObj.contains("DEVICE_NAME") && jsonObj.contains("PART_NAME"))
-                                qDebug()<<jsonObj["DEVICE_NAME"].toString()<<jsonObj["PART_NAME"].toString();
+                            if (jsonObj.contains("DEVICE_NAME") && jsonObj.contains("MOLD_NAME"))
+                                qDebug()<<jsonObj["DEVICE_NAME"].toString()<<jsonObj["MOLD_NAME"].toString();
                         }
                     });
                 }

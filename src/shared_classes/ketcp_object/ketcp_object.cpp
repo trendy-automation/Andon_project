@@ -102,7 +102,7 @@ KeTcpObject::KeTcpObject( ) :
         if (AutoEvent)
             refreshSysTime();
         keSend("$KE"); //TODO remake the connect signal
-        qDebug()<<"Tcp socket connected lambda finish";
+//        qDebug()<<"Tcp socket connected lambda finish";
     });
 
     QObject::connect(this,&KeTcpObject::inputChanged,[=](int InputNum, bool InputVal){

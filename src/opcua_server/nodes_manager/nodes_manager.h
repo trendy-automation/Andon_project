@@ -25,22 +25,21 @@ QT_END_NAMESPACE
 
 using namespace OpcUa;
 
-//  class SubscriptionHandler //AttributeId
-
 class NodesManager : public QObject, public SubscriptionHandler
 {
     Q_OBJECT
 public:
     explicit NodesManager(QObject *parent = 0);
     virtual ~NodesManager();
-//    void initNodes();
     void loadKeObject(KeTcpObject *keObject);
     void DataChange(uint32_t handle, const OpcUa::Node &node, const OpcUa::Variant &val, OpcUa::AttributeId attr);
-
-public slots:
-    void readProperties();
 signals:
     //void propertyChanged(const Node& node, const Variant& val, AttributeId attr) Q_DECL_OVERRIDE;
+
+private slots:
+    void appendVariables(KeTcpObject *keObject, Node *keNode);
+    void processEvent(KeTcpObject *keObject, Node *keNode, const QString &ioName,const QVariant &val);
+    void refreshNodes(Node *keNode);
 
 private:
     Variant varConv(const QVariant& v);

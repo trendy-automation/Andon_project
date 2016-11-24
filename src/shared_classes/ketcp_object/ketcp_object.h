@@ -51,8 +51,11 @@ class KeTcpObject: public QObject
     Q_PROPERTY(bool input_10 READ getInput_10)
     Q_PROPERTY(bool input_11 READ getInput_11)
     Q_PROPERTY(bool input_12 READ getInput_12)
+    //TODO:
+    //Q_PROPERTY(bool isConnected MEMBER isConnected NOTIFY connectStateChanged)
+    //Q_PROPERTY(bool isReady READ isReady NOTIFY ready)
+
     Q_PROPERTY(bool isSocketConnected READ isSocketConnected)
-//    Q_PROPERTY(bool isReady READ isReady) //NOTIFY ready
 //    Q_PROPERTY(QBitArray inputs MEMBER inputs NOTIFY inputsChanged)
     Q_PROPERTY(quint32 inputCode MEMBER inputCode NOTIFY inputCodeChanged)
     Q_PROPERTY(QString DEVICE_NAME READ getDeviceName WRITE setDeviceName)

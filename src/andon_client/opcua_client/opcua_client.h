@@ -33,24 +33,25 @@ public slots:
 
 signals:
     void serverFound();
-    void propertyChanged(int deviceId, const QString &propertyName, const QVariant &value);
+    void propertyChanged(int deviceId, const QString &variableName, const QVariant &value);
 
 private slots:
     void processValue(QVariant value);
     void processEvent(QVector<QVariant> value);
 
 private:
-    bool subscribeProperty(QOpcUaNode *property);
+    bool subscribeProperty(int deviceId, const QString &variableName, QOpcUaNode *variable);
+    void subscribeObjects();
 
 //    QList<QOpcUaMonitoredValue*>  m_monitoredValues;
 //    QList<QOpcUaMonitoredEvent*>  m_monitoredEvents;
     QOpcUaSubscription   *m_subscription;
 //    QOpcUaSubscription   *m_eventSubscription;
     QOpcUaClient        *m_pClient;
-    QOpcUaNode          *m_pRoot;
     QOpcUaProvider      *m_pProvider;
-    QMap<int,QString>    m_nodesMap;
+    QMap<int,QString>    m_objectsMap;
     QTimer              *m_monitorTimer;
+//    QOpcUaNode          *m_pRoot;
     bool                 m_isConnected=false;
 };
 

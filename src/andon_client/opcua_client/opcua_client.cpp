@@ -21,7 +21,8 @@
 
 
 //const QByteArray constObjName = "OBJECT_NAME";
-const QByteArray constBAPropertyName = "PROPERTY_NAME";
+const QByteArray constBAVariableName = "VARIABLE_NAME";
+const QByteArray constBAVariableId = "VARIABLE_ID";
 const QByteArray constDevId = "TCPDEVICE_ID";
 const QByteArray constBAinputCode("inputCode");
 //const QByteArray constFullNodeName = "propertyName";
@@ -264,14 +265,14 @@ bool OpcUaClient::subscribeProperty(int deviceId, const QString &variableName, Q
             QOpcUaMonitoredValue *monitoredValue =
                     this->findChild<QOpcUaMonitoredValue *>(monValName);
             if (monitoredValue){
-                qDebug() << variable << "already subscribed. Value="<<monitoredValue->node().value();
+//                qDebug() << variable << "already subscribed. Value="<<monitoredValue->node().value();
                 //TODO chack monitoredValue connection
                 return true;
             }//
-        qDebug()<<16<<variable->parent();
+//        qDebug()<<16<<variable->parent();
             //QOpcUaMonitoredValue *
             monitoredValue = m_subscription->addValue(variable);
-            qDebug()<<17;
+//            qDebug()<<17;
             if (monitoredValue) {
                 monitoredValue->setObjectName(monValName);
                 monitoredValue->setParent(this);
@@ -281,11 +282,13 @@ bool OpcUaClient::subscribeProperty(int deviceId, const QString &variableName, Q
 //                                 [this,monitoredValue](QVariant value){
 //                    qDebug()<<"valueChanged"<<monitoredValue<<value;
 //                    emit propertyChanged(monitoredValue->variable(constDevId).toInt(),
-//                                         monitoredValue->variable(constBAPropertyName).toString(),value);
+//                                         monitoredValue->variable(constBAVariableName).toString(),value);
 //                });
 */
                 monitoredValue->setProperty(constDevId,deviceId);
-                monitoredValue->setProperty(constBAPropertyName,variableName);
+                monitoredValue->setProperty(constBAVariableName,variableName);
+                monitoredValue->setProperty(constBAVariableId,variable->objectName());
+
                 QObject::connect(monitoredValue, &QOpcUaMonitoredValue::valueChanged,
                         this,&OpcUaClient::processValue);
 //                if(m_subscription->findChild<QOpcUaMonitoredValue *>(monValName))
@@ -303,9 +306,9 @@ void OpcUaClient::processValue(QVariant value)
 {
     QOpcUaMonitoredValue *sender = qobject_cast<QOpcUaMonitoredValue *>(QObject::sender());
     if(sender) {
-        QString pName(sender->property(constBAPropertyName).toString());
+        QString pName(sender->property(constBAVariableName).toString());
         int deviceId=sender->property(constDevId).toInt();
-//        qDebug()<<"Device"<<deviceId<<pName<<value;
+        qDebug()<<sender->property(constBAVariableId).toString()<<value;
         emit propertyChanged(deviceId,pName,value);
         if(pName.isEmpty()){
             pName=constBAinputCode;

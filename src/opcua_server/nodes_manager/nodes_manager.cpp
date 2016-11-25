@@ -100,7 +100,7 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
         //qDebug()<<keName<<keNode<<keNode->GetChildren().size();
         refreshNodes(keNode);
     });
-    keWatchTimer->start(1800000);
+    keWatchTimer->start(180000);
 /*
     qDebug()<<"m_events.insert(keNode,new OpcUa::Event(keNode))";
     OpcUa::Event *evt = new OpcUa::Event(ObjectId::BaseEventType);
@@ -210,16 +210,16 @@ void NodesManager::processEvent(KeTcpObject *keObject, Node *keNode, const QStri
             Variant value=varConv(val);
             qDebug()<< keObject->getDeviceName() << ioName << val << keNode << &v;
             v.SetValue(value);
-            m_eventInputCode = OpcUa::Event(ObjectId::BaseEventType);
-            m_eventInputCode.Severity = 1;
-            m_eventInputCode.SourceName = keObject->getDeviceName().toStdString();
-            m_eventInputCode.Time = DateTime::Current();
-            m_eventInputCode.Message = LocalizedText(ioName.toStdString());
-            m_eventInputCode.SetValue(v.GetBrowseName(),value);
-            m_eventInputCode.LocalTime = DateTime::Current();
-            m_eventInputCode.ReceiveTime = DateTime::Current();
-            m_eventInputCode.SourceNode=v.GetId();
-            m_server.TriggerEvent(m_eventInputCode);
+//            m_eventInputCode = OpcUa::Event(ObjectId::BaseEventType);
+//            m_eventInputCode.Severity = 1;
+//            m_eventInputCode.SourceName = keObject->getDeviceName().toStdString();
+//            m_eventInputCode.Time = DateTime::Current();
+//            m_eventInputCode.Message = LocalizedText(ioName.toStdString());
+//            m_eventInputCode.SetValue(v.GetBrowseName(),value);
+//            m_eventInputCode.LocalTime = DateTime::Current();
+//            m_eventInputCode.ReceiveTime = DateTime::Current();
+//            m_eventInputCode.SourceNode=v.GetId();
+//            m_server.TriggerEvent(m_eventInputCode);
             return;
         }
     qDebug()<< keObject->getDeviceName() << "missing child" << ioName;
@@ -229,7 +229,7 @@ void NodesManager::refreshNodes(Node *keNode)
 {
     qDebug()<< "Start refresh";
     for (Node &var:keNode->GetChildren()){
-        //qDebug()<< "var"<<QString::fromStdString(var.GetBrowseName().Name);
+        qDebug()<< "var"<<QString::fromStdString(var.GetBrowseName().Name);
         var.SetValue(var.GetValue());
     }
 }

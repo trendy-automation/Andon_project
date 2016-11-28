@@ -226,17 +226,13 @@ void ServerFound(QHostAddress ServerAddress)
                 if (jsonRow["DEVICE_TYPE"].toString()=="FTP") {
                     QFtp *ftp = new QFtp(jsonRow["TCPDEVICE_IP"].toString(),jsonRow["PORT"].toInt(),
                                          jsonRow["LOGIN"].toString(),jsonRow["PASS"].toString());
-//                    QObject::connect(ftp, &QFtp::commandFinished,[serverRpc](int taskId, bool res){
-//                        qDebug()<<"transferFinished"<<taskId;
-
-//                    });
                     QTimer *fileTimer = new QTimer;
                     QObject::connect(fileTimer,&QTimer::timeout,
                                      [serverRpc,ftp,fileTimer](){
 //                        qDebug() << "fileTimer,&QTimer::timeout";
                         serverRpc->Query2Json("SELECT PART_REFERENCE, PART_COUNT FROM PRODUCTION_DECLARATING",
                                      [ftp,serverRpc](QVariant resp){
-//                            qDebug() << "PRODUCTION_DECLARATING"<<resp;
+                            qDebug() << "PRODUCTION_DECLARATING"<<resp;
                             QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
                             if(!array.isEmpty()) {
                                 QJsonObject jsonObj0=array.at(0).toObject();
@@ -255,14 +251,31 @@ void ServerFound(QHostAddress ServerAddress)
                                     QTimer::singleShot(0,[ftp,buffer,taskId](){
                                         buffer->setProperty("command",ftp->putBuf(buffer,
                                             QString("Decl_%1.txt").arg(QDateTime().currentDateTime().toString("ddMMyy_hh.mm")), QFtp::Binary,taskId));
-                                        //TODO query PRODUCTION_DECLARATION taskId, 1
                                     });
                                     QObject::connect(ftp, &QFtp::commandFinished,[ftp,buffer,serverRpc](int command,bool res){
                                         if(command==buffer->property("command").toInt()){
                                             int taskId=buffer->property("task").toInt();
                                             buffer->deleteLater();
-                                            if(!res)taskId=-taskId;
-                                            serverRpc->Query2Json(QString("SELECT * FROM PRODUCTION_DECLARATING(%1)").arg(taskId));
+                                            if(!res){
+                                                taskId=-taskId;
+                                                qDebug() << "Ftp: file not wirted";
+                                            }
+                                            serverRpc->Query2Json(QString("SELECT PART_REFERENCE, "
+                                                                          "PART_COUNT FROM PRODUCTION_DECLARATING(%1)").arg(taskId),  [=](QVariant resp){
+                                                qDebug() << "PRODUCTION_DECLARATING finish "<<resp;
+                                                QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
+                                                if(!array.isEmpty()) {
+                                                    QJsonObject jsonObj0=array.at(0).toObject();
+                                                    if(jsonObj0.contains("PART_REFERENCE") && jsonObj0.contains("PART_COUNT"))
+                                                        for (auto object:array) {
+//                                                        for (QJsonObject object = array.begin(); object != array.end(); object++)
+                                                            QJsonObject jsonObj=object.toObject();
+                                                            qDebug() << "Ftp: file writed" << jsonObj["PART_REFERENCE"].toString()
+                                                                     << jsonObj["PART_COUNT"].toInt();
+                                                        }
+                                                }
+                                            });
+
                                         }
                                     });
                                 }

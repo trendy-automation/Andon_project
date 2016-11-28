@@ -59,6 +59,7 @@ private:
     std::unique_ptr<Subscription> sub ;
 //    std::unique_ptr<Subscription> m_subscription;
     OpcUa::Event m_eventInputCode;
+    OpcUa::Event m_eventObjects;
 //    QMap<Node*,OpcUa::Event*> m_events;
 
     //QTimer m_timer;

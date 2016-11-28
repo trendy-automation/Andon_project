@@ -27,7 +27,6 @@ public:
 
 public slots:
     void monitorNode(int deviceId, const QString &objectName);
-    void updateValue(QVector<QVariant> value);    
     void appendObject(int deviceId, const QString &objectName);
 
 
@@ -51,7 +50,7 @@ private:
     QOpcUaProvider      *m_pProvider;
     QMap<int,QString>    m_objectsMap;
     QTimer              *m_monitorTimer;
-//    QOpcUaNode          *m_pRoot;
+    QOpcUaNode          *m_root;
     bool                 m_isConnected=false;
 };
 

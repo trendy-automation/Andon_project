@@ -40,8 +40,16 @@ NodesManager::NodesManager(QObject *parent)
     m_server.SetServerURI(QString("urn://%1:%2").arg(OPCUA_IP).arg(OPCUA_PORT).toStdString());
     m_server.Start();
     m_server.EnableEventNotification();
-    m_root = m_server.GetObjectsNode();
+//    m_root = m_server.GetObjectsNode();
     m_idx = m_server.RegisterNamespace("http://10.208.110.75:8081/");
+    m_root = m_server.GetRootNode().AddObject(QString("ns=1;s=Objects").toStdString(),
+                                              QString("Objects").toStdString());
+        m_eventObjects = OpcUa::Event(ObjectId::BaseEventType);
+        m_eventObjects.Severity = 1;
+        m_eventObjects.SourceName = "Object_event";
+        m_eventObjects.SourceNode=m_root.GetId();
+        m_eventObjects.Time = DateTime::Current();
+        m_eventObjects.Message = LocalizedText("Object event");
 
 /*//    Node triggerVar = m_root.AddVariable("ns=3;s=TriggerVariable", "TriggerVariable", Variant(0));
 //    Node triggerNode = m_root.AddObject("ns=3;s=TriggerNode", "TriggerNode");
@@ -94,13 +102,15 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
     qDebug()<<"AddObject"<<QString("ns=2;s=%1").arg(keName);
     Node *keNode = new Node(m_root.AddObject(QString("ns=2;s=%1").arg(keName).toStdString(),
                              keName.toStdString()));
+    m_server.TriggerEvent(m_eventObjects);
+
     QTimer *keWatchTimer = new QTimer;
     QObject::connect(keWatchTimer,&QTimer::timeout,
                      [this,keName,keNode](){
         //qDebug()<<keName<<keNode<<keNode->GetChildren().size();
         refreshNodes(keNode);
     });
-    keWatchTimer->start(180000);
+    keWatchTimer->start(1800000);
 /*
     qDebug()<<"m_events.insert(keNode,new OpcUa::Event(keNode))";
     OpcUa::Event *evt = new OpcUa::Event(ObjectId::BaseEventType);
@@ -116,6 +126,7 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
                 qDebug() << keObject->getDeviceName() << "disconnected";
                 for (Node &v:keNode->GetChildren())
                     v.SetValue(Variant());
+                m_server.TriggerEvent(m_eventObjects);
             });
 
 

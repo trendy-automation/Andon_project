@@ -67,7 +67,7 @@ OpcUaClient::OpcUaClient(QObject *parent)
             qDebug()<<3;
             m_isConnected=true;
 //            subscribeObjects();
-            QTimer::singleShot(20000,this,&OpcUaClient::subscribeObjects);
+            QTimer::singleShot(10000,this,&OpcUaClient::subscribeObjects);
             m_monitorTimer->start(1800000);
             qDebug()<<4;
             m_root = m_pClient->node("ns=1;s=Objects");
@@ -184,7 +184,7 @@ void OpcUaClient::monitorNode(int deviceId, const QString &objectName)
     if (!node)
         node = m_pClient->node(nodeName);
     else
-        qDebug()<<QString("Node %1 already exist").arg(objectName);
+        qDebug()<<QString("Node %1 already exist").arg(objectName)<<node;
     if(node){
 
 /*
@@ -229,7 +229,7 @@ void OpcUaClient::monitorNode(int deviceId, const QString &objectName)
                 if (!variable)
                     variable = m_pClient->node(p);
                 else
-                    qDebug()<<QString("Variable %1 already exist").arg(p);
+                    qDebug()<<QString("Variable %1 already exist").arg(p)<<variable;
 
                 if(variable){
                     variable->setParent(this);
@@ -261,7 +261,7 @@ bool OpcUaClient::subscribeProperty(int deviceId, const QString &variableName, Q
             QOpcUaMonitoredValue *monitoredValue =
                     this->findChild<QOpcUaMonitoredValue *>(monValName);
             if (monitoredValue){
-//                qDebug() << variable << "already subscribed. Value="<<monitoredValue->node().value();
+                qDebug() << variable << "Variable already subscribed"<<variable->name()<<variable<<monitoredValue;
                 //TODO chack monitoredValue connection
                 return true;
             }//

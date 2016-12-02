@@ -217,7 +217,6 @@ void ServerFound(QHostAddress ServerAddress)
                           " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",
                           [=](QVariant resp){
         qDebug()<<"lambda TCPDEVICES start";
-
         QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
         for (auto row = array.begin(); row != array.end(); row++) {
             QJsonObject jsonRow=row->toObject();
@@ -226,18 +225,47 @@ void ServerFound(QHostAddress ServerAddress)
                 if (jsonRow["DEVICE_TYPE"].toString()=="FTP") {
                     QFtp *ftp = new QFtp(jsonRow["TCPDEVICE_IP"].toString(),jsonRow["PORT"].toInt(),
                                          jsonRow["LOGIN"].toString(),jsonRow["PASS"].toString());
+                    QBuffer *buffer=new QBuffer;
                     QTimer *fileTimer = new QTimer;
+                    QObject::connect(ftp, &QFtp::commandFinished,[ftp,buffer,serverRpc](int command,bool res){
+                        if(command==buffer->property("command").toInt()){
+                            int taskId=buffer->property("task").toInt();
+                            buffer->buffer().clear();
+                            buffer->close();
+                            if(res){
+                                taskId=-taskId;
+                                qDebug() << "Ftp: file not wirted";
+                            }
+                            serverRpc->Query2Json(QString("SELECT PART_REFERENCE, "
+                                                          "PART_COUNT FROM PRODUCTION_DECLARATING(%1)").arg(taskId),
+                                                      [](QVariant resp){
+//                                    qDebug() << "PRODUCTION_DECLARATING finish "<<resp;
+                                QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
+                                if(!array.isEmpty()) {
+                                    QJsonObject jsonObj0=array.at(0).toObject();
+                                    if(jsonObj0.contains("PART_REFERENCE") && jsonObj0.contains("PART_COUNT")){
+                                        qDebug() << "Ftp: file writed";
+                                        for (auto object:array) {
+                                            QJsonObject jsonObj=object.toObject();
+                                            qDebug() << jsonObj["PART_REFERENCE"].toString()
+                                                     << jsonObj["PART_COUNT"].toInt();
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    });
                     QObject::connect(fileTimer,&QTimer::timeout,
-                                     [serverRpc,ftp,fileTimer](){
+                                     [serverRpc,ftp,buffer](){
 //                        qDebug() << "fileTimer,&QTimer::timeout";
-                        serverRpc->Query2Json("SELECT PART_REFERENCE, PART_COUNT FROM PRODUCTION_DECLARATING",
-                                     [ftp,serverRpc](QVariant resp){
+                        serverRpc->Query2Json("SELECT ID_TASK, PART_REFERENCE, PART_COUNT FROM PRODUCTION_DECLARATING",
+                                     [ftp,buffer](QVariant resp){
                             qDebug() << "PRODUCTION_DECLARATING"<<resp;
                             QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
                             if(!array.isEmpty()) {
                                 QJsonObject jsonObj0=array.at(0).toObject();
-                                if(jsonObj0.contains("PART_REFERENCE") && jsonObj0.contains("PART_COUNT")) {
-                                    QBuffer *buffer=new QBuffer;
+                                if(jsonObj0.contains("PART_REFERENCE") && jsonObj0.contains("ID_TASK")
+                                        && jsonObj0.contains("PART_COUNT")) {
                                     int taskId=jsonObj0["ID_TASK"].toInt();
                                     buffer->setProperty("task", taskId);
                                     buffer->open(QBuffer::ReadWrite);
@@ -245,38 +273,12 @@ void ServerFound(QHostAddress ServerAddress)
                                         QJsonObject jsonObj=object->toObject();
                                         buffer->write(jsonObj["PART_REFERENCE"].toString().toLatin1());
                                         buffer->write("\t");
-                                        buffer->write(jsonObj["PART_COUNT"].toString().toLatin1());
+                                        buffer->write(QString::number(jsonObj["PART_COUNT"].toInt()).toLatin1());
                                         buffer->write("\r\n");
                                     }
                                     QTimer::singleShot(0,[ftp,buffer,taskId](){
                                         buffer->setProperty("command",ftp->putBuf(buffer,
                                             QString("Decl_%1.txt").arg(QDateTime().currentDateTime().toString("ddMMyy_hh.mm")), QFtp::Binary,taskId));
-                                    });
-                                    QObject::connect(ftp, &QFtp::commandFinished,[ftp,buffer,serverRpc](int command,bool res){
-                                        if(command==buffer->property("command").toInt()){
-                                            int taskId=buffer->property("task").toInt();
-                                            buffer->deleteLater();
-                                            if(!res){
-                                                taskId=-taskId;
-                                                qDebug() << "Ftp: file not wirted";
-                                            }
-                                            serverRpc->Query2Json(QString("SELECT PART_REFERENCE, "
-                                                                          "PART_COUNT FROM PRODUCTION_DECLARATING(%1)").arg(taskId),  [=](QVariant resp){
-                                                qDebug() << "PRODUCTION_DECLARATING finish "<<resp;
-                                                QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
-                                                if(!array.isEmpty()) {
-                                                    QJsonObject jsonObj0=array.at(0).toObject();
-                                                    if(jsonObj0.contains("PART_REFERENCE") && jsonObj0.contains("PART_COUNT"))
-                                                        for (auto object:array) {
-//                                                        for (QJsonObject object = array.begin(); object != array.end(); object++)
-                                                            QJsonObject jsonObj=object.toObject();
-                                                            qDebug() << "Ftp: file writed" << jsonObj["PART_REFERENCE"].toString()
-                                                                     << jsonObj["PART_COUNT"].toInt();
-                                                        }
-                                                }
-                                            });
-
-                                        }
                                     });
                                 }
                             }

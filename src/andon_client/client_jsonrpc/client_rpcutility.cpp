@@ -4,19 +4,18 @@
 #include <QEventLoop>
 #include <QApplication>
 #include <QTimer>
-//#include <QJSValueIterator>
 //#include <QThread>
 
 ClientRpcUtility::ClientRpcUtility(QObject *parent)
     : QObject(parent),
       m_client(0)
 {
-//    QThread *thread=new QThread();
-//    this->moveToThread(thread);
-//    QObject::connect(thread, &QThread::finished, thread, &QThread::deleteLater);
-//    QObject::connect(thread, &QThread::finished, this, &ClientRpcUtility::deleteLater);
-//    QObject::connect(this, &ClientRpcUtility::Query2Json, this, &ClientRpcUtility::sqlQuery,Qt::UniqueConnection);
-//    thread->start();
+    //    QThread *thread=new QThread();
+    //    this->moveToThread(thread);
+    //    QObject::connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+    //    QObject::connect(thread, &QThread::finished, this, &ClientRpcUtility::deleteLater);
+    //    QObject::connect(this, &ClientRpcUtility::Query2Json, this, &ClientRpcUtility::sqlQuery,Qt::UniqueConnection);
+    //    thread->start();
 }
 
 void ClientRpcUtility::setEngine(QJSEngine* SharedEngine)
@@ -25,20 +24,21 @@ void ClientRpcUtility::setEngine(QJSEngine* SharedEngine)
 }
 
 QJsonRpcServiceReply *ClientRpcUtility::ServerExecute(const QString &RemoteMethodName, QVariantList InParameterList,
-                              std::function<void(QVariant)> functor)
+                                                      std::function<void(QVariant)> functor)
 {
 //    qDebug()<<RemoteMethodName<<InParameterList;
-    QTcpSocket *socket = new QTcpSocket(this);
+    QTcpSocket *socket = new QTcpSocket;//(this);
     socket->connectToHost(serveraddress.toString(), JSONRPC_SERVER_PORT);
     if (!socket->waitForConnected()) {
         qDebug() << "could not connect to server: " << socket->errorString();
         emit error(socket->errorString());
         functor(QVariant());
     }
-    m_client = new QJsonRpcSocket(socket, this);
+    m_client = new QJsonRpcSocket(socket);//(socket,this);
     QVariant arg[10];
     for (int i=0;i<9;++i)
         arg[i]=i<InParameterList.count()?InParameterList.at(i):QVariant();
+
     QJsonRpcServiceReply *reply = m_client->invokeRemoteMethod(QString(JSONRPC_SERVER_SERVICENAME).append(".").append(RemoteMethodName),
                                                                arg[0],arg[1],arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],arg[9]);
     if(functor)
@@ -54,27 +54,27 @@ QJsonRpcServiceReply *ClientRpcUtility::ServerExecute(const QString &RemoteMetho
 }
 
 void ClientRpcUtility::ServerExecute(const QString &RemoteMethodName, QVariantList InParameterList,
-                              QJSValue scriptFunctor)
+                                     QJSValue scriptFunctor)
 {
     std::function<void(QVariant response)> functor=0;
-   qDebug()<<"scriptFunctor.isCallable()"<<scriptFunctor.isCallable();
+    qDebug()<<"scriptFunctor.isCallable()"<<scriptFunctor.isCallable();
     if(engine && scriptFunctor.isCallable()){
-//        qDebug() << "scriptFunctor callable";
+        //        qDebug() << "scriptFunctor callable";
         functor = [=](QVariant response){
-                QJSValue result = QJSValue(scriptFunctor).call( //scriptFunctor.call(
-                        QJSValueList() << engine->toScriptValue(response));
-                if (result.isError()){
-                    qDebug() << "Uncaught exception at line"
-                             << result.property("lineNumber").toInt()
-                             << ":" << result.toString()
-                             << "in script:" << scriptFunctor.property("name").toString();
+            QJSValue result = QJSValue(scriptFunctor).call( //scriptFunctor.call(
+                                                            QJSValueList() << engine->toScriptValue(response));
+            if (result.isError()){
+                qDebug() << "Uncaught exception at line"
+                         << result.property("lineNumber").toInt()
+                         << ":" << result.toString()
+                         << "in script:" << scriptFunctor.property("name").toString();
+            }
+            else {
+                if (result.isVariant()){
+                    qDebug()<<result.toVariant();
+                    return result.toVariant();
                 }
-                else {
-                    if (result.isVariant()){
-                        qDebug()<<result.toVariant();
-                        return result.toVariant();
-                    }
-                }
+            }
         };
     }
     else {

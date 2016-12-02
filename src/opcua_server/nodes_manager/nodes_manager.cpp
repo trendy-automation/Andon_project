@@ -110,7 +110,7 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
         //qDebug()<<keName<<keNode<<keNode->GetChildren().size();
         refreshNodes(keNode);
     });
-    keWatchTimer->start(180000);
+    keWatchTimer->start(360000);
 /*
     qDebug()<<"m_events.insert(keNode,new OpcUa::Event(keNode))";
     OpcUa::Event *evt = new OpcUa::Event(ObjectId::BaseEventType);
@@ -242,11 +242,20 @@ void NodesManager::processEvent(KeTcpObject *keObject, Node *keNode, const QStri
 void NodesManager::refreshNodes(Node *keNode)
 {
     qDebug()<< "Start refresh"<<QString::fromStdString(keNode->GetBrowseName().Name)<<keNode;
-    std::vector<Node> nodes = keNode->GetChildren();
-    for (auto it = nodes.begin(); it != nodes.end(); ++it){
-        qDebug()<< "var"<<QString::fromStdString(*it.GetBrowseName().Name)<<it;
-        *it.SetValue(*it.GetValue());
+    for (auto &v:keNode->GetChildren()){
+        qDebug()<< "var"<<QString::fromStdString(v.GetBrowseName().Name)<<&v;
+        Variant value = v.GetValue();
+        if (value==Variant(0))
+            v.SetValue(value);
     }
+
+//    std::vector<Node> nodes = keNode->GetChildren();
+//    for (std::vector<Node>::iterator it = nodes.begin(); it != nodes.end(); ++it){
+//        qDebug()<< "var"<<QString::fromStdString(*it.GetBrowseName().Name)<<it;
+//        Variant value = *it.GetValue();
+//        if (value==Variant(0))
+//            *it.SetValue(value);
+//    }
 }
 
 Variant NodesManager::varConv(const QVariant& v) {

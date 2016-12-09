@@ -25,6 +25,9 @@ QT_END_NAMESPACE
 
 using namespace OpcUa;
 
+//Q_DECLARE_METATYPE(OpcUa::Variant)
+//RegisterMetaType<Variant>();
+
 class NodesManager : public QObject, public SubscriptionHandler
 {
     Q_OBJECT
@@ -37,9 +40,9 @@ signals:
     //void propertyChanged(const Node& node, const Variant& val, AttributeId attr) Q_DECL_OVERRIDE;
 
 private slots:
-    void appendVariables(KeTcpObject *keObject, Node *keNode);
-    void processEvent(KeTcpObject *keObject, Node *keNode, const QString &ioName,const QVariant &val);
-    void refreshNodes(Node *keNode);
+    void appendVariables(KeTcpObject *keObject);
+    void processEvent(KeTcpObject *keObject, const QString &ioName,const QVariant &val);
+    void refreshNodes(KeTcpObject *keObject);
 
 private:
     Variant varConv(const QVariant& v);
@@ -55,6 +58,8 @@ private:
 //    Node m_stopNode;
 //    Node m_stateNode;
     Node m_root;
+    Node m_triggerNode;
+    QMap<KeTcpObject*,Node> m_objects;
     uint32_t    m_idx;
     std::unique_ptr<Subscription> sub ;
 //    std::unique_ptr<Subscription> m_subscription;

@@ -26,7 +26,7 @@ public:
     virtual ~OpcUaClient();
 
 public slots:
-    void monitorNode(int deviceId, const QString &objectName);
+    bool monitorNode(int deviceId, const QString &objectName);
     void appendObject(int deviceId, const QString &objectName);
 
 
@@ -50,7 +50,7 @@ private:
     QOpcUaProvider      *m_pProvider;
     QMap<int,QString>    m_objectsMap;
     QTimer              *m_monitorTimer;
-    QOpcUaNode          *m_root;
+    QOpcUaNode          *m_triggerNode;
     bool                 m_isConnected=false;
 };
 

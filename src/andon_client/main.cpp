@@ -271,6 +271,8 @@ void ServerFound(QHostAddress ServerAddress)
                                     buffer->open(QBuffer::ReadWrite);
                                     for (auto object = array.begin(); object != array.end(); object++) {
                                         QJsonObject jsonObj=object->toObject();
+//                                        QString line("hdfdjshf%1gdfd%2");
+//                                        line.arg()
                                         buffer->write(jsonObj["PART_REFERENCE"].toString().toLatin1());
                                         buffer->write("\t");
                                         buffer->write(QString::number(jsonObj["PART_COUNT"].toInt()).toLatin1());

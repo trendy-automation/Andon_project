@@ -233,13 +233,11 @@ bool OpcUaClient::monitorNode(int deviceId, const QString &objectName)
             node->setObjectName(nodeName);
 
             QStringList variables = node->childIds();
-            QStringList vars;
-            for (QString p:variables)
-                vars<<p.split(".").last();
             qDebug()<<node<<node->name()<<variables.count()<<"properties";
             //        if(variables.contains(QString("ns=3;s=%1.%2").arg(objectName).arg(constBAinputCode)))
-            for (QString p:variables)
-                if(p.split(".").last()==constBAinputCode || p.split(".").last()==constBAloaded){
+            for (QString p:variables){
+                QString varName = p.split(".").last();
+                if(varName==constBAinputCode || varName==constBAloaded){
                     QOpcUaNode* variable = this->findChild<QOpcUaNode*>(p);
                     if (!variable)
                         variable = m_pClient->node(p);
@@ -248,9 +246,13 @@ bool OpcUaClient::monitorNode(int deviceId, const QString &objectName)
                     if(variable){
                         variable->setParent(this);
                         variable->setObjectName(p);
-                        subscribeProperty(deviceId, constBAinputCode, variable);
+                        subscribeProperty(deviceId, varName, variable);
                     } else qDebug()<<"Can not finde variable"<<p;
                 }
+            }
+            QStringList vars;
+            for (QString p:variables)
+                vars<<p.split(".").last();
             if(!vars.contains(constBAinputCode)) {
                 qDebug()<<"Can not finde variable inputCode in"<<objectName;
                 for (auto p:variables)

@@ -16,33 +16,19 @@
 
 using namespace OpcUa;
 
-/*class SubClient : public SubscriptionHandler
-{
-    void DataChange(uint32_t handle, const Node& node, const Variant& val, AttributeId attr) override
-    {
-        qDebug() << handle << QString::fromStdString(node.ToString())
-                 << QString::fromStdString(val.ToString()) << (uint32_t)attr;
-        if(m_server && m_event)
-            m_server.TriggerEvent(*m_event);
-    }
-public:
-    UaServer m_server;
-    OpcUa::Event *m_event;
-};*/
-
-
 NodesManager::NodesManager(QObject *parent)
-    : QObject(parent)//, m_server(new UaServer(false /*debug*/))
+    : QObject(parent), m_server(new OpcUa::UaServer(true /*debug*/))
 {
 //    m_server = new UaServer(false /*debug*/);
-    m_server.SetServerName("Andon OPCUA server");
-    m_server.SetEndpoint(QString("opc.tcp://%1:%2").arg(OPCUA_IP).arg(OPCUA_PORT).toStdString());
-    m_server.SetServerURI(QString("urn://%1:%2").arg(OPCUA_IP).arg(OPCUA_PORT).toStdString());
-    m_server.Start();
-    m_server.EnableEventNotification();
-    m_root = m_server.GetObjectsNode();
-    m_idx = m_server.RegisterNamespace("http://10.208.110.75:8081/");
-    m_triggerNode = m_server.GetRootNode().AddObject(QString("ns=1;s=TriggerNode").toStdString(),
+
+    m_server->SetServerName("Andon OPCUA server");
+    m_server->SetEndpoint(QString("opc.tcp://%1:%2").arg(OPCUA_IP).arg(OPCUA_PORT).toStdString());
+    m_server->SetServerURI(QString("urn://%1:%2").arg(OPCUA_IP).arg(OPCUA_PORT).toStdString());
+    m_server->Start();
+    m_server->EnableEventNotification();
+    m_root = m_server->GetObjectsNode();
+    m_idx = m_server->RegisterNamespace("http://10.208.110.75:8081/");
+    m_triggerNode = m_server->GetRootNode().AddObject(QString("ns=1;s=TriggerNode").toStdString(),
                                               QString("TriggerNode").toStdString());
         m_eventObjects = OpcUa::Event(ObjectId::BaseEventType);
         m_eventObjects.Severity = 1;
@@ -67,7 +53,7 @@ NodesManager::NodesManager(QObject *parent)
 //    m_eventInputCode.Time = DateTime::Current();
 //    m_eventInputCode.Message = LocalizedText("Injection event");
 //    QTimer::singleShot(15000,[this](){
-//        m_server.TriggerEvent(m_eventInputCode);
+//        m_server->TriggerEvent(m_eventInputCode);
 //    });
 
 
@@ -80,13 +66,17 @@ NodesManager::NodesManager(QObject *parent)
 //    clt.m_server = m_server;
 //    qDebug() << "" << 9;*///
 
-    sub = m_server.CreateSubscription(100, *this);
-    qDebug() << "Subscription" << sub.get();
+    sub = m_server->CreateSubscription(100, *this);
+    //Subscription::Republish()
+    //Subscription
+//    qDebug() << "Subscription: RevisedLifetimeCount" << sub.get()->GetData().RevisedLifetimeCount //3000
+//             << "RevisedMaxKeepAliveCount" << sub.get()->GetData().RevisedMaxKeepAliveCount //10000
+//             << "RevisedPublishingInterval" << sub.get()->GetData().RevisedPublishingInterval; //100
 }
 
 NodesManager::~NodesManager()
 {
-    m_server.Stop();
+    m_server->Stop();
 }
 
 void NodesManager::DataChange(uint32_t handle, const Node& node, const Variant& val, AttributeId attr)
@@ -111,7 +101,7 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
         QString("ns=3;s=%1.%2").arg(keObject->getDeviceName()).arg("loaded").toStdString(),
         QString("loaded").toStdString(), varConv(true));
     sub->SubscribeDataChange(varNode);
-    m_server.TriggerEvent(m_eventObjects);
+    m_server->TriggerEvent(m_eventObjects);
 
     QTimer *keWatchTimer = new QTimer;
     QObject::connect(keWatchTimer,&QTimer::timeout,
@@ -137,7 +127,7 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
                 for (Node &v:keNode.GetChildren()){
                     v.SetValue(Variant());
                 }
-                m_server.TriggerEvent(m_eventObjects);
+                m_server->TriggerEvent(m_eventObjects);
             });
 
             QObject::connect(keObject,&KeTcpObject::ready,[this,keObject](){
@@ -175,7 +165,7 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
                     evt->Time=DateTime::Current();
                     qDebug() << QString("keNode event %1 %2")
                                .arg(val.value<quint32>()).arg(ioName);
-                    m_server.TriggerEvent(*evt);
+                    m_server->TriggerEvent(*evt);
                 }*///
 /*                for (Node &v:keNode.GetChildren())
                     if(v.GetBrowseName().Name==ioName.toStdString()) {
@@ -191,7 +181,7 @@ void NodesManager::loadKeObject(KeTcpObject *keObject)
                         m_eventInputCode.LocalTime = DateTime::Current();
                         m_eventInputCode.ReceiveTime = DateTime::Current();
                         m_eventInputCode.SourceNode=v.GetId();
-                        m_server.TriggerEvent(m_eventInputCode);
+                        m_server->TriggerEvent(m_eventInputCode);
                         return;
                     }
                 qDebug()<< keObject->getDeviceName() << "missing child" << ioName;*///
@@ -222,7 +212,7 @@ void NodesManager::appendVariables(KeTcpObject *keObject)
             sub->SubscribeDataChange(varNode);
             qDebug() << "Subscription" << sub.get();
         }
-        m_server.TriggerEvent(m_eventObjects);
+        m_server->TriggerEvent(m_eventObjects);
     }
 }
 
@@ -243,7 +233,7 @@ void NodesManager::processEvent(KeTcpObject *keObject, const QString &ioName, co
 //            m_eventInputCode.LocalTime = DateTime::Current();
 //            m_eventInputCode.ReceiveTime = DateTime::Current();
 //            m_eventInputCode.SourceNode=v.GetId();
-//            m_server.TriggerEvent(m_eventInputCode);
+//            m_server->TriggerEvent(m_eventInputCode);
             return;
         }
     qDebug()<< keObject->getDeviceName() << "missing child" << ioName;
@@ -260,7 +250,6 @@ void NodesManager::refreshNodes(KeTcpObject *keObject)
                 continue;
         qDebug() << "var"<<QString::fromStdString(v.GetId().GetStringIdentifier())
                  << QString::fromStdString(val.ToString());
-//                << ((val.Type()==VariantType::NUL)?(QVariant()):(QVariant(val.As<uint32_t>())));
         v.SetValue(val);
     }
 

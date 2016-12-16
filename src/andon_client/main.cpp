@@ -5,7 +5,7 @@
 #include "message_handler.h"
 #include "qttelnet.h"
 #include "single_apprun.h"
-#include "opcua_client.h"
+//#include "opcua_client.h"
 
 #include <QApplication>
 //#include <cmath>
@@ -23,8 +23,10 @@
 #include <QtWebSockets/QWebSocketServer>
 #include <QtQml>
 #include "qftp.h"
+#include "main_lambdas.h"
 
-//#include <QAbstractSocket>
+using namespace ML;
+
 
 struct QueryTemplate{
     QStringList fields;
@@ -107,6 +109,7 @@ void ServerFound(QHostAddress ServerAddress)
     InterfaceManager* IM = new InterfaceManager;
     IM->InitVKeyboard();
     ClientRpcUtility *serverRpc = new ClientRpcUtility;
+    MLserverRpc=serverRpc;
 //    serverRpc->start();
     QObject::connect(serverRpc,&ClientRpcUtility::error,[=](QString errorString){
         qDebug()<<errorString;
@@ -212,6 +215,8 @@ void ServerFound(QHostAddress ServerAddress)
 
 
     //########### Step 1.2 TCP DEVICES ############
+    loadKeObjects(serverRpc,qApp);
+
     serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
                                           "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
                           " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",
@@ -546,7 +551,7 @@ void ServerFound(QHostAddress ServerAddress)
 
     });
 
-    //########### Step 1.4 OPC Client ############
+/*    //########### Step 1.4 OPC Client ############
     serverRpc->Query2Json("SELECT ID_TCPDEVICE,DEVICE_NAME FROM TBL_TCPDEVICES "
                           "WHERE DEVICE_TYPE='KBX100' AND ENABLED=1",
                           [=](QVariant resp){
@@ -577,7 +582,7 @@ void ServerFound(QHostAddress ServerAddress)
                 }
            });
            qDebug()<<"lambda OpcUaClient fineshed";
-        });
+        });*///
 
 
 

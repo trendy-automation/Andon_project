@@ -19,7 +19,11 @@ bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
 {
     if (!QSqlDatabase::contains(DB_Name)){
 //        qDebug() << "QSqlDatabase::drivers" << QSqlDatabase::drivers();
-        DB = QSqlDatabase::addDatabase(QLatin1String("QIBASE"),DB_Name);
+
+//        IBPP::Database ibpp = IBPP::DatabaseFactory("",DB_Name,"andon","andon");
+//        ibpp->Connect();
+
+        DB = QSqlDatabase::addDatabase(QLatin1String("QIBASE"),DB_Name); //QIBASE //QFIREBIRD
         DB.setDatabaseName(DB_Path+"/"+DB_Name);
         DB.setUserName("andon");
         DB.setPassword("andon");
@@ -52,8 +56,7 @@ QSqlQuery * DBWrapper::queryexecute (const QString &querytext, QString &lastErro
     }
     bool trans = QSqlDatabase::database().transaction();
     QSqlQuery * SqlQueryPtr = new QSqlQuery(DB);
-    //SqlQueryPtr->setForwardOnly(true);
-    //DB.transaction();
+//    try{
     if (!SqlQueryPtr->exec(querytext)) {
         lastError=SqlQueryPtr->lastError().text();
         qDebug() << querytext << lastError;
@@ -61,6 +64,19 @@ QSqlQuery * DBWrapper::queryexecute (const QString &querytext, QString &lastErro
             QSqlDatabase::database().rollback();
         return 0;
     }
+//    QSqlError cur_err1 = QSqlDatabase::database().driver()->lastError();
+//        if(cur_err1.isValid())
+//            qDebug()<<"driver error"<<cur_err1;
+//    QSqlError cur_err2 = QSqlDatabase::database().lastError();
+//        if(cur_err2.isValid())
+//            qDebug()<<"database error"<<cur_err2;
+    if(SqlQueryPtr->lastError().isValid())
+        qDebug()<<"Query error"<<SqlQueryPtr->lastError();
+//    }
+//    catch(IBPP::Exception& e)
+//    {
+//        qDebug() << "IBPP::Exception" << e.ErrorMessage();
+//    }
      QSqlDatabase::database().commit();
     return SqlQueryPtr;
 }

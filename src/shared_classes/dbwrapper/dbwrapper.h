@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QtSql>
+#include <QSqlError>
+//#include "ibpp.h"
 using namespace std;
 #include <functional>
 

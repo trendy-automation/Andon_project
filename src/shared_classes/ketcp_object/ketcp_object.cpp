@@ -19,7 +19,8 @@
 
 
 //*******************************************************************************
-KeTcpObject::KeTcpObject( ) :
+KeTcpObject::KeTcpObject(QObject *parent) :
+    QObject(parent),
     tcpSocket (new QTcpSocket(this)),
     deviceIp(QString()),
     port(0),

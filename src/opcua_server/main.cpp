@@ -249,7 +249,7 @@ int main(int argc, char** argv)
         WebSocketClientWrapper clientWrapper(server);
         WebSocketClass WScls;
         QWebChannel channel;
-        channel.registerObject(QStringLiteral("clientWeb"), &WScls);
+        channel.registerObject(QStringLiteral("opcWeb"), &WScls);
         QObject::connect(&clientWrapper, &WebSocketClientWrapper::clientConnected,
                          &channel, &QWebChannel::connectTo);
 

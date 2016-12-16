@@ -81,7 +81,7 @@ class KeTcpObject: public QObject
 
 
 public:
-    KeTcpObject();
+    KeTcpObject(QObject * parent=0);
     ~KeTcpObject();
 
     void setDeviceName(const QString &devName) {this->setObjectName(devName);}

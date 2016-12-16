@@ -51,7 +51,7 @@ private:
 //    double m_currentTemp;
 //    double m_temperatureSetpoint;
 
-    OpcUa::UaServer m_server;
+    OpcUa::UaServer *m_server;
 //    Node m_currentTempNode;
 //    Node m_setPointNode;
 //    Node m_startNode;

@@ -285,7 +285,7 @@ void ServerFound(QHostAddress ServerAddress)
                                     }
                                     QTimer::singleShot(0,[ftp,buffer,taskId](){
                                         buffer->setProperty("command",ftp->putBuf(buffer,
-                                            QString("Decl_%1.txt").arg(QDateTime().currentDateTime().toString("ddMMyy_hh.mm")), QFtp::Binary,taskId));
+                                            QString("Decl_%1.txt").arg(QDateTime().currentDateTime().toString("ddMMyy_hh_mm")), QFtp::Binary,taskId));
                                     });
                                 }
                             }

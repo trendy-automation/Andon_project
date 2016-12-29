@@ -120,11 +120,12 @@ public slots:
     }
   */
 
-    void receiveText(const QString &sql_query, const QString &query_method)
+    void receiveText(const QString &query, const QString &query_method)
     {
 //        qDebug() << "sql_query"<<sql_query;
 //                 << "query_method" << query_method << "webuiPages.count()" << webuiPages.count()
 //                 << "recive_count" << recive_count;
+        QString sql_query=QString(query).toUpper();
         if (webuiPages.contains(sql_query)) {
             if (webuiPages.value(sql_query).pageTime.elapsed()<WUI_UPDATE_INTERVAL) {
 //                qDebug() << "webuiPages.contains(sql_query)";

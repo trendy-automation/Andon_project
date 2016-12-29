@@ -195,8 +195,17 @@ QString DBWrapper::query2json(const QString & sqlquery)
     QJsonArray jatmp;
     while(query->next()) {
         QJsonObject jotmp;
-        for(int x=0; x < query->record().count(); x++)
-            jotmp.insert((query->record().fieldName(x)),QJsonValue::fromVariant(query->value(x)));
+        for(int x=0; x < query->record().count(); x++){
+            //TODO DateTime
+//            qDebug()<<query->value(x).userType();
+//            if(query->value(x).userType()==QVariant::DateTime){
+//                QString timestamp = query->value(x).toDateTime().toString("dd.MM.yy hh:mm:ss.zzz");
+//                qDebug()<<"timestamp"<<timestamp;
+//                jotmp.insert((query->record().fieldName(x)),QJsonValue::fromVariant(timestamp));
+//            }
+//            else
+                jotmp.insert((query->record().fieldName(x)),QJsonValue::fromVariant(query->value(x)));
+        }
         jatmp.append(QJsonValue::fromVariant(QJsonDocument(jotmp).toVariant()));
     }
     QJsonDocument json(jatmp);

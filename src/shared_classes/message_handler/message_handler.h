@@ -68,7 +68,7 @@ public:
         qInstallMessageHandler(handleMessages);
         //TODO Numering of builds
         myMessageHandler(QtDebugMsg,QMessageLogContext(),
-            "_________________________________________________________");
+            "\r\n_________________________________________________________");
         myMessageHandler(QtDebugMsg,QMessageLogContext(),
                          QString("Application %1 build %2 runing").arg(DEBUG_NAME)
                           .arg(QFileInfo(qApp->applicationFilePath()).created().toString("ddMMyy:hh.mm")));
@@ -165,7 +165,7 @@ private slots:
         if(!logFile->open(QIODevice::WriteOnly|QIODevice::Text|QIODevice::Append))
             qDebug() << "File not opened"<<logFile->errorString();
         timerFN->stop();
-        timerFN->start(msecsPerDay-QTime::currentTime().msecsSinceStartOfDay()+1000);
+        timerFN->start(msecsPerDay-QTime::currentTime().msecsSinceStartOfDay()+2000);
     }
 
 private:

@@ -25,6 +25,10 @@
 #include "qftp.h"
 #include "main_lambdas.h"
 
+//#include "math.h"
+//using namespace std;
+//#include <functional>
+
 using namespace ML;
 
 
@@ -261,8 +265,11 @@ void ServerFound(QHostAddress ServerAddress)
                         }
                     });
                     QObject::connect(fileTimer,&QTimer::timeout,
-                                     [serverRpc,ftp,buffer](){
-//                        qDebug() << "fileTimer,&QTimer::timeout";
+                                     [serverRpc,ftp,buffer,fileTimer](){
+                        int interval = QTime::currentTime().msecsTo(QTime(QTime::currentTime().hour(),58,0));
+                        if (interval<0) interval = interval +FTP_INTERVAL;
+                        qDebug() << "fileTimer->start(" << interval << ");";
+                        fileTimer->start(interval);
                         serverRpc->Query2Json("SELECT ID_TASK, PART_REFERENCE, PART_COUNT FROM PRODUCTION_DECLARATING",
                                      [ftp,buffer](QVariant resp){
                             qDebug() << "PRODUCTION_DECLARATING"<<resp;
@@ -276,8 +283,6 @@ void ServerFound(QHostAddress ServerAddress)
                                     buffer->open(QBuffer::ReadWrite);
                                     for (auto object = array.begin(); object != array.end(); object++) {
                                         QJsonObject jsonObj=object->toObject();
-//                                        QString line("hdfdjshf%1gdfd%2");
-//                                        line.arg()
                                         buffer->write(jsonObj["PART_REFERENCE"].toString().toLatin1());
                                         buffer->write("\t");
                                         buffer->write(QString::number(jsonObj["PART_COUNT"].toInt()).toLatin1());
@@ -291,8 +296,10 @@ void ServerFound(QHostAddress ServerAddress)
                             }
                         });
                     });
-                    fileTimer->start(FTP_INTERVAL);
-//                    qDebug() << "FTP_INTERVAL" << FTP_INTERVAL;
+                    int interval = QTime::currentTime().msecsTo(QTime(QTime::currentTime().hour(),58,0));
+                    if (interval<0) interval = interval +FTP_INTERVAL;
+                    fileTimer->start(interval);
+                    qDebug() << "ftp cur interval" << interval;
                 }
             }
         }

@@ -54,16 +54,6 @@ EmailAddress* SendEmail::stringToEmail(const QString &str)
 
 }
 
-//void SendEmail::addAttachment(const QByteArray &stream, const QString &fileName)
-//{
-//    EmailMessage->addPart(new MimeAttachment(stream, fileName));
-//}
-
-//void SendEmail::addAttachment(QFile* file)
-//{
-//    EmailMessage->addPart(new MimeAttachment(file));
-//}
-
 void SendEmail::sendEmail(const QString &subject, const QString &message,
                           const QStringList &rcptStringList, QList<QBuffer*> * attachments)
 {
@@ -83,10 +73,11 @@ void SendEmail::sendEmail(const QString &subject, const QString &message,
         emit errorMessage(QString("Connection Failed to host %1:%2").arg(smtp.getHost()).arg(smtp.getPort()));
         return;
     }
-    if (!smtp.login()) {
-        emit errorMessage(QString("Authentification Failed by user %1 pass %2").arg(smtp.getUser()).arg(smtp.getPassword()));
-        return;
-    }
+    if(EMAIL_AUTH)
+        if (!smtp.login()) {
+            emit errorMessage(QString("Authentification Failed by user %1 pass %2").arg(smtp.getUser()).arg(smtp.getPassword()));
+            return;
+        }
     if (!smtp.sendMail(*EmailMessage)) {
         emit errorMessage("Mail sending failed");
         return;
@@ -96,16 +87,3 @@ void SendEmail::sendEmail(const QString &subject, const QString &message,
     smtp.quit();
 }
 
-//void SendEmail::sendEmail(const QString &subject, const QString &message,
-//                               const QStringList &rcptStringList, QList<QBuffer*> * attachments)
-//{
-//    for (auto file = attachments->begin(); file != attachments->end(); ++file)
-//        EmailMessage->addPart(new MimeAttachment(file));
-//    sendEmail(subject, rcptStringList, message);
-//}
-
-//void SendEmail::errorMessage(const QString & message)
-//{
-//    qDebug()<<"SendEmail";//<<message<<smtp.getHost()<<smtp.getPort()
-//           //<<smtp.getResponseText()<<smtp.getUser()<<smtp.getPassword();
-//}

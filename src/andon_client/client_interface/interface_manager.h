@@ -82,7 +82,7 @@ public:
     ~InterfaceManager();
 
 signals:
-    InputFinished(const QString &InputedText);
+    void InputFinished(const QString &InputedText);
     void interfaceLoaded();
     void interfaceCreated();
 

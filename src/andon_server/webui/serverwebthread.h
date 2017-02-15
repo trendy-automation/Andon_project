@@ -10,6 +10,7 @@
 #include <QDebug>
 #include <QTime>
 #include <QTimer>
+#include <QTextCodec>
 
 //_______Excel Lib_______________
 #include "xlsxdocument.h"
@@ -154,6 +155,7 @@ public slots:
         QString template_file;
         QString res_file="report.xlsx";
         QString subject;
+        QString sheet;
         //SELECT p.DESCRIPTION
         //FROM DB_REPORT_DESCRIPTION(PROCEDURE_NAME) p
         if (report==QString("Daily_PDP")) {
@@ -168,22 +170,26 @@ public slots:
             res_file=QString("PDP W%1.xlsx").arg(QDate::currentDate().weekNumber());
             subject=QString("Производственный отчёт большие тримы за неделю %1").arg(QDate::currentDate().weekNumber()) ;
         }
-        qDebug() << "snedReport"<<report<<emails<<sql_query;
-        getSqlQuery(sql_query, [this,&subject,&template_file,&res_file,emails]
+        if (report==QString("REPORT_BREAKDOWNS")) {
+            sql_query="SELECT * FROM REPORT_BREAKDOWNS";
+            res_file=QString("REPORT_BREAKDOWNS_%1.xlsx").arg(QDate::currentDate().toString("dd_MM_yyyy"));
+            subject=QString("Простои производства %1").arg(QDate::currentDate().toString("ddd d MMMM"));
+            sheet=QString("Отчёт по простоям %1").arg(QDate::currentDate().toString("ddd d MMMM"));
+        }
+
+        qDebug()<<"getSqlQuery"<<report<<emails<<sql_query;
+        getSqlQuery(sql_query, [this,&subject,&sheet,&template_file,&res_file,emails]
                         (QSqlQuery *query){
-                if(query->size()<1)
-                    return;
                 QXlsx::Document * xlsx;
                 if (template_file.isEmpty())
                     xlsx = new QXlsx::Document();
                 else
                     xlsx = new QXlsx::Document(template_file);
-                //xlsx->deleteSheet("Data");
-                xlsx->addSheet("Data");
-                xlsx->selectSheet("Data");
+                xlsx->addSheet(sheet);
                 int i=1;
+                QTextCodec *codec = QTextCodec::codecForName("iso8859-1");
                 for(int j=0; j < query->record().count(); j++)
-                    xlsx->write(i,j+1,query->record().fieldName(j));
+                    xlsx->write(i,j+1,QString(codec->fromUnicode(query->record().fieldName(j))));
                 while(query->next()) {
                     i++;
                     for(int j=0; j < query->record().count(); j++)

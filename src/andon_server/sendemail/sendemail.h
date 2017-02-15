@@ -20,8 +20,9 @@
 #include <QObject>
 
 //#include "../../SmtpClient/src/SmtpMime"
-
+//___________
 #include "SmtpMime"
+//___________
 ////??????????
 //#include "mimepart.h"
 //#include "mimehtml.h"

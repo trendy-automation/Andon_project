@@ -372,24 +372,6 @@ int main(int argc, char *argv[])
                               std::function<void(QString jsontext)> functor)>(&WebuiThread::getSqlQuery),
                      andondb, static_cast<void (DBWrapper::*)(const QString &sql_query,const QString &query_method,
                               std::function<void(QString jsontext)> functor)>(&DBWrapper::executeQuery));
-//    qDebug()<<"Finish setup the channel";
-
-//    SchedulerStruc PdpScheduler={[WThread](){
-//                                  if(QDate::currentDate().dayOfWeek()<5) {
-//                                      QStringList rcpnts;
-//                                      if(QDate::currentDate().weekNumber() &
-//            ((QTime::currentTime().hour()*60+QTime::currentTime().minute())/870 ) )
-//                                           rcpnts<<"stadulskiy@faurecia.com";
-//                                      else rcpnts<<"poloznov@faurecia.com";
-//                                      WThread->snedReport("PDP", rcpnts);
-//                                  }
-//            },QList<QTime>()<<QTime::fromString("14:15:00")<<QTime::fromString("22:45:00"),0};
-//    SchedulerStruc PdpScheduler2={[WThread](){
-//                                      WThread->snedReport("PDP", QStringList()<<"ilya-kolesnic@yandex.ru");
-//                                  },QList<FloatTimeStruc>()<<endOfShift2<<endOfShift1Even,0};
-
-//    schedulerList<<PdpScheduler;
-
     /*****************************************
     * Start pdpTimer
     *****************************************/
@@ -398,21 +380,27 @@ int main(int argc, char *argv[])
 
     QTimer * pdpTimer = new QTimer(QAbstractEventDispatcher::instance());
     pdpTimer->setTimerType(Qt::VeryCoarseTimer);
-    pdpTimer->start(msecsPerDay-max(QTime::fromString("14:15:00").elapsed(),
-                                    QTime::fromString("22:45:00").elapsed())+1000);
+    pdpTimer->start(1*(msecsPerDay-QTime::fromString("23:59:59").elapsed())+1000);
     qDebug()<<"pdpTimer start"<<pdpTimer->interval()/3600000.0<<"hours";
-    QObject::connect(pdpTimer,&QTimer::timeout, [WThread,pdpTimer](){
-        qDebug()<<"pdpTimer timeout"<<"dayOfWeek"<<QDate::currentDate().dayOfWeek();
-        if(QDate::currentDate().dayOfWeek()<5) {
-            QStringList rcpnts("ilya.kolesnik@faurecia.com");
-            if(QDate::currentDate().weekNumber() &
-             ((QTime::currentTime().hour()*60+QTime::currentTime().minute())/870))
-                 rcpnts<<"evgeny.stadulsky@faurecia.com";
-            else rcpnts<<"alexander.poloznov@faurecia.com";
-            WThread->snedReport("Daily_PDP", rcpnts);
+    QObject::connect(pdpTimer,&QTimer::timeout, [WThread,pdpTimer,msecsPerDay,andondb](){
+        //qDebug()<<"pdpTimer timeout"<<"dayOfWeek"<<QDate::currentDate().dayOfWeek();
+        if(QDate::currentDate().dayOfWeek()<6) {
+            andondb->executeQuery("SELECT LIST(EMAIL) FROM TBL_STAFF WHERE EMAIL_REPORTING=1",
+                                        [WThread](QSqlQuery *query){
+                if(query->next()){
+                    QStringList rcpnts=query->value(0).toString().split(',');
+                    if(!rcpnts.isEmpty()) //??? newer heppend
+                        WThread->snedReport("REPORT_BREAKDOWNS", rcpnts);
+                }
+            });
+                //rcpnts<<"evgeny.zaychenko@faurecia.com";
+//            if(QDate::currentDate().weekNumber() &
+//             ((QTime::currentTime().hour()*60+QTime::currentTime().minute())/870))
+//                 rcpnts<<"evgeny.stadulsky@faurecia.com";
+//            else rcpnts<<"alexander.poloznov@faurecia.com";
         }
-        pdpTimer->start(msecsPerDay-max(QTime::fromString("14:15:00").elapsed(),
-                                        QTime::fromString("22:45:00").elapsed())+1000);
+        pdpTimer->start(msecsPerDay-max(QTime::fromString("23:59:59").elapsed(),
+                                        QTime::fromString("23:59:59").elapsed())+1000);
         qDebug()<<"pdpTimer start"<<pdpTimer->interval()/3600000.0<<"hours";
     });
     //qDebug()<<"WThread->snedReport";

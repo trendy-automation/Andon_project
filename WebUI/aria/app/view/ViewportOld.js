@@ -1,17 +1,19 @@
-Ext.define('AndonPortal.view.Viewport', {
-    extend: 'Ext.container.Viewport',
+Ext.define('AndonPortal.view.ViewportOld', {
+    extend: 'Ext.container.ViewportOld',
     
     requires: [
         'Ext.Img',
         'Ext.layout.container.Border',
         'Ext.layout.container.Accordion',
         'Ext.tab.Panel',
-        'Ext.form.Panel',
-        'Ext.data.*',
-        'Ext.grid.*',
-        'Ext.tree.*',
-        'Ext.tip.*',
-        'Ext.ux.CheckColumn'
+        'Ext.form.Panel'
+       // Ext.require([
+    ,'Ext.data.*',
+    'Ext.grid.*',
+    'Ext.tree.*',
+    'Ext.tip.*',
+    'Ext.ux.CheckColumn'
+//]);
     ],
 
     layout: 'border',
@@ -82,8 +84,20 @@ Ext.define('AndonPortal.view.Viewport', {
             }],
             
             items: [{
+                xtype: 'mysimplebuttons',
+                closable: true
+            }, {
                 xtype: 'mysimpletree',
                 closable: false
+            }, {
+                xtype: 'panel',
+                title: 'Closable panel',
+                closable: true,
+                html: 'This is an example of a closable panel'
+            }, {
+                xtype: 'mysimpleform',
+                title: 'Personal data form',
+                closable: true
             }]
         }, {
             xtype: 'tabpanel',
@@ -101,6 +115,40 @@ Ext.define('AndonPortal.view.Viewport', {
             
             items: [{
                 xtype: 'mysimplegrid'
+            }, {
+                xtype: 'mysimplepanel'
+            }, {
+                xtype: 'mysimplelist'
+            }, {
+                xtype: 'container',
+                title: 'Window',
+                items: [{
+                    xtype: 'button',
+                    text: 'Open Window',
+                    handler: function() {
+                        var win = this.up('container').add(Ext.widget('mysimplewindow', {
+                            title:'ARIA Window ' + num++
+                        }));
+                        
+                        win.showBy(this, 'tr', [num*20, num*20]);
+                    }
+                }]
+            }, {
+                xtype: 'mysimpleitemselector'
+//             }, {
+//                 xtype: 'mysimpledatepicker'
+            }, {
+                xtype: 'mysimpletoolbar'
+            }, {
+                xtype: 'mysimplewizard'
+            }, {
+                xtype: 'container',
+                title: 'Image',
+                closable: true,
+                
+                items: [{
+                    xtype: 'mysimpleimage'
+                }]
             }]
         }];
 

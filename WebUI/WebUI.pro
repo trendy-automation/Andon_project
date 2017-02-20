@@ -28,4 +28,5 @@ DISTFILES += \
     aria/app/Application.js \
     aria/app/ExtJS-WebSocket/package.json \
     aria/app/view/ViewportOld.js \
-    aria/app.js
+    aria/app.js \
+    aria/app/AndonForm.frm

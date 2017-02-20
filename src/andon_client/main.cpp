@@ -236,6 +236,7 @@ void ServerFound(QHostAddress ServerAddress)
                                          jsonRow["LOGIN"].toString(),jsonRow["PASS"].toString());
                     QBuffer *buffer=new QBuffer;
                     QTimer *fileTimer = new QTimer;
+                    fileTimer->setTimerType(Qt::VeryCoarseTimer);
                     QObject::connect(ftp, &QFtp::commandFinished,[ftp,buffer,serverRpc](int command,bool res){
                         if(command==buffer->property("command").toInt()){
                             int taskId=buffer->property("task").toInt();
@@ -266,8 +267,7 @@ void ServerFound(QHostAddress ServerAddress)
                     });
                     QObject::connect(fileTimer,&QTimer::timeout,
                                      [serverRpc,ftp,buffer,fileTimer](){
-                        int interval = QTime::currentTime().msecsTo(QTime(QTime::currentTime().hour(),58,0));
-                        if (interval<0) interval = interval +FTP_INTERVAL;
+                        int interval = QTime::currentTime().msecsTo(QTime(QTime::currentTime().hour()+1,58,0));
                         qDebug() << "fileTimer->start(" << interval << ");";
                         fileTimer->start(interval);
                         serverRpc->Query2Json("SELECT ID_TASK, PART_REFERENCE, PART_COUNT FROM PRODUCTION_DECLARATING",

@@ -380,7 +380,7 @@ int main(int argc, char *argv[])
 
     QTimer * pdpTimer = new QTimer(QAbstractEventDispatcher::instance());
     pdpTimer->setTimerType(Qt::VeryCoarseTimer);
-    pdpTimer->start(1*(msecsPerDay-QTime::fromString("23:59:59").elapsed())+1000);
+    pdpTimer->start(1*(msecsPerDay-QTime::fromString("23:50:00").elapsed())+1000);
     qDebug()<<"pdpTimer start"<<pdpTimer->interval()/3600000.0<<"hours";
     QObject::connect(pdpTimer,&QTimer::timeout, [WThread,pdpTimer,msecsPerDay,andondb](){
         //qDebug()<<"pdpTimer timeout"<<"dayOfWeek"<<QDate::currentDate().dayOfWeek();
@@ -399,8 +399,9 @@ int main(int argc, char *argv[])
 //                 rcpnts<<"evgeny.stadulsky@faurecia.com";
 //            else rcpnts<<"alexander.poloznov@faurecia.com";
         }
-        pdpTimer->start(msecsPerDay-max(QTime::fromString("23:59:59").elapsed(),
-                                        QTime::fromString("23:59:59").elapsed())+1000);
+        pdpTimer->stop();
+        pdpTimer->start(msecsPerDay-max(QTime::fromString("23:50:00").elapsed(),
+                                        QTime::fromString("23:50:00").elapsed())+1000);
         qDebug()<<"pdpTimer start"<<pdpTimer->interval()/3600000.0<<"hours";
     });
     //qDebug()<<"WThread->snedReport";

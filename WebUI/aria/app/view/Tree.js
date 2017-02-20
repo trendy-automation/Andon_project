@@ -50,7 +50,7 @@ Ext.define('AndonPortal.view.Tree', {
     root: {
         name: 'Root',
         //description: 'Root description',
-        //leaf:false,
+        leaf:false,
         children: [{
             name: 'Child 1'//,
             //description: 'Description 1'

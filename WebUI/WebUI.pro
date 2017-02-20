@@ -26,4 +26,6 @@ DISTFILES += \
     aria/app/view/Wizard.js \
     aria/app/view/WizardController.js \
     aria/app/Application.js \
-    aria/app/ExtJS-WebSocket/package.json
+    aria/app/ExtJS-WebSocket/package.json \
+    aria/app/view/ViewportOld.js \
+    aria/app.js

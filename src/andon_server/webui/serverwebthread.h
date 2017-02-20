@@ -195,10 +195,12 @@ public slots:
                     for(int j=0; j < query->record().count(); j++)
                         xlsx->write(i,j+1,query->value(j));
                 }
-                QBuffer buffer(new QByteArray);
-                xlsx->saveAs(&buffer);
-                buffer.setProperty("FILE_NAME",res_file);
-                emit sendReport2email(subject,"",emails,&(QList<QBuffer*>()<<&buffer));
+                if(i>1){
+                    QBuffer buffer(new QByteArray);
+                    xlsx->saveAs(&buffer);
+                    buffer.setProperty("FILE_NAME",res_file);
+                    emit sendReport2email(subject,"",emails,&(QList<QBuffer*>()<<&buffer));
+                }
             });
     }
 

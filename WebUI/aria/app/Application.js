@@ -45,17 +45,22 @@ Ext.define('AndonPortal.Application', {
                                              listeners: {
                                                  open: function (ws) {
                                                      datajs={};
-                                                     ws.db.query2json("SELECT ID_MACHINE, MACHINE_NAME, MACHINE_COLOR"+
-                                                                      ", AVG_SMED, SHIFT1_TRS, SHIFT2_TRS"+
-                                                                      " FROM PRODUCTION_MACHINE_TRS_NEW"+
-                                                                      ((ws.period.START_TIME === null) ? "" : String.format("('{0}','{1}')"
-                                                                                                                            ,ws.period.START_TIME.toLocaleString("ru-RU"),ws.period.END_TIME.toLocaleString("ru-RU"))),
+                                                     ws.db.query2json("SELECT JSON_BRANCH FROM TREE_GET_JSONTREE('plant')",
                                                                       function(resp){
-                                                                          if(resp!='[]'){
-                                                                              datajsAssign("resources", JSON.parse(resp));
-                                                                          }else{
-                                                                              ws.period.state='ready';
-                                                                          }
+
+                                                                          Ext.ux.ajax.SimManager.init({
+                                                                                                          delay: 300,
+                                                                                                          defaultSimlet: null
+                                                                                                      }).register({
+                                                                                                                      'trees': {
+                                                                                                                          data: JSON.parse(resp),
+                                                                                                                          stype: 'json'
+                                                                                                                      }
+                                                                                                                  });
+                                                                          treeStore.load();
+
+
+
                                                                       }
                                                                       );
                                                  },

@@ -1,9 +1,4 @@
-TEMPLATE = app
-QT = core
-CONFIG -= app_bundle
-CONFIG += c++11
-
-SOURCES +=
+TEMPLATE = subdirs
 
 DISTFILES += \
     aria/app/ExtJS-WebSocket/qwebchannel.js \

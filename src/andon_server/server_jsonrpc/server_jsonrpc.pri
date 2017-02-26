@@ -1,8 +1,8 @@
 include($${ANDNPRJ_LIBPATH}/qjsonrpc/qjsonrpc.pri)
 INCLUDEPATH += $${ANDNPRJ_LIBPATH}/qjsonrpc \
                $${ANDNPRJ_LIBPATH}/qjsonrpc/json
-LIBS += -L$${ANDNPRJ_LIBPATH}/qjsonrpc $${QJSONRPC_LIBS}
-
+#LIBS += -L$${ANDNPRJ_LIBPATH}/qjsonrpc $${QJSONRPC_LIBS}
+LIBS += -L$${QJSONRPCDESTDIR} $${QJSONRPC_LIBS}
 
 
 INCLUDEPATH+=$$PWD

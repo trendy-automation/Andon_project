@@ -19,9 +19,9 @@
 
 #include <QObject>
 
-//#include "../../SmtpClient/src/SmtpMime"
+#include "../../lib/SmtpClient/src/SmtpMime"
 //___________
-#include "SmtpMime"
+//#include "SmtpMime"
 //___________
 ////??????????
 //#include "mimepart.h"

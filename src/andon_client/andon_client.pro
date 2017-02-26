@@ -18,6 +18,8 @@ include(main_lambdas/main_lambdas.pri)
 DEFINES += DEBUG_NAME='\\"Client\\"'
 DEFINES += APP_NAME='\\"CLIENT\\"'
 
+QJSONRPCDESTDIR= $${DESTDIR}/../lib/qjsonrpc/release
+
 CONFIG  += console
 
 QT      += concurrent

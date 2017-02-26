@@ -65,7 +65,7 @@ bool Step_3_OpenDB(DBWrapper *andondb)
     /*****************************************
      * Start DB
      *****************************************/
-    qDebug()<<"Start DB";
+    qDebug()<<"Start DB"<<SMTPCLIENTDESTDIR ;
     //DBWrapper *andondb = new DBWrapper;
     return andondb->ConnectDB(QCoreApplication::applicationDirPath(),DATABASE_FILE);
 }

@@ -14,6 +14,9 @@ include(sendemail/sendemail.pri)
 DEFINES += DEBUG_NAME='\\"Server\\"'
 DEFINES += APP_NAME='\\"SERVER\\"'
 
+SMTPCLIENTDESTDIR= $${DESTDIR}/../lib/SmtpClient/release
+QJSONRPCDESTDIR= $${DESTDIR}/../lib/qjsonrpc/release
+
 #include($${ANDNPRJ_LIBPATH}/qjsonrpc/qjsonrpc.pri)
 #INCLUDEPATH += $${ANDNPRJ_LIBPATH}/qjsonrpc/src \
 #               $${ANDNPRJ_LIBPATH}/qjsonrpc/src/json
@@ -49,40 +52,7 @@ CONFIG -= app_bundle
 
 
 TARGET = andon_server
-#CONFIG += console
-#CONFIG -= app_bundle
 
 TEMPLATE = app
 
 SOURCES += main.cpp \
-    #$$PWD/jsonrpc_tcpserver/testservice.cpp \
-    #$$PWD/sms_service/sms_service.cpp \
-    #$$PWD/broadcastsender/sender.cpp #\
-
-#HEADERS += \
-    #$$PWD/jsonrpc_tcpserver/testservice.h \
-    #$$PWD/sms_service/sms_service.h \
-    #$$PWD/sql_fb/sql_fb.h \
-    #$$PWD/broadcastsender/sender.h \
-    #$$PWD/iostreamtheard/iostreamtheard.h
-
-
-
-#INCLUDEPATH += jsonrpc_tcpserver \
-#               sms_service \
-#               sql_fb \
-#               broadcastsender #\
-               #iostreamthread
-               #webui
-
-# Location of SMTP Library
-#SMTP_LIBRARY_LOCATION = $$PWD/../../../build-andon_project-Desktop_Qt_5_4_0_MinGW_32bit-Release/src/andon_server/
-
-#win32:CONFIG(release, debug|release): LIBS += -L$$SMTP_LIBRARY_LOCATION/release/ -lSMTPEmail
-#else:win32:CONFIG(debug, debug|release): LIBS += -L$$SMTP_LIBRARY_LOCATION/debug/ -lSMTPEmail
-#else:unix: LIBS += -L$$SMTP_LIBRARY_LOCATION -lSMTPEmail
-
-#INCLUDEPATH += $$SMTP_LIBRARY_LOCATION
-#DEPENDPATH += $$SMTP_LIBRARY_LOCATION
-
-

@@ -1,5 +1,5 @@
 TEMPLATE = subdirs
-SUBDIRS  += src \
-            lib \
+SUBDIRS  += lib \
+            src \
             WebUI
 CONFIG  += ordered

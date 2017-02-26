@@ -1,5 +1,6 @@
 QT += core network
-LIBS        += -lsnap7
+#LIBS        += -lsnap7
+LIBS += -L$${ANDNPRJ_LIBPATH}/snap7 -lsnap7
 
 INCLUDEPATH += $$PWD
 

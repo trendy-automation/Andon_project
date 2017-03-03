@@ -16,10 +16,11 @@ var treeStore = Ext.create('Ext.data.TreeStore', {
                                    type: 'ajax',
                                    url: 'trees',
                                    reader: {
-                                                   type: 'json'//,
-                                                  // root: 'children'
+                                                   type: 'json',
+                                                   rootProperty: 'children'
                                    }
                                },
+                               defaultValue: {root:{}},
                                autoLoad: false
                  });
 

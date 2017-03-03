@@ -1,10 +1,4 @@
-TEMPLATE = app
-QT = core
-CONFIG -= app_bundle
-CONFIG += c++11
-
-SOURCES +=
-
+TEMPLATE = subdirs
 DISTFILES += \
     aria/app/ExtJS-WebSocket/qwebchannel.js \
     aria/app/ExtJS-WebSocket/WebSocket.js \
@@ -26,7 +20,9 @@ DISTFILES += \
     aria/app/view/Wizard.js \
     aria/app/view/WizardController.js \
     aria/app/Application.js \
-    aria/app/ExtJS-WebSocket/package.json \
-    aria/app/view/ViewportOld.js \
     aria/app.js \
-    aria/app/AndonForm.frm
+    aria/app/AndonForm.frm \
+    aria/app/ExtJS-WebSocket/qwebchannel.js \
+    aria/app/ExtJS-WebSocket/WebSocket.js \
+    aria/app/ExtJS-WebSocket/WebSocketManager.js \
+    aria/app.json

@@ -1,29 +1,30 @@
-var store = Ext.create('Ext.data.TreeStore', {
-    root: {
-        text: "/",
-        expanded: true,
-        children: [
-            { text: "detention", leaf: true },
-            { text: "homework", expanded: true, children: [
-                { text: "book report", leaf: true },
-                { text: "alegrbra", leaf: true}
-            ] },
-            { text: "buy lottery tickets", leaf: true }
-        ]
-    }
-});
+Ext.define('MyTree', {
+                   extend: 'Ext.data.Model',
+                   fields: [
+                       {name: 'OBJECT_NAME',  type: 'string'},
+                       {name: 'OBJECT_TYPE_NAME',  type: 'string'},
+                       {name: 'OBJECT_TYPE_ID',   type: 'int', convert: null},
+                       {name: 'PKEY',   type: 'int', convert: null},
+                       {name: 'PID',   type: 'int', convert: null}
+                   ],
+           });
 
-// Ext.create('Ext.tree.Panel', {
-//     title: 'Simple Tree',
-//     width: 200,
-//     height: 150,
-//     store: store,
-//     rootVisible: true,
-//     renderTo:
-// });
+var treeStore = Ext.create('Ext.data.TreeStore', {
+                               fields: ['OBJECT_NAME','OBJECT_TYPE_NAME','OBJECT_TYPE_ID','PKEY','PID'],
+                               pageSize :0,
+                               proxy: {
+                                   type: 'ajax',
+                                   url: 'trees',
+                                   reader: {
+                                                   type: 'json',
+                                                   rootProperty: 'children'
+                                   }
+                               },
+                               defaultValue: {root:{}},
+                               autoLoad: false
+                 });
 
 Ext.define('AndonPortal.view.Tree', {
-    //extend: 'Ext.panel.Panel',
     extend: 'Ext.tree.Panel',
     alias:  'widget.mysimpletree',
     viewConfig: {plugins: {ptype: 'treeviewdragdrop'}}, 
@@ -35,28 +36,17 @@ Ext.define('AndonPortal.view.Tree', {
     width: 300,
     height: 150,
     fields: ['name', 'description'],
+    store: treeStore,
     columns: [{
         xtype: 'treecolumn',
-        text: 'Name',
-        dataIndex: 'name',
+        text: 'Andon data',
+        dataIndex: 'OBJECT_NAME',
         width: 150,
         sortable: true
-    }, {
+    },/* {
         text: 'Description',
         dataIndex: 'description',
         flex: 1,
         sortable: true
-    }],
-    root: {
-        name: 'Root',
-        //description: 'Root description',
-        leaf:false,
-        children: [{
-            name: 'Child 1'//,
-            //description: 'Description 1'
-        }, {
-            name: 'Child 2'//,
-            //description: 'Description 2'
-        }]
-    }
+    }*/]
 });

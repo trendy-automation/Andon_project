@@ -3,18 +3,18 @@
  * calls Ext.application(). This is the ideal place to handle application launch and
  * initialization details.
  */
-Ext.Loader.setConfig ({
-                          enabled: true,
-                          paths: {
+//Ext.Loader.setConfig ({
+//                          enabled: true,
+//                          paths: {
 
-                              'Ext.ux.WebSocket': 'ExtJS-WebSocket/WebSocket.js' ,
-                              'Ext.ux.WebSocketManager': 'ExtJS-WebSocket/WebSocketManager.js',
-                              'Ext.ux.qwebchannel': 'ExtJS-WebSocket/qwebchannel.js'
-                              //'Ext.ux.SqlSocket': 'ExtJS-WebSocket/SqlSocket.js',
-                          }
-                      });
+//                              'Ext.ux.WebSocket': '../shared/ExtJS-WebSocket/WebSocket.js' ,
+//                              'Ext.ux.WebSocketManager': '../shared/ExtJS-WebSocket/WebSocketManager.js',
+//                              'Ext.ux.qwebchannel': '../shared/ExtJS-WebSocket/qwebchannel.js'
+//                              //'Ext.ux.SqlSocket': '../shared/ExtJS-WebSocket/SqlSocket.js',
+//                          }
+//                      });
 
-Ext.require (['Ext.ux.WebSocket', 'Ext.ux.WebSocketManager']); //,'Ext.ux.SqlSocket'
+//Ext.require (['Ext.ux.WebSocket', 'Ext.ux.WebSocketManager']); //,'Ext.ux.SqlSocket'
 
 // Ext.tree.Panel.borrow(Ext.grid.Panel, [
 //     'bothCfgCopy',
@@ -37,34 +37,37 @@ Ext.define('AndonPortal.Application', {
                ],
 
                launch: function () {
-                   // TODO - Launch the application
-                   Ext.tip.QuickTipManager.init();
-                   var qws = Ext.create ('Ext.ux.WebSocket', {
-                                             id : 'ServerWebSocket',
-                                             url: "ws://"+location.hostname+":12346" ,
-                                             listeners: {
-                                                 open: function (ws) {
-                                                     datajs={};
-                                                     ws.db.query2json("SELECT ID_MACHINE, MACHINE_NAME, MACHINE_COLOR"+
-                                                                      ", AVG_SMED, SHIFT1_TRS, SHIFT2_TRS"+
-                                                                      " FROM PRODUCTION_MACHINE_TRS_NEW"+
-                                                                      ((ws.period.START_TIME === null) ? "" : String.format("('{0}','{1}')"
-                                                                                                                            ,ws.period.START_TIME.toLocaleString("ru-RU"),ws.period.END_TIME.toLocaleString("ru-RU"))),
-                                                                      function(resp){
-                                                                          if(resp!='[]'){
-                                                                              datajsAssign("resources", JSON.parse(resp));
-                                                                          }else{
-                                                                              ws.period.state='ready';
-                                                                          }
-                                                                      }
-                                                                      );
-                                                 },
-                                                 close: function (ws) {
-                                                     clearInterval(refreshIntervalId);
-                                                     console.log ('The qwebsocket is closed!');
-                                                 }
-                                             }
-                                         });
+                   console.log('Application launch function');
+//                   // TODO - Launch the application
+//                   Ext.tip.QuickTipManager.init();
+//                   var qws = Ext.create ('Ext.ux.WebSocket', {
+//                                             id : 'ServerWebSocket',
+//                                             //url: "ws://"+location.hostname+":12346",
+//                                             url: "ws://10.208.110.75:12346",
+//                                             listeners: {
+//                                                 open: function (ws) {
+//                                                     datajs={};
+//                                                     ws.db.query2json("SELECT JSON_BRANCH FROM TREE_GET_JSONTREE('plant')",
+//                                                                      function(resp){
+//                                                                          Ext.ux.ajax.SimManager.init({
+//                                                                                                          delay: 300,
+//                                                                                                          defaultSimlet: null
+//                                                                                                      }).register({
+//                                                                                                                      'trees': {
+//                                                                                                                          data: JSON.parse(resp),
+//                                                                                                                          stype: 'json'
+//                                                                                                                      }
+//                                                                                                                  });
+//                                                                          treeStore.load();
+//                                                                      }
+//                                                                      );
+//                                                 },
+//                                                 close: function (ws) {
+//                                                     clearInterval(refreshIntervalId);
+//                                                     console.log ('The qwebsocket is closed!');
+//                                                 }
+//                                             }
+//                                         });
                },
 
                onAppUpdate: function () {

@@ -341,13 +341,14 @@ Ext.define('Ext.ux.WebSocket', {
     * Internal qwebsocket initialization
     * @private
     */
-
+    me: this,
     initQWebsocket: function (channel,me) {
         for(objName in channel.objects){
-            me[objName] = channel.objects[objName];
+            if(me)
+                me[objName] = channel.objects[objName];
         }
-        me.fireEvent('open', me);
-
+        if(me)
+            me.fireEvent('open', me);
         },
 
     /**

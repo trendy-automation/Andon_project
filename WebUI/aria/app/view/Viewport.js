@@ -12,6 +12,7 @@ Ext.define('AndonPortal.view.Viewport', {
         'Ext.tree.*',
         'Ext.tip.*',
         'Ext.ux.CheckColumn'
+        //,'Ext.ux.WebSocket', 'Ext.ux.WebSocketManager'
     ],
 
     layout: 'border',
@@ -103,6 +104,7 @@ Ext.define('AndonPortal.view.Viewport', {
                 xtype: 'mysimplegrid'
             }]
         }];
+
 
         me.callParent();
     }

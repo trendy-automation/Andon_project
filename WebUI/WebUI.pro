@@ -1,8 +1,4 @@
 TEMPLATE = subdirs
-<<<<<<< HEAD
-
-=======
->>>>>>> ca8f804b2830a91da69d29ea7a1c63992fe350be
 DISTFILES += \
     aria/app/ExtJS-WebSocket/qwebchannel.js \
     aria/app/ExtJS-WebSocket/WebSocket.js \

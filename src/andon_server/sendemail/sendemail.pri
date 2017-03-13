@@ -4,12 +4,12 @@ QT       += core
 
 # Location of SMTP Library
 #LIBS += -L$${SMTPCLIENTDESTDIR} -lSMTPEmail
-#SMTP_LIBRARY_LOCATION = $${SMTPCLIENTDESTDIR}/SmtpClient
+SMTP_LIBRARY_LOCATION = $${SMTPCLIENTDESTDIR}/SmtpClient
 #SMTP_LIBRARY_LOCATION = $${ANDNPRJ_LIBPATH}/SmtpClient/
 
-#win32:CONFIG(release, debug|release): LIBS += -L$$SMTP_LIBRARY_LOCATION/release/ -lSMTPEmail
-#else:win32:CONFIG(debug, debug|release): LIBS += -L$$SMTP_LIBRARY_LOCATION/debug/ -lSMTPEmail
-#else:unix: LIBS += -L$$SMTP_LIBRARY_LOCATION -lSMTPEmail
+win32:CONFIG(release, debug|release): LIBS += -L$$SMTP_LIBRARY_LOCATION/release/ -lSMTPEmail
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$SMTP_LIBRARY_LOCATION/debug/ -lSMTPEmail
+else:unix: LIBS += -L$$SMTP_LIBRARY_LOCATION -lSMTPEmail
 
 #INCLUDEPATH += $$SMTP_LIBRARY_LOCATION
 #DEPENDPATH += $$SMTP_LIBRARY_LOCATION

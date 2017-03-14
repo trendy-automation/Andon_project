@@ -1,4 +1,4 @@
-QT += core network
+#QT += core network
 include($${ANDNPRJ_LIBPATH}/snap7/snap7.pri)
 
 #LIBS        += -lsnap7

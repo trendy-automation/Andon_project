@@ -55,4 +55,5 @@ DEFINES += OPCUA_INTERVAL=3000
 
 DISTFILES += \
     $$PWD/lib/snap7/snap7.lib \
-    $$PWD/lib/snap7/snap7.dll
+    $$PWD/lib/snap7/snap7.dll \
+    $$PWD/.gitignore

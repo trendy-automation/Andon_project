@@ -12,6 +12,15 @@ private-headers {
     QT += core-private
 }
 
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../lib/qjsonrpc/release/ -lqjsonrpc
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../lib/qjsonrpc/debug/ -lqjsonrpc
+else:unix: LIBS += -L$$OUT_PWD/../../lib/qjsonrpc/ -lqjsonrpc
+
+INCLUDEPATH += $$PWD #/../../lib/qjsonrpc
+DEPENDPATH += $$PWD #/../../lib/qjsonrpc
+
+
 QJSONRPC_INCLUDEPATH = $${PWD}
 QJSONRPC_LIBS = -lqjsonrpc
 contains(QJSONRPC_LIBRARY_TYPE, staticlib) {

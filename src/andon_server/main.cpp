@@ -323,7 +323,6 @@ int main(int argc, char *argv[])
     StartUpDelay.setSingleShot(true);
     StartUpDelay.start();
     QObject::connect(&StartUpDelay,&QTimer::timeout,[=](){
-
         iotheard->start();
         sender->run(UDP_INTERVAL,UDP_PORT);
         //TODO: stop broadcast after connect all clients

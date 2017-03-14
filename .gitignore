@@ -1,0 +1,12 @@
+/WebUI/.sencha/*
+/WebUI/classic/*
+/WebUI/cmd/*
+/WebUI/ext/*
+/WebUI/licenses/*
+/WebUI/modern/*
+/WebUI/packages/*
+/WebUI/resources/*
+/WebUI/sass/*
+/WebUI/welcome/*
+/WebUI/*
+andon_project.pro.user

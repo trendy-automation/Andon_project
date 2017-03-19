@@ -10,7 +10,7 @@ Ext.define('MyTree', {
            });
 
 var treeStore = Ext.create('Ext.data.TreeStore', {
-                               fields: ['OBJECT_NAME','OBJECT_TYPE_NAME','OBJECT_TYPE_ID','PKEY','PID'],
+                               //fields: ['OBJECT_NAME','OBJECT_TYPE_NAME','OBJECT_TYPE_ID','PKEY','PID'],
                                pageSize :0,
                                proxy: {
                                    type: 'ajax',
@@ -27,10 +27,10 @@ var treeStore = Ext.create('Ext.data.TreeStore', {
 Ext.define('AndonPortal.view.Tree', {
     extend: 'Ext.tree.Panel',
     alias:  'widget.mysimpletree',
-    viewConfig: {plugins: {ptype: 'treeviewdragdrop'}}, 
+//    viewConfig: {plugins: {ptype: 'treeviewdragdrop'}},
     renderTo: Ext.getBody(),
     title: 'TreeGrid',
-    rootVisible: true,
+//    rootVisible: true,
     hideCollapseTool: false,
     collapsible: true,
     width: 300,
@@ -40,7 +40,7 @@ Ext.define('AndonPortal.view.Tree', {
     columns: [{
         xtype: 'treecolumn',
         text: 'Andon data',
-        dataIndex: 'OBJECT_NAME',
+        dataIndex: "text",//'OBJECT_NAME',
         width: 150,
         sortable: true
     }/*, {

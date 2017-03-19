@@ -51,20 +51,24 @@ Ext.application({
                                                           datajs={};
                                                           ws.db.query2json("SELECT JSON_BRANCH FROM TREE_GET_JSONTREE('plant')",
                                                                            function(resp){
-
+                                                                               var JSONdata = JSON.parse(resp);
+                                                                               if(JSONdata.length!=0){
+                                                                                   JSONdata=JSONdata[0].JSON_BRANCH;
+                                                                                   //console.log('JSONdata',JSONdata);
+                                                                                   JSONdata=JSON.parse(JSONdata);
+                                                                               }
+                                                                               //console.log('JSONdata',JSONdata);
                                                                                Ext.ux.ajax.SimManager.init({
                                                                                                                delay: 300,
                                                                                                                defaultSimlet: null
                                                                                                            }).register({
                                                                                                                            'trees': {
-                                                                                                                               data: JSON.parse(resp),
+                                                                                                                               data: JSONdata,
                                                                                                                                stype: 'json'
                                                                                                                            }
                                                                                                                        });
                                                                                treeStore.load();
-
-
-
+                                                                               //treepanel.setRootNode(null);
                                                                            }
                                                                            );
                                                       },

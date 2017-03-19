@@ -343,12 +343,13 @@ Ext.define('Ext.ux.WebSocket', {
     */
     me: this,
     initQWebsocket: function (channel,me) {
-        for(objName in channel.objects){
-            if(me)
+        if (me) {
+            for(objName in channel.objects)
                 me[objName] = channel.objects[objName];
+                me.fireEvent('open', me);
         }
-        if(me)
-            me.fireEvent('open', me);
+        else
+            console.log('initQWebsocket me not ok');
         },
 
     /**

@@ -39,7 +39,7 @@
 //#include <windows.h>
 
 //_______SMTPEmail Lib_______________
-#include "smtpclient.h"
+//#include "smtpclient.h"
 //#include "mimepart.h"
 //#include "mimehtml.h"
 //#include "mimeattachment.h"
@@ -65,7 +65,7 @@ bool Step_3_OpenDB(DBWrapper *andondb)
     /*****************************************
      * Start DB
      *****************************************/
-    qDebug()<<"Start DB"<<SMTPCLIENTDESTDIR ;
+    qDebug()<<"Start DB";
     //DBWrapper *andondb = new DBWrapper;
     return andondb->ConnectDB(QCoreApplication::applicationDirPath(),DATABASE_FILE);
 }

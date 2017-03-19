@@ -115,6 +115,10 @@
             "bundle": true
         },
         {
+            "path": "app/ExtJS-WebSocket/SqlSocket.js",
+            "bundle": true
+        },
+        {
             "path": "app.js",
             "bundle": true
         }

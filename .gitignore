@@ -8,5 +8,5 @@
 /WebUI/resources/*
 /WebUI/sass/*
 /WebUI/welcome/*
-/WebUI/*
+#/WebUI/*
 andon_project.pro.user

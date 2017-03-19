@@ -61,10 +61,10 @@ var QWebChannelMessageTypes = {
     connectToSignal: 7,
     disconnectFromSignal: 8,
     setProperty: 9,
-    response: 10,
+    response: 10
 };
 
-var QWebChannel = function(transport, initCallback)
+var QWebChannel = function(transport, initCallback, parent) //my hack 19.03.17
 {
     if (typeof transport !== "object" || typeof transport.send !== "function") {
         console.error("The QWebChannel expects a transport object with a send function and onmessage callback property." +
@@ -177,7 +177,7 @@ var QWebChannel = function(transport, initCallback)
             channel.objects[objectName].unwrapProperties();
         }
         if (initCallback) {
-            initCallback(channel);
+            initCallback(channel,parent); //my hack 19.03.17
         }
         channel.exec({type: QWebChannelMessageTypes.idle});
     });

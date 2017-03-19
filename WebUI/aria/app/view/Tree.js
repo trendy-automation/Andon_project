@@ -6,7 +6,7 @@ Ext.define('MyTree', {
                        {name: 'OBJECT_TYPE_ID',   type: 'int', convert: null},
                        {name: 'PKEY',   type: 'int', convert: null},
                        {name: 'PID',   type: 'int', convert: null}
-                   ],
+                   ]
            });
 
 var treeStore = Ext.create('Ext.data.TreeStore', {
@@ -43,7 +43,7 @@ Ext.define('AndonPortal.view.Tree', {
         dataIndex: 'OBJECT_NAME',
         width: 150,
         sortable: true
-    },/* {
+    }/*, {
         text: 'Description',
         dataIndex: 'description',
         flex: 1,

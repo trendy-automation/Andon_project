@@ -15,7 +15,7 @@ Ext.Loader.setConfig ({
                           }
                       });
 
-Ext.require (['Ext.ux.WebSocket', 'Ext.ux.WebSocketManager']); //,'Ext.ux.SqlSocket'
+Ext.require (['Ext.ux.WebSocket', 'Ext.ux.WebSocketManager','Ext.selection.Model',]); //,'Ext.ux.SqlSocket'
 
 Ext.application({
     name: 'AndonPortal',
@@ -40,7 +40,7 @@ Ext.application({
     ],
                     launch: function () {
                         console.log('app launch function');
-                        Ext.tip.QuickTipManager.init();
+                        //Ext.tip.QuickTipManager.init();
                         var qws = Ext.create ('Ext.ux.WebSocket', {
                                                   id : 'ServerWebSocket',
                                                   //url: "ws://"+location.hostname+":12346",
@@ -48,27 +48,34 @@ Ext.application({
                                                   listeners: {
                                                       open: function (ws) {
                                                           console.log('WebSocket opened');
-                                                          datajs={};
                                                           ws.db.query2json("SELECT JSON_BRANCH FROM TREE_GET_JSONTREE('plant')",
                                                                            function(resp){
-                                                                               var JSONdata = JSON.parse(resp);
-                                                                               if(JSONdata.length!=0){
-                                                                                   JSONdata=JSONdata[0].JSON_BRANCH;
-                                                                                   //console.log('JSONdata',JSONdata);
-                                                                                   JSONdata=JSON.parse(JSONdata);
-                                                                               }
+                                                                               var JSONdata =[];
+                                                                               JSONdata=JSON.parse(resp);
+                                                                               //console.log('resp',resp  );
+                                                                               //if(JSONdata.length!=0)
+                                                                                   //JSONdata = eval(resp);
+                                                                               //JSONdata = eval('['+JSONdata[0].JSON_BRANCH+']');
+                                                                               JSONdata = /*{OBJECT_NAME:'plant',
+                                                                                           expaned: true,
+                                                                                           leaf: false,
+                                                                                           children:*/
+                                                                                               JSONdata.map(function(node) {
+                                                                                                return eval('['+node.JSON_BRANCH+']')[0];
+                                                                                                })
+                                                                               //}
+                                                                           ;
                                                                                //console.log('JSONdata',JSONdata);
                                                                                Ext.ux.ajax.SimManager.init({
                                                                                                                delay: 300,
                                                                                                                defaultSimlet: null
-                                                                                                           }).register({
-                                                                                                                           'trees': {
+                                                                                                           }).register({'/json/treePanel': {
                                                                                                                                data: JSONdata,
                                                                                                                                stype: 'json'
                                                                                                                            }
                                                                                                                        });
                                                                                treeStore.load();
-                                                                               //treepanel.setRootNode(null);
+                                                                               //console.log(' treeStore.getData()', treeStore.getData());
                                                                            }
                                                                            );
                                                       },

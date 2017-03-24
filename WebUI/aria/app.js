@@ -3,19 +3,25 @@
  * needed for your application, but these edits will have to be merged by
  * Sencha Cmd when upgrading.
  */
-//@require /app/ExtJS-WebSocket/qwebchannel.js
 Ext.Loader.setConfig ({
                           enabled: true,
                           paths: {
 
                               'Ext.ux.WebSocket': 'app/ExtJS-WebSocket/WebSocket.js' ,
                               'Ext.ux.WebSocketManager': 'app/ExtJS-WebSocket/WebSocketManager.js'
-                              //'Ext.ux.qwebchannel': 'app/ExtJS-WebSocket/qwebchannel.js'
-                              //'Ext.ux.SqlSocket': 'app/ExtJS-WebSocket/SqlSocket.js',
+                              //,'Ext.ux.qwebchannel': 'app/ExtJS-WebSocket/qwebchannel.js'
+                              ,'Ext.ux.SqlSocket': 'app/ExtJS-WebSocket/SqlSocket.js'
+                              ,'Ext.ux.SqlSocket': 'app/ExtJS-WebSocket/SqlSocket.js'
                           }
                       });
 
-Ext.require (['Ext.ux.WebSocket', 'Ext.ux.WebSocketManager','Ext.selection.Model',]); //,'Ext.ux.SqlSocket'
+Ext.require (['Ext.ux.WebSocket',
+              'Ext.ux.WebSocketManager',
+              'Ext.selection.Model'
+//              ,'AndonPortal.store.Tree',
+//              'AndonPortal.model.Tree',
+//              'AndonPortal.Application'
+             ]); //,'Ext.ux.SqlSocket'
 
 Ext.application({
     name: 'AndonPortal',
@@ -41,13 +47,14 @@ Ext.application({
                     launch: function () {
                         console.log('app launch function');
                         //Ext.tip.QuickTipManager.init();
-                        var qws = Ext.create ('Ext.ux.WebSocket', {
+                        var qws = Ext.create ('Ext.ux.SqlSocket', {
                                                   id : 'ServerWebSocket',
                                                   //url: "ws://"+location.hostname+":12346",
-                                                  url: "ws://127.0.0.1:12346",
+                                                  //url: "ws://127.0.0.1:12346",
+                                                  url: "ws://10.208.110.75:12346",
                                                   listeners: {
                                                       open: function (ws) {
-                                                          console.log('WebSocket opened');
+                                                          console.log('SqlSocket opened');
                                                           ws.db.query2json("SELECT JSON_BRANCH FROM TREE_GET_JSONTREE('plant')",
                                                                            function(resp){
                                                                                var JSONdata =[];
@@ -74,7 +81,8 @@ Ext.application({
                                                                                                                                stype: 'json'
                                                                                                                            }
                                                                                                                        });
-                                                                               treeStore.load();
+                                                                               AndonPortal.store.Tree.load();
+                                                                               //treeStore.load();
                                                                                //console.log(' treeStore.getData()', treeStore.getData());
                                                                            }
                                                                            );
@@ -97,7 +105,6 @@ Ext.application({
     //-------------------------------------------------------------------------
     msg: function(title, format) {
         var s = Ext.String.format.apply(String, Array.prototype.slice.call(arguments, 1));
-        
         Ext.toast(s, title);
     }
 });

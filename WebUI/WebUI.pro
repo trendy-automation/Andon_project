@@ -5,8 +5,10 @@ DISTFILES += \
     aria/app/ExtJS-WebSocket/SqlSocket.js \
     aria/app/ExtJS-WebSocket/WebSocket.js \
     aria/app/ExtJS-WebSocket/WebSocketManager.js \
+    aria/app/model/User.js \
     aria/app/model/Sql_sources.js \
-    aria/app/model/Users.js \
+    aria/app/model/Tree.js \
+    aria/app/store/Tree.js \
     aria/app/view/Buttons.js \
     aria/app/view/DatePicker.js \
     aria/app/view/Form.js \
@@ -24,7 +26,5 @@ DISTFILES += \
     aria/app/Application.js \
     aria/app.js \
     aria/app/AndonForm.frm \
-    aria/app/ExtJS-WebSocket/qwebchannel.js \
-    aria/app/ExtJS-WebSocket/WebSocket.js \
-    aria/app/ExtJS-WebSocket/WebSocketManager.js \
     aria/app.json
+

@@ -13,6 +13,7 @@ include(broadcastreceiver/broadcastreceiver.pri)
 include(plc_station/plc_station.pri)
 include($${ANDNPRJ_LIBPATH}/qextserialport-1.2rc/src/qextserialport.pri)
 #include(opcua_client/opcua_client.pri)
+include(../shared_classes/serlock_manager/serlock_manager.pri)
 include(main_lambdas/main_lambdas.pri)
 
 DEFINES += DEBUG_NAME='\\"Client\\"'

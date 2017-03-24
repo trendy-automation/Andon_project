@@ -33,7 +33,7 @@ Ext.define ('Ext.ux.SqlSocket', {
                 callback(key, val);
         }
     },
-    db  : {procedures:[],query2json:function(){}},
+    //db  : {procedures:[],query2json:function(){}},
     sql : function(proc,input,fields,result){
              proc=proc.toUpperCase();
              var errors = [];

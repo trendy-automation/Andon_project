@@ -24,6 +24,7 @@
 #include <QtQml>
 #include "qftp.h"
 #include "main_lambdas.h"
+#include "serlock_manager.h"
 
 //#include "math.h"
 //using namespace std;
@@ -299,6 +300,10 @@ void ServerFound(QHostAddress ServerAddress)
                     int interval = qMin(5000,QTime::currentTime().msecsTo(QTime(QTime::currentTime().hour(),58)));
                     fileTimer->start(interval);
                     //qDebug() << "ftp cur interval" << interval;
+                }
+                if (jsonRow["DEVICE_TYPE"].toString()=="SHERLOCK") {
+                    SherlockManager * sm = new SherlockManager(jsonRow["TCPDEVICE_IP"].toString(),
+                                                               jsonRow["PORT"].toInt());
                 }
             }
         }

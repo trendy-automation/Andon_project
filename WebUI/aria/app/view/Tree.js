@@ -1,39 +1,16 @@
-Ext.define('TreeObjectNode', {
-                   extend: 'Ext.data.Model',
-                   fields: [
-                       //{name: 'expanded', type: 'boolean', defaultValue: true, persist: false },
-                       {name: 'OBJECT_NAME',  type: 'string'},
-                       {name: 'OBJECT_TYPE_NAME',  type: 'string'},
-                       {name: 'OBJECT_TYPE_ID',   type: 'int', convert: null},
-                       {name: 'PKEY',   type: 'int', convert: null},
-                       {name: 'PID',   type: 'int', convert: null}
-                   ]
-           });
-
-var treeStore = Ext.create('Ext.data.TreeStore',
-                           {
-                               model:'TreeObjectNode',
-                               pageSize :0,
-                               proxy: {
-                                   type: 'ajax',
-                                   url: '/json/treePanel',
-                                   reader: {
-                                                   type: 'json'
-                                   }
-                               }
-                               ,autoLoad: false
-                               //,autoSync: true
-//                               ,listeners: {
-//                                              load: function (treeStore , records , successful , operation , node , eOpts ) {
-//                                                  //Ext.getCmp('treePanel').expandPath('/root/');
-//                                                   //treePanel.expandPath('/root/');
-//                                                  //console.log('treeStore load',records);
-//                                              }
-//                                          }
-                               //,autoLoad: true,
-                               //,autoSync: true
-                               //clearOnLoad: true,
-                 });
+//var treeStore = Ext.create('Ext.data.TreeStore',
+//                           {
+//                               model:'AndonPortal.model.Tree',
+//                               pageSize :0,
+//                               proxy: {
+//                                   type: 'ajax',
+//                                   url: '/json/treePanel',
+//                                   reader: {
+//                                                   type: 'json'
+//                                   }
+//                               }
+//                               ,autoLoad: false
+//                 });
 
 Ext.define('AndonPortal.view.Tree', {
     extend: 'Ext.tree.Panel',
@@ -48,7 +25,7 @@ Ext.define('AndonPortal.view.Tree', {
     width: 300,
     height: 150,
     fields: ['name', 'description'],
-    store: treeStore,
+    store: AndonPortal.store.Tree, //treeStore, //
     //autoLoad : true,
     columns: [{
         xtype: 'treecolumn',
@@ -66,7 +43,7 @@ Ext.define('AndonPortal.view.Tree', {
 
 
     ,listeners: {
-               load: function (treeStore , records , successful , operation , node , eOpts ) {
+               load: function (Tree , records , successful , operation , node , eOpts ) {
                     node.expand();
                }
            }/*,

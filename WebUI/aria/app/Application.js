@@ -10,7 +10,7 @@
 //                              'Ext.ux.WebSocket': '../shared/ExtJS-WebSocket/WebSocket.js' ,
 //                              'Ext.ux.WebSocketManager': '../shared/ExtJS-WebSocket/WebSocketManager.js',
 //                              'Ext.ux.qwebchannel': '../shared/ExtJS-WebSocket/qwebchannel.js'
-//                              //'Ext.ux.SqlSocket': '../shared/ExtJS-WebSocket/SqlSocket.js',
+//                              'Ext.ux.SqlSocket': '../shared/ExtJS-WebSocket/SqlSocket.js',
 //                          }
 //                      });
 
@@ -42,8 +42,8 @@ Ext.define('AndonPortal.Application', {
 //                   Ext.tip.QuickTipManager.init();
 //                   var qws = Ext.create ('Ext.ux.WebSocket', {
 //                                             id : 'ServerWebSocket',
-//                                             //url: "ws://"+location.hostname+":12346",
-//                                             url: "ws://10.208.110.75:12346",
+//                                             url: "ws://"+location.hostname+":12346",
+//                                             //url: "ws://10.208.110.75:12346",
 //                                             listeners: {
 //                                                 open: function (ws) {
 //                                                     datajs={};

@@ -3,33 +3,37 @@
  * needed for your application, but these edits will have to be merged by
  * Sencha Cmd when upgrading.
  */
+
+/*
 Ext.Loader.setConfig ({
                           enabled: true,
                           paths: {
 
-                              'Ext.ux.WebSocket': 'app/ExtJS-WebSocket/WebSocket.js' ,
-                              'Ext.ux.WebSocketManager': 'app/ExtJS-WebSocket/WebSocketManager.js'
-                              //,'Ext.ux.qwebchannel': 'app/ExtJS-WebSocket/qwebchannel.js'
-                              ,'Ext.ux.SqlSocket': 'app/ExtJS-WebSocket/SqlSocket.js'
-                              ,'Ext.ux.SqlSocket': 'app/ExtJS-WebSocket/SqlSocket.js'
+//                              'Ext.ux.WebSocket': 'app/ExtJS-WebSocket/WebSocket.js' ,
+//                              'Ext.ux.WebSocketManager': 'app/ExtJS-WebSocket/WebSocketManager.js',
+                              'Ext.ux.SqlSocket': 'app/ExtJS-WebSocket/SqlSocket.js'//,
+                              //'AndonPortal.store.Tree' : 'app/store/Tree.js'
                           }
                       });
+Ext.require(['AndonPortal.model.Tree']);
 
-Ext.require (['Ext.ux.WebSocket',
-              'Ext.ux.WebSocketManager',
-              'Ext.selection.Model'
-//              ,'AndonPortal.store.Tree',
-//              'AndonPortal.model.Tree',
+Ext.require ([//'Ext.ux.WebSocket',
+              //'Ext.ux.WebSocketManager',
+              //'Ext.selection.Model',
+              'AndonPortal.store.Tree',
+              //'AndonPortal.model.Tree',
+              'Ext.ux.SqlSocket'
 //              'AndonPortal.Application'
-             ]); //,'Ext.ux.SqlSocket'
-
+             ]);
+*/
+/*
 Ext.application({
     name: 'AndonPortal',
     
     requires: [
         'Ext.window.Toast'
     ],
-    
+//    stores: ['Tree'],
     views: [
 //        'Buttons',
         'DatePicker',
@@ -63,15 +67,10 @@ Ext.application({
                                                                                //if(JSONdata.length!=0)
                                                                                    //JSONdata = eval(resp);
                                                                                //JSONdata = eval('['+JSONdata[0].JSON_BRANCH+']');
-                                                                               JSONdata = /*{OBJECT_NAME:'plant',
-                                                                                           expaned: true,
-                                                                                           leaf: false,
-                                                                                           children:*/
-                                                                                               JSONdata.map(function(node) {
+                                                                               JSONdata = JSONdata.map(function(node) {
                                                                                                 return eval('['+node.JSON_BRANCH+']')[0];
                                                                                                 })
-                                                                               //}
-                                                                           ;
+                                                                               //};
                                                                                //console.log('JSONdata',JSONdata);
                                                                                Ext.ux.ajax.SimManager.init({
                                                                                                                delay: 300,
@@ -97,7 +96,36 @@ Ext.application({
                     },
 
     autoCreateViewport: 'AndonPortal.view.Viewport',
-	
+    */
+
+
+
+Ext.application({
+    name: 'AndonPortal',
+
+    extend: 'AndonPortal.Application',
+
+    autoCreateViewport: 'AndonPortal.view.Viewport',
+
+    //stores: ['Tree'],
+    requires: [
+       'Ext.window.Toast'
+    ],
+    views: [
+//        'Buttons',
+        'DatePicker',
+//        'Form',
+        'Grid',
+        'Tree',
+//        'Image',
+//        'ItemSelector',
+//        'List',
+//        'Panel',
+//        'Toolbar',
+        'Viewport'
+//        'Window'
+    ],
+
     //-------------------------------------------------------------------------
     // Most customizations should be made to AndonPortal.Application. If you need to
     // customize this file, doing so below this section reduces the likelihood

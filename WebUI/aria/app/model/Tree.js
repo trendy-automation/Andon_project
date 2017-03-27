@@ -12,34 +12,34 @@ Ext.define('AndonPortal.model.Tree', {
                                iconCls='folder';
                                break
                            case 'LINE':
-                               iconCls='Простой';
+                               iconCls='help';
                                break
                            case 'LINE_INJECTION':
-                               iconCls='Ошибка';
+                               iconCls='help';
                                break
                            case 'MACHINE':
-                               iconCls='Ошибка';
+                               iconCls='tags';
                                break
                            case 'UNIT':
-                               iconCls='Ошибка';
+                               iconCls='unpin';
                                break
                            case 'MOLD':
-                               iconCls='Ошибка';
+                               iconCls='stop';
                                break
                            case 'MACHINE_INJECTION':
-                               iconCls='Ошибка';
+                               iconCls='inbox';
                                break
                            case 'MACHINE_US_WELD':
-                               iconCls='Ошибка';
+                               iconCls='lightning';
                                break
                            case 'LINE_US_WELD':
-                               iconCls='Ошибка';
+                               iconCls='help';
                                break
                            case 'MACHINE_PY':
-                               iconCls='Ошибка';
+                               iconCls='eye';
                                break
                            case 'ROBOT_INJECTION':
-                               iconCls='Ошибка';
+                               iconCls='file';
                                break
                            }
                             return iconCls;}},

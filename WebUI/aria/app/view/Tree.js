@@ -1,5 +1,6 @@
 //var treeStore = Ext.create('Ext.data.TreeStore',
 //                           {
+//                               requires: ['AndonPortal.model.Tree'],
 //                               model:'AndonPortal.model.Tree',
 //                               pageSize :0,
 //                               proxy: {
@@ -12,8 +13,12 @@
 //                               ,autoLoad: false
 //                 });
 
+//Ext.require (['Ext.selection.Model']);
+//Ext.require (['AndonPortal.model.Tree']);
+//Ext.require (['AndonPortal.store.Tree']);
 Ext.define('AndonPortal.view.Tree', {
     extend: 'Ext.tree.Panel',
+    //requires: ['AndonPortal.store.Tree'],
     alias:  'widget.mysimpletree',
     id: 'treePanel',
 //    viewConfig: {plugins: {ptype: 'treeviewdragdrop'}},
@@ -25,8 +30,8 @@ Ext.define('AndonPortal.view.Tree', {
     width: 300,
     height: 150,
     fields: ['name', 'description'],
-    store: AndonPortal.store.Tree, //treeStore, //
-    //autoLoad : true,
+    store: AndonPortal.store.Tree,
+    //Ext.data.StoreManager.lookup('treeStore'), //'treeStore',//'Tree', //AndonPortal.store.Tree,
     columns: [{
         xtype: 'treecolumn',
         text: 'Andon data',

@@ -1,7 +1,8 @@
-Ext.create('AndonPortal.store.Tree',
-                           {   extend: 'Ext.data.Model',
+Ext.define('AndonPortal.store.Tree',
+                           {   extend: 'Ext.data.TreeStore',
                                requires: ['AndonPortal.model.Tree'],
-                               model:'AndonPortal.model.Tree',
+                               model: Ext.create('AndonPortal.model.Tree'),
+                               model: 'AndonPortal.model.Tree',
                                pageSize :0,
                                proxy: {
                                    type: 'ajax',
@@ -10,11 +11,9 @@ Ext.create('AndonPortal.store.Tree',
                                                    type: 'json'
                                    }
                                },
+//                               storeId: 'treeStore',
                                autoLoad: false,
-               alias       : 'store.Tree',
-               constructor : function() {
-                   this.callParent(arguments);
-               },
-               storeId: 'treeStore',
-               id: 'treeStore'
+                               constructor : function() {
+                                   this.callParent(arguments);
+                               }
 });

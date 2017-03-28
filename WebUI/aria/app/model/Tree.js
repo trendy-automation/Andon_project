@@ -2,7 +2,7 @@ Ext.define('AndonPortal.model.Tree', {
                    extend: 'Ext.data.Model',
                    fields: [
                    //{name: 'expanded', type: 'boolean', defaultValue: true, persist: false },
-                       {name: 'iconCls', type: 'string', defaultValue: '', convert:function(val,row){
+                       {name: 'iconCls', type: 'string', persist: false, convert:function(val,row){
                            var iconCls='';
                            switch (row.get('OBJECT_TYPE_NAME')) {
                            case 'AREA':
@@ -41,12 +41,19 @@ Ext.define('AndonPortal.model.Tree', {
                            case 'ROBOT_INJECTION':
                                iconCls='file';
                                break
+                           default:
+                               iconCls='help';
                            }
+                           //console.log('AndonPortal.model.Tree iconCls convert');
                             return iconCls;}},
                        {name: 'OBJECT_NAME',  type: 'string'},
                        {name: 'OBJECT_TYPE_NAME',  type: 'string'},
                        {name: 'OBJECT_TYPE_ID',   type: 'int', convert: null},
                        {name: 'PKEY',   type: 'int', convert: null},
                        {name: 'PID',   type: 'int', convert: null}
-                   ]
+                   ]/*,
+               constructor : function() {
+                   console.log('AndonPortal.model.Tree constructor');
+                   this.callParent(arguments);
+               }*/
 });

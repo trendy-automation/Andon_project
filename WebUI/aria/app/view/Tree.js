@@ -1,7 +1,7 @@
 //var treeStore = Ext.create('Ext.data.TreeStore',
 //                           {
 //                               requires: ['AndonPortal.model.Tree'],
-//                               model:'AndonPortal.model.Tree',
+//                               model: Ext.create('AndonPortal.model.Tree'),
 //                               pageSize :0,
 //                               proxy: {
 //                                   type: 'ajax',
@@ -14,8 +14,9 @@
 //                 });
 
 //Ext.require (['Ext.selection.Model']);
-//Ext.require (['AndonPortal.model.Tree']);
+Ext.require (['AndonPortal.model.Tree']);
 //Ext.require (['AndonPortal.store.Tree']);
+//var treeStore = Ext.create('AndonPortal.store.Tree',{storeId:'treeStore'});
 Ext.define('AndonPortal.view.Tree', {
     extend: 'Ext.tree.Panel',
     //requires: ['AndonPortal.store.Tree'],
@@ -30,8 +31,17 @@ Ext.define('AndonPortal.view.Tree', {
     width: 300,
     height: 150,
     fields: ['name', 'description'],
-    store: AndonPortal.store.Tree,
-    //Ext.data.StoreManager.lookup('treeStore'), //'treeStore',//'Tree', //AndonPortal.store.Tree,
+    store: Ext.create('AndonPortal.store.Tree',{storeId: 'treeStore'}),
+               //'treeStore2',
+               //treeStore,
+//               Ext.create('AndonPortal.store.Tree', {
+//                              id: 'treeStore',
+//                              storeId: 'treeStore'
+//                              }),
+               //AndonPortal.store.Tree,
+               //Ext.data.StoreManager.lookup('treeStore'), //
+               //Ext.getStore('treeStore'),//
+               //'Tree', //AndonPortal.store.Tree,
     columns: [{
         xtype: 'treecolumn',
         text: 'Andon data',
@@ -48,8 +58,9 @@ Ext.define('AndonPortal.view.Tree', {
 
 
     ,listeners: {
-               load: function (Tree , records , successful , operation , node , eOpts ) {
-                    node.expand();
+               load: function (treeStore , records , successful , operation , node , eOpts ) {
+                   console.log('treePanel load function ', node);
+                   node.expand();
                }
            }/*,
     selection : Ext.create(

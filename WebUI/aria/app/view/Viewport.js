@@ -1,3 +1,5 @@
+//Ext.require (['AndonPortal.model.Tree']);
+//Ext.require (['AndonPortal.store.Tree']);
 Ext.define('AndonPortal.view.Viewport', {
     extend: 'Ext.container.Viewport',
     
@@ -12,9 +14,13 @@ Ext.define('AndonPortal.view.Viewport', {
         'Ext.tree.*',
         'Ext.tip.*',
         'Ext.ux.CheckColumn'
-        //,'Ext.ux.WebSocket', 'Ext.ux.WebSocketManager'
     ],
-
+//    stroes:[
+//                   {treeStore3:Ext.create('AndonPortal.store.Tree',{
+//                                                                         id: 'treeStore3',
+//                                                                         storeId: 'treeStore3'
+//                                                                         })}
+//               'Tree'],
     layout: 'border',
 
     initComponent: function() {

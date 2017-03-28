@@ -9,27 +9,41 @@ Ext.Loader.setConfig ({
 
                               'Ext.ux.WebSocket': 'app/ExtJS-WebSocket/WebSocket.js' ,
                               'Ext.ux.WebSocketManager': 'app/ExtJS-WebSocket/WebSocketManager.js',
-                              'Ext.ux.SqlSocket': 'app/ExtJS-WebSocket/SqlSocket.js'/*,
-                              'AndonPortal.store.Tree': 'app/store/Tree.js'*/
+                              'Ext.ux.SqlSocket': 'app/ExtJS-WebSocket/SqlSocket.js'
                           }
                       });
-
 Ext.require (['Ext.ux.WebSocket', 'Ext.ux.WebSocketManager','Ext.ux.SqlSocket']);
-//Ext.require(['AndonPortal.model.Tree']);
-
-//Ext.require (['AndonPortal.store.Tree'/*,
-//              'AndonPortal.model.Tree'*/
-//             ]);
+//Ext.require (['AndonPortal.store.Tree']); //'AndonPortal.model.Tree',
+//var treeStore = Ext.create('AndonPortal.store.Tree',
+//                           {   extend: 'Ext.data.Model',
+//                               id: 'treeStore',
+//                               storeId: 'treeStore',
+//                               requires: ['AndonPortal.model.Tree'],
+//                               model: Ext.create('AndonPortal.model.Tree'),
+//                               pageSize :0,
+//                               proxy: {
+//                                   type: 'ajax',
+//                                   url: '/json/treePanel',
+//                                   reader: {
+//                                                   type: 'json'
+//                                   }
+//                               },
+//                               autoLoad: false,
+//               constructor : function() {
+//                   this.callParent(arguments);
+//               }
+//});
 
 Ext.define('AndonPortal.Application', {
                extend: 'Ext.app.Application',
-               requires: [
-                            'AndonPortal.store.Tree',
+//               requires: [
+//                            'AndonPortal.store.Tree',
 //                            'Ext.window.Toast',
 //                            'AndonPortal.model.Tree'
-               ],
+//               ],
                name: 'AndonPortal',
-               stores: ['Tree'],
+//               stores: ['Tree'],
+//               models: ['Tree'],
                views: [
                    'DatePicker',
                    'Grid',
@@ -38,6 +52,11 @@ Ext.define('AndonPortal.Application', {
                ],
                launch: function () {
                    console.log('Application launch function');
+//                   treeStore2 = Ext.create('AndonPortal.store.Tree',{
+//                                                      id: 'treeStore2',
+//                                                      storeId: 'treeStore2'
+//                                                      });
+
                        var qws = Ext.create ('Ext.ux.SqlSocket', {
                                                  id : 'ServerWebSocket',
                                                  //url: "ws://"+location.hostname+":12346",
@@ -62,11 +81,18 @@ Ext.define('AndonPortal.Application', {
                                                                                                                               stype: 'json'
                                                                                                                           }
                                                                                                                       });
-                                                                              debugger;
-                                                                              Ext.data.StoreManager.lookup('treeStore').load();
-                                                                              Ext.getCmp('treeStore').load();
-                                                                              //AndonPortal.store.Tree.load();
+                                                                              //debugger;
+                                                                              //Ext.data.StoreManager.lookup('Tree').load();
+                                                                              //Ext.data.StoreManager.lookup('treeStore').load();
+                                                                              //Ext.data.StoreManager.lookup('treeStore2').load();
+                                                                              //Ext.data.StoreManager.lookup('treeStore3').load();
+                                                                              //Ext.getStore('Tree').load();
+                                                                              Ext.getStore('treeStore').load();
+                                                                              //Ext.getStore('treeStore2').load();
+                                                                              //Ext.getStore('treeStore3').load();
+                                                                              //treeStore2.load();
                                                                               //treeStore.load();
+
                                                                               //console.log('AndonPortal.store.Tree', AndonPortal.store.Tree);
                                                                           }
                                                                           );
@@ -79,7 +105,6 @@ Ext.define('AndonPortal.Application', {
                                              });
 
                    },
-
                onAppUpdate: function () {
                    Ext.Msg.confirm('Application Update', 'This application has an update, reload?',
                                    function (choice) {

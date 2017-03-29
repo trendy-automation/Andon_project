@@ -271,7 +271,8 @@ void ServerFound(QHostAddress ServerAddress)
                         int interval = qMax(FTP_INTERVAL, QTime::currentTime().msecsTo(QTime(QTime::currentTime().hour()+1,58)));
                         //qDebug() << "fileTimer->start(" << interval << ");";
                         fileTimer->start(interval);
-                        serverRpc->Query2Json("SELECT ID_TASK, PART_REFERENCE, PART_COUNT FROM PRODUCTION_DECLARATING",
+                        serverRpc->Query2Json("SELECT ID_TASK, PART_REFERENCE, PART_COUNT, MANUFACTURE_DATE "
+                                              "FROM PRODUCTION_DECLARATING",
                                      [ftp,buffer](QVariant resp){
                             qDebug() << "PRODUCTION_DECLARATING"<<resp;
                             QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
@@ -287,6 +288,8 @@ void ServerFound(QHostAddress ServerAddress)
                                         buffer->write(jsonObj["PART_REFERENCE"].toString().toLatin1());
                                         buffer->write("\t");
                                         buffer->write(QString::number(jsonObj["PART_COUNT"].toInt()).toLatin1());
+                                        buffer->write("\t");
+                                        buffer->write(QString::number(jsonObj["MANUFACTURE_DATE"].toInt()).toLatin1());
                                         buffer->write("\r\n");
                                     }
                                     QTimer::singleShot(0,[ftp,buffer,taskId](){

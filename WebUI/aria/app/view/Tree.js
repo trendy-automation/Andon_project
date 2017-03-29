@@ -59,7 +59,7 @@ Ext.define('AndonPortal.view.Tree', {
 
     ,listeners: {
                load: function (treeStore , records , successful , operation , node , eOpts ) {
-                   console.log('treePanel load function ', node);
+                   //console.log('treePanel load function ', node);
                    node.expand();
                }
            }/*,

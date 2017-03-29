@@ -1,9 +1,13 @@
 TARGET = qsqlibase
 TEMPLATE = lib
+QT += sql
 #win32:CONFIG += dll
 
-#FIREBIRD = 'C:\Program Files\Firebird\Firebird_2_5'
-FIREBIRD = 'C:\Program Files (x86)\Firebird\Firebird_2_5'
+win32{
+    FIREBIRD = 'C:\Program Files\Firebird\Firebird_2_5'
+} else {
+    FIREBIRD = 'C:\Program Files (x86)\Firebird\Firebird_2_5'
+}
 
 LIBS += -L$${FIREBIRD}\lib -lfbclient_ms
 

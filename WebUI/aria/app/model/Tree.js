@@ -9,7 +9,7 @@ Ext.define('AndonPortal.model.Tree', {
                                iconCls='box';
                                break
                            case 'UAP':
-                               iconCls='folder';
+                               iconCls='robot';
                                break
                            case 'LINE':
                                iconCls='help';
@@ -30,7 +30,7 @@ Ext.define('AndonPortal.model.Tree', {
                                iconCls='inbox';
                                break
                            case 'MACHINE_US_WELD':
-                               iconCls='lightning';
+                               iconCls='robot';
                                break
                            case 'LINE_US_WELD':
                                iconCls='help';

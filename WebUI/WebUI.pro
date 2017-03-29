@@ -28,6 +28,7 @@ DISTFILES += \
     aria/app.js \
     aria/app/AndonForm.frm \
     aria/app.json \
+    aria/shared/examples.css \
     aria/resources/AndonPortal-all_1.css \
     aria/resources/AndonPortal-all_2.css
 

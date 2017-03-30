@@ -6,6 +6,7 @@ DISTFILES += \
     aria/app/ExtJS-WebSocket/SqlSocket.js \
     aria/app/ExtJS-WebSocket/WebSocket.js \
     aria/app/ExtJS-WebSocket/WebSocketManager.js \
+    aria/app/controller/Main.js \
     aria/app/model/User.js \
     aria/app/model/Sql_sources.js \
     aria/app/model/Tree.js \
@@ -28,7 +29,4 @@ DISTFILES += \
     aria/app.js \
     aria/app/AndonForm.frm \
     aria/app.json \
-    aria/shared/examples.css \
-    aria/resources/AndonPortal-all_1.css \
-    aria/resources/AndonPortal-all_2.css
-
+    aria/shared/icons.css

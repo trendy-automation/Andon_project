@@ -1,5 +1,7 @@
 Ext.define ('Ext.ux.SqlSocket', {
     extend : 'Ext.ux.WebSocket',
+    alias:  'plugin.mysqlsocket',
+    url: "ws://10.208.110.75:12346",
     getList : function(v){
         switch (typeof v) {
         case 'string':

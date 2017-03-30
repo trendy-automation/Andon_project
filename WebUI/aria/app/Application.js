@@ -12,7 +12,7 @@ Ext.Loader.setConfig ({
                               'Ext.ux.SqlSocket': 'app/ExtJS-WebSocket/SqlSocket.js'
                           }
                       });
-Ext.require (['Ext.ux.WebSocket', 'Ext.ux.WebSocketManager','Ext.ux.SqlSocket']);
+//Ext.require (['Ext.ux.WebSocket', 'Ext.ux.WebSocketManager','Ext.ux.SqlSocket']);
 //Ext.require (['AndonPortal.store.Tree']); //'AndonPortal.model.Tree',
 //var treeStore = Ext.create('AndonPortal.store.Tree',
 //                           {   extend: 'Ext.data.Model',
@@ -36,7 +36,9 @@ Ext.require (['Ext.ux.WebSocket', 'Ext.ux.WebSocketManager','Ext.ux.SqlSocket'])
 
 Ext.define('AndonPortal.Application', {
                extend: 'Ext.app.Application',
-//               requires: [
+               requires:
+               ['Ext.ux.WebSocket', 'Ext.ux.WebSocketManager','Ext.ux.SqlSocket'],
+//               [
 //                            'AndonPortal.store.Tree',
 //                            'Ext.window.Toast',
 //                            'AndonPortal.model.Tree'
@@ -50,6 +52,9 @@ Ext.define('AndonPortal.Application', {
                    'Tree',
                    'Viewport'
                ],
+               controllers: [
+                   'Main'
+               ],
                launch: function () {
                    console.log('Application launch function');
 //                   treeStore2 = Ext.create('AndonPortal.store.Tree',{
@@ -57,7 +62,7 @@ Ext.define('AndonPortal.Application', {
 //                                                      storeId: 'treeStore2'
 //                                                      });
 
-                       var qws = Ext.create ('Ext.ux.SqlSocket', {
+                       /*var qws = Ext.create ('Ext.ux.SqlSocket', {
                                                  id : 'ServerWebSocket',
                                                  //url: "ws://"+location.hostname+":12346",
                                                  //url: "ws://127.0.0.1:12346",
@@ -101,9 +106,8 @@ Ext.define('AndonPortal.Application', {
                                                          //clearInterval(refreshIntervalId);
                                                          console.log ('The qwebsocket is closed!');
                                                      }
-                                                 }
-                                             });
-
+                                                 };
+                                             })*/
                    },
                onAppUpdate: function () {
                    Ext.Msg.confirm('Application Update', 'This application has an update, reload?',

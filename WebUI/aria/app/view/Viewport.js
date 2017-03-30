@@ -1,8 +1,5 @@
-//Ext.require (['AndonPortal.model.Tree']);
-//Ext.require (['AndonPortal.store.Tree']);
 Ext.define('AndonPortal.view.Viewport', {
     extend: 'Ext.container.Viewport',
-    
     requires: [
         'Ext.Img',
         'Ext.layout.container.Border',
@@ -13,21 +10,45 @@ Ext.define('AndonPortal.view.Viewport', {
         'Ext.grid.*',
         'Ext.tree.*',
         'Ext.tip.*',
-        'Ext.ux.CheckColumn'
+        'Ext.ux.CheckColumn',
+        'Ext.ux.SqlSocket'
     ],
-//    stroes:[
-//                   {treeStore3:Ext.create('AndonPortal.store.Tree',{
-//                                                                         id: 'treeStore3',
-//                                                                         storeId: 'treeStore3'
-//                                                                         })}
-//               'Tree'],
+//    stroes:['Tree'],
     layout: 'border',
 
     initComponent: function() {
         var me = this,
             num = 1;
-        var qws = Ext.create ('Ext.ux.SqlSocket');
-        me.items = [{
+        me.qws = Ext.create ('Ext.ux.SqlSocket',{
+                                 //url: "ws://127.0.0.1:12346",
+                                 url:"ws://10.208.110.75:12346",
+                                 listeners: {
+                                     open: function (ws) {
+                                         console.log('SqlSocket opened');
+                                         this.sql("TREE_GET_JSONTREE",
+                                                  "plant",
+                                                  "JSON_BRANCH",
+                                                          function(resp){
+                                                              var JSONdata=JSON.parse(resp).map(function(node) {
+                                                                               return eval('['+node.JSON_BRANCH+']')[0];
+                                                                               });
+                                                              Ext.ux.ajax.SimManager.init({
+                                                                                              delay: 300,
+                                                                                              defaultSimlet: null
+                                                                                          }).register({'/json/treePanel': {
+                                                                                                              data: JSONdata,
+                                                                                                              stype: 'json'
+                                                                                                          }
+                                                                                                      });
+                                                              Ext.getStore('treeStore').load();
+                                                          });
+                                         //this.getApplication().fireEvent('open',ws);
+                                         //AndonPortal.fireEvent('open',ws);
+                                     }
+                                 }
+                             });
+        me.items = [
+            {
             xtype: 'container',
             region: 'north',
             padding: '6 12',

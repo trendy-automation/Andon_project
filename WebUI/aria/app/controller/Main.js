@@ -1,15 +1,13 @@
 Ext.define('AndonPortal.controller.Main', {
     extend: 'Ext.app.Controller',
 
-    requires: [
-        'Ext.ux.WebSocket',
-        'Ext.ux.WebSocketManager',
-        'Ext.ux.SqlSocket'
-    ],
+//    requires: [
+//        'Ext.ux.SqlSocket'
+//    ],
 
-    stores: [
-        'Tree'
-    ],
+//    stores: [
+//        'Tree'
+//    ],
 
     refs: [
         {
@@ -81,22 +79,22 @@ Ext.define('AndonPortal.controller.Main', {
         }
 
         mainPanel.setActiveTab(newTab);*/
-        console.log("onTreePanelItemClick",record);
+        console.log('onTreePanelItemClick',record);
         //this.redirectTo(record.get('className'));
     },
 
     onSqlSocketOpen:  function(ws) {
-        console.log("mysqlsocket open",ws);
+        console.log('sqlsocket open',ws);
     },
     init: function(application) {
 
         this.control({
-            "mysimpletree": {
+            'tree': {
                 itemclick: this.onTreePanelItemClick
             },
-            "mysqlsocket":{
+            'sqlSocket':{
                 open: this.onSqlSocketOpen
-               }
+            }
         });
     }
 });

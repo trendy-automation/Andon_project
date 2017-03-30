@@ -3,15 +3,15 @@
  * calls Ext.application(). This is the ideal place to handle application launch and
  * initialization details.
  */
-Ext.Loader.setConfig ({
-                          enabled: true,
-                          paths: {
+//Ext.Loader.setConfig ({
+//                          enabled: true,
+//                          paths: {
 
-                              'Ext.ux.WebSocket': 'app/ExtJS-WebSocket/WebSocket.js' ,
-                              'Ext.ux.WebSocketManager': 'app/ExtJS-WebSocket/WebSocketManager.js',
-                              'Ext.ux.SqlSocket': 'app/ExtJS-WebSocket/SqlSocket.js'
-                          }
-                      });
+//                              'Ext.ux.WebSocket': 'app/ExtJS-WebSocket/WebSocket.js' ,
+//                              'Ext.ux.WebSocketManager': 'app/ExtJS-WebSocket/WebSocketManager.js'/*,
+//                              'Ext.ux.SqlSocket': 'app/ExtJS-WebSocket/SqlSocket.js'*/
+//                          }
+//                      });
 //Ext.require (['Ext.ux.WebSocket', 'Ext.ux.WebSocketManager','Ext.ux.SqlSocket']);
 //Ext.require (['AndonPortal.store.Tree']); //'AndonPortal.model.Tree',
 //var treeStore = Ext.create('AndonPortal.store.Tree',
@@ -36,8 +36,8 @@ Ext.Loader.setConfig ({
 
 Ext.define('AndonPortal.Application', {
                extend: 'Ext.app.Application',
-               requires:
-               ['Ext.ux.WebSocket', 'Ext.ux.WebSocketManager','Ext.ux.SqlSocket'],
+//               requires:
+//               ['Ext.ux.WebSocket', 'Ext.ux.WebSocketManager','Ext.ux.SqlSocket'],
 //               [
 //                            'AndonPortal.store.Tree',
 //                            'Ext.window.Toast',
@@ -56,7 +56,7 @@ Ext.define('AndonPortal.Application', {
                    'Main'
                ],
                launch: function () {
-                   console.log('Application launch function');
+//                   console.log('Application launch function');
 //                   treeStore2 = Ext.create('AndonPortal.store.Tree',{
 //                                                      id: 'treeStore2',
 //                                                      storeId: 'treeStore2'

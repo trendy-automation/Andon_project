@@ -1,7 +1,15 @@
+//Ext.Loader.setConfig ({
+//                          enabled: true,
+//                          paths: {
+//                              'Ext.ux.WebSocket': 'app/ExtJS-WebSocket/WebSocket.js'
+//                          }
+//                      });
 Ext.define ('Ext.ux.SqlSocket', {
     extend : 'Ext.ux.WebSocket',
-    alias:  'plugin.mysqlsocket',
-    url: "ws://10.208.110.75:12346",
+    alias:  'widget.mysqlsocket',
+//    requires: [
+//        'Ext.ux.WebSocket'
+//    ],
     getList : function(v){
         switch (typeof v) {
         case 'string':
@@ -54,13 +62,13 @@ Ext.define ('Ext.ux.SqlSocket', {
              if(typeof p.outputs == 'undefined')
                  query='EXECUTE PROCEDURE '+proc;
              else{
-                 if(p.outputs.length==0)
+                 if(p.outputs.length===0)
                      query='EXECUTE PROCEDURE '+proc;
                  else
                      query='SELECT '+returns.join()+' FROM '+proc;
              }
              var param=[];
-
+             var error = {};
              switch(typeof input){
              case 'string':
              case 'number':
@@ -71,7 +79,7 @@ Ext.define ('Ext.ux.SqlSocket', {
              case 'object':
                  keySearch(input,p.inputs,function(key,val){
                      var value;
-                     if(val.type == 'TIMESTAMP')
+                     if(val.type === 'TIMESTAMP')
                          value=input[key].toLocaleString("ru-RU");
                      else
                        value=input[key];
@@ -89,8 +97,10 @@ Ext.define ('Ext.ux.SqlSocket', {
                      param[val.pos]=value;
                  });
                  break
+//             case 'function':
+//                 result = input;
+//                 break
              default:
-                 var error = {};
                  error.description = 'Input is not an object';
                  error.string='input is not an object';
                  error.info={input:input};
@@ -99,7 +109,6 @@ Ext.define ('Ext.ux.SqlSocket', {
 
              ////TODO param objecct key/val, interselect keys
              if(param.length!=Object.keys(p.inputs).length){
-                 var error = {};
                  error.description = 'Not enough parameters';
                  error.string='not enough parameters';
                  error.info={input:input,values:param,expected:p.inputs};
@@ -108,7 +117,6 @@ Ext.define ('Ext.ux.SqlSocket', {
              if(param.length!=0)
                  query=query+"('"+param.join("','")/*.replace(/,/g,"','")*/+"')";
              if((typeof result == 'function') && (typeof result == 'object')){
-                 var error = {};
                  error.description = 'Result value is not an object or function';
                  error.string='result value is not an object or function';
                  error.info={result:result};
@@ -186,5 +194,8 @@ Ext.define ('Ext.ux.SqlSocket', {
              else
                  console.log('Error in SQL fnc!!!',JSON.stringify(errors));
          
-                    }
-                           });
+                    },
+        constructor : function() {
+                    this.callParent(arguments);
+        }
+});

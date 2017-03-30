@@ -1,0 +1,254 @@
+.x-tree-icon
+{
+    height: 25px;
+    width: 25px;
+}
+.x-tree-icon.x-tree-icon-custom
+{
+    -webkit-filter: invert(100%);
+    filter: invert(100%);
+}
+.x-tree-icon.x-tree-icon-custom.automotive
+{
+    background-image: url("icons/custom/automotive-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.biohazard
+{
+    background-image: url("icons/custom/biohazard-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.biomass
+{
+    background-image: url("icons/custom/biomass-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.biotech
+{
+    background-image: url("icons/custom/biotech-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.capacitor
+{
+    background-image: url("icons/custom/capacitor-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.circuit
+{
+    background-image: url("icons/custom/circuit-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.crystal_oscillator
+{
+    background-image: url("icons/custom/crystal_oscillator-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.deployment
+{
+    background-image: url("icons/custom/deployment-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.display
+{
+    background-image: url("icons/custom/display-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.electricity
+{
+    background-image: url("icons/custom/electricity-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.electro_devices
+{
+    background-image: url("icons/custom/electro_devices-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.electronics
+{
+    background-image: url("icons/custom/electronics-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.engineering
+{
+    background-image: url("icons/custom/engineering-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.factory
+{
+    background-image: url("icons/custom/factory-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.fire_extinguisher
+{
+    background-image: url("icons/custom/fire_extinguisher-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.fork_truck
+{
+    background-image: url("icons/custom/fork_truck-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.gas_industry
+{
+    background-image: url("icons/custom/gas_industry-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.gas_mask
+{
+    background-image: url("icons/custom/gas_mask-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.gas2
+{
+    background-image: url("icons/custom/gas2-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.geothermal
+{
+    background-image: url("icons/custom/geothermal-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.greentech
+{
+    background-image: url("icons/custom/greentech-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.hydroelectric
+{
+    background-image: url("icons/custom/hydroelectric-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.infrared_beam_sensor
+{
+    background-image: url("icons/custom/infrared_beam_sensor-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.infrared
+{
+    background-image: url("icons/custom/infrared-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.integrated_circuit
+{
+    background-image: url("icons/custom/integrated_circuit-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.ladder
+{
+    background-image: url("icons/custom/ladder-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.laser_beam
+{
+    background-image: url("icons/custom/laser_beam-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.led_diode
+{
+    background-image: url("icons/custom/led_diode-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.manual
+{
+    background-image: url("icons/custom/manual-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.memory_module
+{
+    background-image: url("icons/custom/memory_module-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.microscope
+{
+    background-image: url("icons/custom/microscope-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.motion_detector
+{
+    background-image: url("icons/custom/motion_detector-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.network
+{
+    background-image: url("icons/custom/Network-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.overhead_crane
+{
+    background-image: url("icons/custom/overhead_crane-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.poison
+{
+    background-image: url("icons/custom/poison-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.potentiometer
+{
+    background-image: url("icons/custom/potentiometer-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.processor
+{
+    background-image: url("icons/custom/processor-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.rack
+{
+    background-image: url("icons/custom/rack-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.radio_active
+{
+    background-image: url("icons/custom/radio_active-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.radio_tower
+{
+    background-image: url("icons/custom/radio_tower-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.recycling
+{
+    background-image: url("icons/custom/recycling-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.relay
+{
+    background-image: url("icons/custom/relay-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.resistor
+{
+    background-image: url("icons/custom/resistor-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.rfid_sensor
+{
+    background-image: url("icons/custom/rfid_sensor-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.rfid_signal
+{
+    background-image: url("icons/custom/rfid_signal-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.rfid_tag
+{
+    background-image: url("icons/custom/rfid_tag-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.robot
+{
+    background-image: url("icons/custom/robot-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.sensor
+{
+    background-image: url("icons/custom/sensor-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.solar_panel
+{
+    background-image: url("icons/custom/solar_panel-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.stepper_motor
+{
+    background-image: url("icons/custom/stepper_motor-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.strikes
+{
+    background-image: url("icons/custom/strikes-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.transistor
+{
+    background-image: url("icons/custom/transistor-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.trash2
+{
+    background-image: url("icons/custom/trash2-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.water
+{
+    background-image: url("icons/custom/water-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.wind_turbine
+{
+    background-image: url("icons/custom/wind_turbine-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.wired_network_filled
+{
+    background-image: url("icons/custom/Wired Network Filled-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.detective
+{
+    background-image: url("icons/custom/Detective-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.cardboard_box
+{
+    background-image: url("icons/custom/Cardboard Box-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.ethernet_off
+{
+    background-image: url("icons/custom/Ethernet Off-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.stack
+{
+    background-image: url("icons/custom/Stack-25.png");
+}
+.x-tree-icon.x-tree-icon-custom.message
+{
+    background-image: url("icons/custom/Message-25.png");
+}

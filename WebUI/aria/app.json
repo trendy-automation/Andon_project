@@ -153,6 +153,11 @@
         {
             "path": "${build.out.css.path}",
             "bundle": true
+        },
+        {
+            "path": "shared/icons.css",
+            "bootstrap": true,
+            "bundle": true
         }
     ],
 

@@ -21,7 +21,7 @@ Ext.define('AndonPortal.view.Tree', {
     extend: 'Ext.tree.Panel',
     //requires: ['AndonPortal.store.Tree'],
     alias:  'widget.mysimpletree',
-    id: 'treePanel',
+    //id: 'treePanel',
 //    viewConfig: {plugins: {ptype: 'treeviewdragdrop'}},
     renderTo: Ext.getBody(),
     title: 'TreeGrid',

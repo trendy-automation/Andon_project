@@ -1,5 +1,6 @@
 Ext.define('AndonPortal.store.Tree',
                            {   extend: 'Ext.data.TreeStore',
+                               alias:  'store.mytreestore',
                                requires: ['AndonPortal.model.Tree'],
                                model: Ext.create('AndonPortal.model.Tree'),
                                model: 'AndonPortal.model.Tree',

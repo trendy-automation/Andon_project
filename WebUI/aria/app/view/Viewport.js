@@ -26,7 +26,7 @@ Ext.define('AndonPortal.view.Viewport', {
     initComponent: function() {
         var me = this,
             num = 1;
-
+        var qws = Ext.create ('Ext.ux.SqlSocket');
         me.items = [{
             xtype: 'container',
             region: 'north',

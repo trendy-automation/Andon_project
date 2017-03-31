@@ -36,6 +36,7 @@
 
 Ext.define('AndonPortal.Application', {
                extend: 'Ext.app.Application',
+               alias: 'andonportal',
 //               requires:
 //               ['Ext.ux.WebSocket', 'Ext.ux.WebSocketManager','Ext.ux.SqlSocket'],
 //               [
@@ -57,57 +58,36 @@ Ext.define('AndonPortal.Application', {
                ],
                launch: function () {
 //                   console.log('Application launch function');
-//                   treeStore2 = Ext.create('AndonPortal.store.Tree',{
-//                                                      id: 'treeStore2',
-//                                                      storeId: 'treeStore2'
-//                                                      });
-
-                       /*var qws = Ext.create ('Ext.ux.SqlSocket', {
-                                                 id : 'ServerWebSocket',
-                                                 //url: "ws://"+location.hostname+":12346",
-                                                 //url: "ws://127.0.0.1:12346",
-                                                 url: "ws://10.208.110.75:12346",
-                                                 listeners: {
-                                                     open: function (ws) {
-                                                         console.log('SqlSocket opened');
-                                                         ws.db.query2json("SELECT JSON_BRANCH FROM TREE_GET_JSONTREE('plant')",
-                                                                          function(resp){
-                                                                              var JSONdata =[];
-                                                                              JSONdata=JSON.parse(resp);
-                                                                              JSONdata = JSONdata.map(function(node) {
-                                                                                               return eval('['+node.JSON_BRANCH+']')[0];
-                                                                                               });
-                                                                              //console.log('JSONdata',JSONdata);
-                                                                              Ext.ux.ajax.SimManager.init({
-                                                                                                              delay: 300,
-                                                                                                              defaultSimlet: null
-                                                                                                          }).register({'/json/treePanel': {
-                                                                                                                              data: JSONdata,
-                                                                                                                              stype: 'json'
-                                                                                                                          }
-                                                                                                                      });
-                                                                              //debugger;
-                                                                              //Ext.data.StoreManager.lookup('Tree').load();
-                                                                              //Ext.data.StoreManager.lookup('treeStore').load();
-                                                                              //Ext.data.StoreManager.lookup('treeStore2').load();
-                                                                              //Ext.data.StoreManager.lookup('treeStore3').load();
-                                                                              //Ext.getStore('Tree').load();
-                                                                              Ext.getStore('treeStore').load();
-                                                                              //Ext.getStore('treeStore2').load();
-                                                                              //Ext.getStore('treeStore3').load();
-                                                                              //treeStore2.load();
-                                                                              //treeStore.load();
-
-                                                                              //console.log('AndonPortal.store.Tree', AndonPortal.store.Tree);
-                                                                          }
-                                                                          );
-                                                     },
-                                                     close: function (ws) {
-                                                         //clearInterval(refreshIntervalId);
-                                                         console.log ('The qwebsocket is closed!');
-                                                     }
-                                                 };
-                                             })*/
+                   var qws = Ext.create ('Ext.ux.SqlSocket',{
+                                            id:'mysqlsocket',
+                                            //url: "ws://127.0.0.1:12346",
+                                            url:"ws://10.208.110.75:12346",
+                                            listeners: {
+                                                ready: function (ws) {
+                                                    //debugger;
+                                                    Ext.GlobalEvents.fireEvent('appSqlSocketReady',ws);
+                                                    AndonPortal.app.fireEvent('appSqlSocketReady',ws);
+                                                    console.log('SqlSocket opened');
+                                                    this.sql("TREE_GET_JSONTREE",
+                                                             "PLANT",
+                                                             "JSON_BRANCH",
+                                                                     function(resp){
+                                                                         var JSONdata=resp.map(function(node) {
+                                                                                          return eval('['+node.JSON_BRANCH+']')[0];
+                                                                                          });
+                                                                         Ext.ux.ajax.SimManager.init({
+                                                                                                         delay: 300,
+                                                                                                         defaultSimlet: null
+                                                                                                     }).register({'/json/treePanel': {
+                                                                                                                         data: JSONdata,
+                                                                                                                         stype: 'json'
+                                                                                                                     }
+                                                                                                                 });
+                                                                         Ext.getStore('treeStore').load();
+                                                                     });
+                                                }
+                                            }
+                                        });
                    },
                onAppUpdate: function () {
                    Ext.Msg.confirm('Application Update', 'This application has an update, reload?',

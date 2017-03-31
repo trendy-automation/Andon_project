@@ -1,6 +1,6 @@
 Ext.define('AndonPortal.controller.Main', {
     extend: 'Ext.app.Controller',
-
+    alias: 'controller.Main',
 //    requires: [
 //        'Ext.ux.SqlSocket'
 //    ],
@@ -15,8 +15,35 @@ Ext.define('AndonPortal.controller.Main', {
             selector: 'mysimpletree'
         },
         {
-            ref: 'sqlSocket',
-            selector: 'mysqlsocket'
+            ref: 'refsqlsocket',
+            selector: 'sqlsocket'
+        },
+                   {
+                       ref: 'refsqlsocket2',
+                       selector: 'xsqlsocket'
+                   },
+                   {
+                       ref: 'refsqlsocket2',
+                       selector: '#mysqlsocket'
+                   },        {
+            ref: 'andonPortal',
+            selector: 'AndonPortal.Application'
+        },
+                   {
+                       ref: 'AndonPortal',
+                       selector: 'AndonPortal.Application'
+                   },
+                   {
+                       ref: 'AndonPortalApp',
+                       selector: '#AndonPortal.$application'
+                   },
+                   {
+                       ref: 'AndonPortalApp2',
+                       selector: 'andonportal'
+                   },
+        {
+            ref: 'simplegrid',
+            selector: 'grid'
         }
     ],
 
@@ -82,19 +109,66 @@ Ext.define('AndonPortal.controller.Main', {
         console.log('onTreePanelItemClick',record);
         //this.redirectTo(record.get('className'));
     },
-
     onSqlSocketOpen:  function(ws) {
-        console.log('sqlsocket open',ws);
+        console.log('sqlsocket open control event',ws);
+    },
+    onSqlSocketReady:  function(ws) {
+        console.log('sqlsocket ready control event',ws);
+    },
+    onAppSqlSocketReady:  function(ws) {
+        console.log('App sqlsocket ready control event',ws);
+    },
+    onGridItemClick:  function( grid , record , item , index , e , eOpts ) {
+        console.log('onGridClick control event',record);
     },
     init: function(application) {
-
+        debugger; //Ext.ComponentQuery.query()
         this.control({
-            'tree': {
+            'treePanel': {
                 itemclick: this.onTreePanelItemClick
             },
-            'sqlSocket':{
-                open: this.onSqlSocketOpen
-            }
+            'andonPortal':{
+                sqlSocketReady: this.onAppSqlSocketReady
+            },
+            'Ext.ux.SqlSocket':{
+                ready : this.onSqlSocketReady
+            },
+            'ux.sqlsocket':{
+                ready : this.onSqlSocketReady
+            },
+            '#mysqlsocket':{
+                ready : this.onSqlSocketReady
+            },
+            'AndonPortalApp' :{
+                appSqlSocketReady: this.onAppSqlSocketReady
+            },
+            application :{
+                appSqlSocketReady: this.onAppSqlSocketReady
+            },
+            'AndonPortal' :{
+                appSqlSocketReady: this.onAppSqlSocketReady
+             },
+             global :{
+                 appSqlSocketReady: this.onAppSqlSocketReady
+             },             AndonPortal :{
+                 appSqlSocketReady: this.onAppSqlSocketReady
+             },
+             'andonPortal' :{
+                 appSqlSocketReady: this.onAppSqlSocketReady
+             },
+             'simplegrid' :{
+                 itemclick: this.onGridItemClick
+             }
         });
-    }
+    },
+               listen : {
+                       //listen to events using GlobalEvents
+                       global : {
+                           appSqlSocketReady : 'onCustomEvent'
+                       }
+                   },
+
+                   onCustomEvent : function(arg1) {
+                       console.log('global event domain', arg1);
+                   }
 });

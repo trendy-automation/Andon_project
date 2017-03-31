@@ -2,10 +2,10 @@ TEMPLATE = subdirs
 DISTFILES += \
     watch_1853.bat \
     Build_watch_1853.bat \
-    aria/app/ExtJS-WebSocket/qwebchannel.js \
-    aria/app/ExtJS-WebSocket/SqlSocket.js \
-    aria/app/ExtJS-WebSocket/WebSocket.js \
-    aria/app/ExtJS-WebSocket/WebSocketManager.js \
+    aria/app/ux/WebSocket/qwebchannel.js \
+    aria/app/ux/WebSocket/SqlSocket.js \
+    aria/app/ux/WebSocket/WebSocket.js \
+    aria/app/ux/WebSocket/WebSocketManager.js \
     aria/app/controller/Main.js \
     aria/app/model/User.js \
     aria/app/model/Sql_sources.js \

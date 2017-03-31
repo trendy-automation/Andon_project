@@ -111,13 +111,13 @@
      */
     "js": [
         {
-            "path": "app/ExtJS-WebSocket/qwebchannel.js",
+            "path": "app/ux/WebSocket/qwebchannel.js",
             "bundle": true
         },
-        {
-            "path": "app/ExtJS-WebSocket/SqlSocket.js",
-            "includeInBundle": true
-        },
+//        {
+//            "path": "app/ux/WebSocket/SqlSocket.js",
+//            "includeInBundle": true
+//        },
         {
             "path": "app.js",
             "bundle": true

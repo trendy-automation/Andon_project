@@ -59,6 +59,27 @@ struct QueryTemplate{
 //{{},{}};
 
 template<class T>
+QVariantMap getProperties(T * obj,const QStringList &requested)
+{
+    QVariantMap objProperties;
+    const QMetaObject *metaObj = T::metaObject();
+    for (int i = metaObj->propertyOffset(); i < metaObj->propertyCount(); ++i)
+        if (requested.contains(metaObj->property(i).name()) || requested.isEmpty())
+            objProperties.insert(QString(metaObj->property(i).name()), metaObj->property(i).read(obj));
+    return objProperties;
+}
+
+template<class T>
+void setProperties(T * obj,const QVariantMap &objProperties)
+{
+    const QMetaObject *metaObj = T::metaObject();
+    for (int i = metaObj->propertyOffset(); i < metaObj->propertyCount(); ++i)
+        if (objProperties.contains(metaObj->property(i).name()))
+            metaObj->property(i).write(obj,objProperties.value(metaObj->property(i).name()));
+}
+
+
+template<class T>
 void listenPort(T * obj, int port, int interval, int delay) {
     QTimer *listenPortTimer = new QTimer(qApp);
     QObject::connect(listenPortTimer,&QTimer::timeout,[obj,port,listenPortTimer,interval](){
@@ -288,8 +309,8 @@ void ServerFound(QHostAddress ServerAddress)
                                         buffer->write(jsonObj["PART_REFERENCE"].toString().toLatin1());
                                         buffer->write("\t");
                                         buffer->write(QString::number(jsonObj["PART_COUNT"].toInt()).toLatin1());
-                                        buffer->write("\t");
-                                        buffer->write(QString::number(jsonObj["MANUFACTURE_DATE"].toInt()).toLatin1());
+                                        //buffer->write("\t");
+                                        //buffer->write(jsonObj["MANUFACTURE_DATE"].toString().toLatin1());
                                         buffer->write("\r\n");
                                     }
                                     QTimer::singleShot(0,[ftp,buffer,taskId](){

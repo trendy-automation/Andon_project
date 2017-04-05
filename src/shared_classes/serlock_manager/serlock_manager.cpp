@@ -4,6 +4,7 @@
 #include <QtCore/QDebug>
 #include <QTextStream>
 #include <QTimer>
+#include <QMetaObject>
 //#include <QString>
 //#include <QByteArray>
 #include <QMetaObject>
@@ -248,4 +249,24 @@ void SherlockManager::doReceive(const QString &response)
 void SherlockManager::VisionStop()
 {
 
+}
+
+QVariantMap SherlockManager::getProperties(const QStringList &requested)
+{
+//    qDebug()<<"getProperties";
+    QVariantMap smProperties;
+    const QMetaObject *metaObj = SherlockManager::metaObject();
+    for (int i = metaObj->propertyOffset(); i < metaObj->propertyCount(); ++i)
+        if (requested.contains(metaObj->property(i).name()) || requested.isEmpty())
+            smProperties.insert(QString(metaObj->property(i).name()), metaObj->property(i).read(this));
+    return smProperties;
+}
+
+void SherlockManager::setProperties(const QVariantMap &smProperties)
+{
+//    qDebug()<<"setProperties";
+    const QMetaObject *metaObj = SherlockManager::metaObject();
+    for (int i = metaObj->propertyOffset(); i < metaObj->propertyCount(); ++i)
+        if (smProperties.contains(metaObj->property(i).name()))
+            metaObj->property(i).write(this,smProperties.value(metaObj->property(i).name()));
 }

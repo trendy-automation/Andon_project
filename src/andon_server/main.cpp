@@ -67,7 +67,7 @@ bool Step_3_OpenDB(DBWrapper *andondb)
      *****************************************/
     qDebug()<<"Start DB";
     //DBWrapper *andondb = new DBWrapper;
-    return andondb->ConnectDB(QCoreApplication::applicationDirPath(),DATABASE_FILE);
+    return andondb->ConnectDB(QCoreApplication::applicationDirPath(),DB_DATABASE_FILE);
 }
 
 
@@ -379,7 +379,7 @@ int main(int argc, char *argv[])
 
     QTimer * pdpTimer = new QTimer(QAbstractEventDispatcher::instance());
     pdpTimer->setTimerType(Qt::VeryCoarseTimer);
-    pdpTimer->start(1*(msecsPerDay-QTime::fromString("23:50:00").elapsed())+1000);
+    pdpTimer->start(qMax(msecsPerDay-QTime::fromString("23:50:00").elapsed(),86400000));
     qDebug()<<"pdpTimer start"<<pdpTimer->interval()/3600000.0<<"hours";
     QObject::connect(pdpTimer,&QTimer::timeout, [WThread,pdpTimer,msecsPerDay,andondb](){
         //qDebug()<<"pdpTimer timeout"<<"dayOfWeek"<<QDate::currentDate().dayOfWeek();
@@ -399,7 +399,7 @@ int main(int argc, char *argv[])
 //            else rcpnts<<"alexander.poloznov@faurecia.com";
         }
         pdpTimer->stop();
-        pdpTimer->start(msecsPerDay-max(QTime::fromString("23:50:00").elapsed(),
+        pdpTimer->start(msecsPerDay-qMax(QTime::fromString("23:50:00").elapsed(),
                                         QTime::fromString("23:50:00").elapsed())+1000);
         qDebug()<<"pdpTimer start"<<pdpTimer->interval()/3600000.0<<"hours";
     });

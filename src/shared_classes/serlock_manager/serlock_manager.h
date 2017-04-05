@@ -24,12 +24,13 @@ public:
     SherlockManager(const QString &tcpServerIp, quint16 tcpServerPort,
                     QObject * parent=0, bool keepConnect=true, bool connectNow=true);
     ~SherlockManager();
-
     void setClientIp(const QString &tcpServerIp){if (!isSocketConnected()) {serverIp=tcpServerIp; startConnecting();}}
-    void setPort(quint16 tcpServerPort)     {if (!isSocketConnected()) {serverPort=tcpServerPort; startConnecting();}}
+    void setPort(quint16 tcpServerPort){if (!isSocketConnected()) {serverPort=tcpServerPort; startConnecting();}}
     bool isSocketConnected() {return tcpSocket->state() == QAbstractSocket::ConnectedState;}
     void setAutoReconnect(bool connectNow=true){autoReconnect=connectNow;}
     void setAutoConnect(bool keepConnect=true){autoConnect=keepConnect;}
+    QVariantMap getProperties(const QStringList &requested);
+    void setProperties(const QVariantMap &smProperties);
 
 public slots:
     void doReceive(const QString &response);
@@ -37,7 +38,6 @@ public slots:
     void startConnecting();
     void VisuonRun();
     void VisionStop();
-
 
 signals:
     void connectionStateChanged(bool isConnected);

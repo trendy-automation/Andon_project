@@ -35,7 +35,7 @@ DEFINES += EMAIL_PASS='\\"And0n2016\\"'
 DEFINES += DB_DATABASE_FILE='\\"ANDON_DB.FDB\\"'
 DEFINES += DB_CASH_INTERVAL=20000 #keep result for 20 SECONDS
 DEFINES += DB_CASH_CLAEN_INTERVAL=600000 #clean result for 10 MINUTES
-DEFINES += DB_QUERIES_LIMIT=60 #limit of differient queries in cash
+DEFINES += DB_QUERIES_LIMIT=30 #limit of differient queries in cash
 
 #_______________ webui _______________
 DEFINES += WUI_PATH='\\"./webui2\\"'

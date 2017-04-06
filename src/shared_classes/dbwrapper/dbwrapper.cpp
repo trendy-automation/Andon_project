@@ -18,10 +18,10 @@ bool DBWrapper::getDbState()
 bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
 {
     if(!QSqlDatabase::contains(DB_Name)){
-//        qDebug() << "QSqlDatabase::drivers" << QSqlDatabase::drivers();
+        //        qDebug() << "QSqlDatabase::drivers" << QSqlDatabase::drivers();
 
-//        IBPP::Database ibpp = IBPP::DatabaseFactory("",DB_Name,"andon","andon");
-//        ibpp->Connect();
+        //        IBPP::Database ibpp = IBPP::DatabaseFactory("",DB_Name,"andon","andon");
+        //        ibpp->Connect();
 
         DB = QSqlDatabase::addDatabase(QLatin1String("QIBASE"),DB_Name); //QIBASE //QFIREBIRD
         DB.setDatabaseName(DB_Path+"/"+DB_Name);
@@ -31,135 +31,173 @@ bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
             qDebug() << "DB connection failed in ConnectDB";
             qDebug() << DB.lastError().text();
             return false;
-        }  else         {
-            emit DBConnected();
+        }else{
             qDebug() << "DB connected: " << DB.databaseName();
             QTimer cleanTimer(this);
             QObject::connect(&cleanTimer, &QTimer::timeout,[this,&cleanTimer](){
-                for(auto &q:queries)
-                    if(q.time.msecsTo(QDateTime::currentDateTime())>cleanTimer.interval()){
-                        q.query->finish();
-                        queries.remove(queries.key(q));
+                for(auto &q:queryMap)
+                    if(q.t_time.msecsTo(QDateTime::currentDateTime())>cleanTimer.interval()){
+                        q.p_query->finish();
+                        queryMap.remove(queryMap.key(q));
                     }
+                if(queryMap.isEmpty())
+                    DB.close();
             });
             cleanTimer.start(DB_CASH_CLAEN_INTERVAL);
+            emit DBConnected();
         }
     }
     return true;
 }
 
-QSqlQuery * DBWrapper::queryexecute (const QString &queryText, QString &lastError)
+queryStruc DBWrapper::appendQuery(const QString &queryStr,const QString &methodStr, int cashTime)
 {
-    //TODO: queryItem
-    if(queryText.isEmpty()){
-        lastError = "querytext isEmpty";
-        qDebug() << lastError;
-        return 0;
+    if(!queryMap.contains(queryStr)){
+        if(queryMap.count()>DB_QUERIES_LIMIT)
+            queryMap.insert(QString("%1=>%2").arg(queryStr).arg(methodStr),
+            {0, queryStr, methodStr, QString(), QString("query`s limit(%1) exhausted").arg(DB_QUERIES_LIMIT),
+             cashTime, QDateTime::currentDateTime()});
+        else
+            queryMap.insert(QString("%1=>%2").arg(queryStr).arg(methodStr),
+            {new QSqlQuery(queryStr,DB), queryStr, methodStr, QString(), QString(),
+             cashTime, QDateTime::currentDateTime()});
     }
-    if(!DB.open()) {
-        lastError = DB.lastError().text();
-        qDebug() << queryText << lastError;
-        return 0;
-    }
-    bool trans = DB.transaction();
-    QSqlQuery * sqlQuery;
-    if(queries.contains(queryText)){
-        if(queries.value(queryText).query->isActive()){
-            if(queries.value(queryText).time.msecsTo(QDateTime::currentDateTime())<DB_CASH_INTERVAL)
-                return queries.value(queryText).query;
+    qDebug()<<"queryMap.count()"<<queryMap.count();
+    return queryMap.value(queryStr);
+    /*    if(queryMap.contains(queryStr)){
+        if(queryMap.value(queryText).p_query->isActive()){
+            if(queryMap.value(queryStr).t_time.msecsTo(QDateTime::currentDateTime())<cashTime)
+                return queryMap.value(queryStr);
             else
-                sqlQuery = queries.value(queryText).query;
+                queryItem = queryMap.value(queryStr);
         }else{
-            queries.insert(queryText,{queries.value(queryText).query,QString(),QString(),QDateTime::currentDateTime()});
-            lastError = "query already runing";
-            qDebug() << queryText << lastError;
-            return 0;
+            queryMap.insert(queryStr,{queryMap.value(queryStr).p_query,QString(),QString(),QDateTime::currentDateTime()});
+            errorStr = "query already runing";
         }
     }else{
-        if(queries.count()<DB_QUERIES_LIMIT){
-            sqlQuery = new QSqlQuery(queryText,DB);
-            queries.insert(queryText,{sqlQuery,QString(),QString(),QDateTime::currentDateTime()});
+        if(queryMap.count()<DB_QUERIES_LIMIT){
+            queryMap.insert(queryStr,{new QSqlQuery(queryStr,DB), QString(), QString(), QString(), cashTime,
+                                       QDateTime::currentDateTime()});
         }else{
-            lastError = "query limit exhausted" << DB_QUERIES_LIMIT;
-            qDebug() << queryText << lastError;
-            return 0;
+            errorStr = QString("query`s limit(%1) exhausted").arg(DB_QUERIES_LIMIT);
         }
     }
-//    try{
-    if(!sqlQuery->exec()) {
-        lastError=sqlQuery->lastError().text();
-        qDebug() << queryText << lastError;
-        if(trans && sqlQuery->isSelect()){
-            sqlQuery->clear();
-            DB.rollback();
-        }
-        return 0;
-    }
-//    QSqlError cur_err1 = DB.driver()->lastError();
-//        if(cur_err1.isValid())
-//            qDebug()<<"driver error"<<cur_err1;
-//    QSqlError cur_err2 = DB.lastError();
-//        if(cur_err2.isValid())
-//            qDebug()<<"database error"<<cur_err2;
-    if(sqlQuery->lastError().isValid())
-        qDebug()<<"sqlQuery->lastError().isValid()"<<sqlQuery->lastError();
-//    }
-//    catch(IBPP::Exception& e)
-//    {
-//        qDebug() << "IBPP::Exception" << e.ErrorMessage();
-//    }
-     //DB.commit();
-    if(sqlQuery->isSelect()){
-        sqlQuery->finish();
-        DB.commit();
-    }
-
-    return sqlQuery;
+    return queryMap.value(queryStr);
+*/
 }
 
-void DBWrapper::executeProc(const QString & sqlquery)
+bool DBWrapper::queryIsCashed(queryStruc &queryItem)
 {
-    QString lastError;
-    QSqlQuery *query=queryexecute(sqlquery, lastError);
-    if(!query)
-        qDebug()<< sqlquery<< "\" faled";
-
+    if(!queryItem.s_error.isEmpty())
+        if(queryItem.p_query)
+            if(!queryItem.p_query->executedQuery().isEmpty())
+                if(queryItem.t_time.msecsTo(QDateTime::currentDateTime())<queryItem.i_cashTime)
+                    return true;
+    return false;
 }
 
-QString DBWrapper::query2jsonstrlist(const QString & sqlquery)
+bool DBWrapper::queryExecute (queryStruc &queryItem)
 {
-    QString lastError;
-    QSqlQuery *query=queryexecute(sqlquery, lastError);
-    if(!query)
-        return str2Json("Error", lastError);
-    QJsonObject tableObject;
-    QStringList FieldList;
-    int key_size=QString().number(query->record().count()).size();
-    for(int x=0; x < query->record().count(); x++) {
-        FieldList << query->record().fieldName(x);
-    }
-    tableObject["FieldList"]=QJsonValue::fromVariant(FieldList.join(","));
-    while(query->next()) {
-        QStringList ValueList;
-        //TODO: QVariantList ValueList;
-        for(int x=0; x < query->record().count(); x++) {
-            ValueList << query->value(x).toString().toUtf8();
+    if(queryItem.s_sql_query.isEmpty())
+        queryItem.s_error = "s_sql_query isEmpty";
+    if(!DB.open())
+        queryItem.s_error = DB.lastError().text();
+
+    bool trans = DB.transaction();
+    qDebug() << "DB.transaction()" << trans;
+    //    if(queryMap.contains(queryText)){
+    //        if(queryMap.value(queryText).p_query->isActive()){
+    //            if(queryMap.value(queryText).t_time.msecsTo(QDateTime::currentDateTime())<DB_CASH_INTERVAL)
+    //                return queryMap.value(queryText);
+    //            else
+    //                queryItem = queryMap.value(queryText);
+    //        }else{
+    //            queryMap.insert(queryText,{queryMap.value(queryText).p_query,QString(),QString(),QDateTime::currentDateTime()});
+    //            queryItem.s_error = "query already runing";
+    //        }
+    //    }else{
+    //        if(queryMap.count()<DB_QUERIES_LIMIT){
+    //            queryItem.p_query = new QSqlQuery(queryText,DB);
+    //            queryMap.insert(queryText,{queryItem.p_query,QString(),QString(),QDateTime::currentDateTime()});
+    //        }else{
+    //            queryItem.s_error = QString("query`s limit(%1) exhausted").arg(DB_QUERIES_LIMIT);
+    //        }
+    //    }
+    if(queryItem.p_query && !queryItem.s_error.isEmpty()){
+        //    try{
+        if(!queryItem.p_query->exec()){
+            queryItem.s_error =queryItem.p_query->lastError().text();
+            //qDebug() << queryItem.s_sql_query << queryItem.s_error;
+            if(trans && queryItem.p_query->isSelect()){
+                queryItem.p_query->clear();
+                DB.rollback();
+            }
+            return true;
         }
-        tableObject[QString("%1").arg(tableObject.count(), key_size, 10, QChar('0'))]
-                =QJsonValue::fromVariant(ValueList.join("|"));
+        if(queryItem.p_query->lastError().isValid())
+            qDebug()<<"queryItem.p_query->lastError().isValid()"<<queryItem.p_query->lastError();
+        //    }
+        //    catch(IBPP::Exception& e)
+        //    {
+        //        qDebug() << "IBPP::Exception" << e.ErrorMessage();
+        //    }
+        //DB.commit();
+        //        if(queryItem.p_query->isSelect()){
+        //            queryItem.p_query->finish();
+        //            DB.commit();
+        //        }
     }
-    delete query;
-    DB.close();
-    QJsonDocument json(tableObject);
-    return json.toJson();
+    return false;
+}
+
+bool DBWrapper::executeProc(const QString & queryStr)
+{
+    queryStruc queryItem = appendQuery(queryStr,"",0);
+    if(queryExecute(queryItem)){
+        queryItem.p_query->finish();
+        return true;
+    }
+    else
+        qDebug()<< queryStr << queryItem.s_error;
+    return false;
+}
+
+QString DBWrapper::query2jsonstrlist(const QString & queryStr)
+{
+    queryStruc queryItem = appendQuery(queryStr,"jsonstrlist");
+    if(queryIsCashed(queryItem))
+        return queryItem.j_result;
+    if(queryExecute(queryItem)){
+        QJsonObject tableObject;
+        QStringList FieldList;
+        int key_size=QString().number(queryItem.p_query->record().count()).size();
+        for(int x=0; x < queryItem.p_query->record().count(); x++) {
+            FieldList << queryItem.p_query->record().fieldName(x);
+        }
+        tableObject["FieldList"]=QJsonValue::fromVariant(FieldList.join(","));
+        while(queryItem.p_query->next()) {
+            QStringList ValueList;
+            //TODO: QVariantList ValueList; // for date, null, ets
+            for(int x=0; x < queryItem.p_query->record().count(); x++) {
+                ValueList << queryItem.p_query->value(x).toString().toUtf8();
+            }
+            tableObject[QString("%1").arg(tableObject.count(), key_size, 10, QChar('0'))]
+                    =QJsonValue::fromVariant(ValueList.join("|"));
+        }
+        queryItem.p_query->finish();
+        QJsonDocument json(tableObject);
+        return json.toJson();
+    }
+    qDebug()<< queryStr << queryItem.s_error;
+    return str2Json("Error", queryItem.s_error);
 }
 
 /*
 
-QString DBWrapper::query2jsonarrays(const QString & sqlquery)
+QString DBWrapper::query2jsonarrays(const QString & queryStr)
 {
     QString lastError;
-    QSqlQuery *query=queryexecute(sqlquery, lastError);
+    QSqlQuery *query=queryexecute(queryStr, lastError);
     if(!query)
         return str2Json("Error", lastError);
 
@@ -189,85 +227,85 @@ QString DBWrapper::query2jsonarrays(const QString & sqlquery)
 
 */
 
-QString DBWrapper::query2fulljson(const QString &sqlquery)
+QString DBWrapper::query2fulljson(const QString &queryStr)
 {
     QTextCodec *codec2 = QTextCodec::codecForName("iso8859-1");
-    QString lastError;
-    QSqlQuery *query=queryexecute(sqlquery, lastError);
-    if(!query)
-        return str2Json("Error", lastError);
-
-
-    QJsonArray rowarray;
-    QJsonArray FieldList;
-    while(query->next()) {
-        QJsonObject jotmp;
-        for(int x=0; x < query->record().count(); x++){
-            jotmp.insert(codec2->fromUnicode(query->record().fieldName(x)),QJsonValue::fromVariant(query->value(x)));
+    queryStruc queryItem = appendQuery(queryStr,"fulljson");
+    if(queryIsCashed(queryItem))
+        return queryItem.j_result;
+    if(queryExecute(queryItem)){
+        QJsonArray rowarray;
+        QJsonArray FieldList;
+        while(queryItem.p_query->next()) {
+            QJsonObject jotmp;
+            for(int x=0; x < queryItem.p_query->record().count(); x++){
+                jotmp.insert(codec2->fromUnicode(queryItem.p_query->record().fieldName(x)),QJsonValue::fromVariant(queryItem.p_query->value(x)));
+            }
+            QJsonDocument jdtmp(jotmp);
+            rowarray.append(QJsonValue::fromVariant(jdtmp.toVariant()));
         }
-        QJsonDocument jdtmp(jotmp);
-        rowarray.append(QJsonValue::fromVariant(jdtmp.toVariant()));
+        for(int x=0; x < queryItem.p_query->record().count(); x++)
+            FieldList << QJsonValue::fromVariant(codec2->fromUnicode(queryItem.p_query->record().fieldName(x)));
+        queryItem.p_query->finish();
+        QJsonDocument FieldDoc(FieldList);
+        rowarray.append(QJsonValue::fromVariant(FieldDoc.toVariant()));
+        QJsonDocument json(rowarray);
+        return json.toJson(QJsonDocument::Compact);
     }
-
-    for(int x=0; x < query->record().count(); x++)
-        FieldList << QJsonValue::fromVariant(codec2->fromUnicode(query->record().fieldName(x)));
-    QJsonDocument FieldDoc(FieldList);
-    rowarray.append(QJsonValue::fromVariant(FieldDoc.toVariant()));
-    QJsonDocument json(rowarray);
-    delete query;
-    DB.close();
-    return json.toJson(QJsonDocument::Compact);
+    qDebug()<< queryStr << queryItem.s_error;
+    return str2Json("Error", queryItem.s_error);
 }
 
 
 
 
-QString DBWrapper::query2json(const QString & sqlquery)
+QString DBWrapper::query2json(const QString & queryStr)
 {
-    QString lastError;
-    QSqlQuery *query=queryexecute(sqlquery, lastError);
-    if(!query)
-        return str2Json("Error", lastError);
-    QJsonArray jatmp;
-    while(query->next()) {
-        QJsonObject jotmp;
-        for(int x=0; x < query->record().count(); x++){
-            //TODO DateTime
-//            qDebug()<<query->value(x).userType();
-//            if(query->value(x).userType()==QVariant::DateTime){
-//                QString timestamp = query->value(x).toDateTime().toString("dd.MM.yy hh:mm:ss.zzz");
-//                qDebug()<<"timestamp"<<timestamp;
-//                jotmp.insert((query->record().fieldName(x)),QJsonValue::fromVariant(timestamp));
-//            }
-//            else
-                jotmp.insert((query->record().fieldName(x)),QJsonValue::fromVariant(query->value(x)));
+    queryStruc queryItem = appendQuery(queryStr,"json");
+    if(queryIsCashed(queryItem))
+        return queryItem.j_result;
+    if(queryExecute(queryItem)){
+        QJsonArray jatmp;
+        while(queryItem.p_query->next()) {
+            QJsonObject jotmp;
+            for(int x=0; x < queryItem.p_query->record().count(); x++){
+                //TODO DateTime
+                //            qDebug()<<queryItem.p_query->value(x).userType();
+                //            if(queryItem.p_query->value(x).userType()==QVariant::DateTime){
+                //                QString timestamp = queryItem.p_query->value(x).toDateTime().toString("dd.MM.yy hh:mm:ss.zzz");
+                //                qDebug()<<"timestamp"<<timestamp;
+                //                jotmp.insert((queryItem.p_query->record().fieldName(x)),QJsonValue::fromVariant(timestamp));
+                //            }
+                //            else
+                jotmp.insert((queryItem.p_query->record().fieldName(x)),QJsonValue::fromVariant(queryItem.p_query->value(x)));
+            }
+            jatmp.append(QJsonValue::fromVariant(QJsonDocument(jotmp).toVariant()));
         }
-        jatmp.append(QJsonValue::fromVariant(QJsonDocument(jotmp).toVariant()));
+        QJsonDocument json(jatmp);
+        return json.toJson(QJsonDocument::Compact);
     }
-    QJsonDocument json(jatmp);
-    delete query;
-    DB.close();
-    return json.toJson(QJsonDocument::Compact);
+    qDebug()<< queryStr << queryItem.s_error;
+    return str2Json("Error", queryItem.s_error);
 }
 
-void DBWrapper::executeQuery(const QString &sqlquery, const QString &query_method,
+void DBWrapper::executeQuery(const QString &queryStr, const QString &query_method,
                              std::function<void(QString jsontext)> functor)
 {
     if(query_method=="query2json")
-        return functor(query2json(sqlquery));
+        return functor(query2json(queryStr));
     if(query_method=="query2fulljson")
-        return functor(query2fulljson(sqlquery));
+        return functor(query2fulljson(queryStr));
 }
 
-void DBWrapper::executeQuery(const QString & sqlquery,
+void DBWrapper::executeQuery(const QString & queryStr,
                              std::function<void(QSqlQuery *query)> functor)
 {
-    QString lastError;
-    QSqlQuery *query=queryexecute(sqlquery, lastError);
-    if(!query)
-        qDebug()<<lastError;
-    else
-        return functor(query);
+    queryStruc queryItem = appendQuery(queryStr,"",0);
+    if(queryExecute(queryItem))
+        return functor(queryItem.p_query);
+    qDebug()<< queryStr << queryItem.s_error;
+    //return str2Json("Error", queryItem.s_error);
+    returnfunctor(0);
 }
 
 QString DBWrapper::getQueryLastError(QSqlQuery *query)
@@ -277,8 +315,8 @@ QString DBWrapper::getQueryLastError(QSqlQuery *query)
     jotmp.insert("ERROR",QJsonValue::fromVariant(QVariant(query->lastError().text())));
     QJsonDocument jdtmp(jotmp);
     jatmp.append(QJsonValue::fromVariant(jdtmp.toVariant()));
-//    jatmp.append(QJsonValue::fromVariant(QVariant("QSqlQuery ERROR")));
-//    jatmp.append(QJsonValue::fromVariant(QVariant(query->lastError().text())));
+    //    jatmp.append(QJsonValue::fromVariant(QVariant("QSqlQuery ERROR")));
+    //    jatmp.append(QJsonValue::fromVariant(QVariant(query->lastError().text())));
     jatmp.append(QJsonValue::fromVariant(QVariant("ERROR")));
     return QJsonDocument(jatmp).toJson();
 }
@@ -298,83 +336,83 @@ QString DBWrapper::str2Json(const QString & name, const QString & val)
 
 void DBWrapper::receiveText(const QString &query, const QString &query_method)
 {
-////        qDebug() << "sql_query"<<sql_query;
-////                 << "query_method" << query_method << "queries.count()" << queries.count()
-////                 << "recive_count" << recive_count;
-//    QString sql_query=QString(query).toUpper();
-//    if(queries.contains(sql_query)) {
-//        if(queries.value(sql_query).pageTime.elapsed()<DB_CASH_INTERVAL) {
-////                qDebug() << "queries.contains(sql_query)";
-////                         << queries.count()<<recive_count;
-//            if(!queries.value(sql_query).pageData.isEmpty()){
-////                    qDebug() << "emit sendText";
-//                emit sendText(sql_query, queries.value(sql_query).pageData);
-//                return;
-//            }
-//            else {
-//                qDebug() << "pageData.isEmpty()";
-//            }
-//        }
-//    } else {
-//        queries.insert(sql_query,{QString(),QTime::currentTime()});
-//    }
-//    getSqlQuery(sql_query, query_method, [this, sql_query](QString jsontext){
-//        queries.insert(sql_query,{jsontext,QTime::currentTime()});
-//        emit sendText(sql_query, jsontext);
-//    });
+    ////        qDebug() << "sql_query"<<sql_query;
+    ////                 << "query_method" << query_method << "queries.count()" << queries.count()
+    ////                 << "recive_count" << recive_count;
+    //    QString sql_query=QString(query).toUpper();
+    //    if(queries.contains(sql_query)) {
+    //        if(queries.value(sql_query).pageTime.elapsed()<DB_CASH_INTERVAL) {
+    ////                qDebug() << "queries.contains(sql_query)";
+    ////                         << queries.count()<<recive_count;
+    //            if(!queries.value(sql_query).pageData.isEmpty()){
+    ////                    qDebug() << "emit sendText";
+    //                emit sendText(sql_query, queries.value(sql_query).pageData);
+    //                return;
+    //            }
+    //            else {
+    //                qDebug() << "pageData.isEmpty()";
+    //            }
+    //        }
+    //    } else {
+    //        queries.insert(sql_query,{QString(),QTime::currentTime()});
+    //    }
+    //    getSqlQuery(sql_query, query_method, [this, sql_query](QString jsontext){
+    //        queries.insert(sql_query,{jsontext,QTime::currentTime()});
+    //        emit sendText(sql_query, jsontext);
+    //    });
 
 }
 void DBWrapper::snedReport(const QString &report, const QStringList &emails)
 {
-//    QString sql_query;
-//    QString template_file;
-//    QString res_file="report.xlsx";
-//    QString subject;
-//    QString sheet;
-//    //SELECT p.DESCRIPTION
-//    //FROM DB_REPORT_DESCRIPTION(PROCEDURE_NAME) p
-//    if(report==QString("Daily_PDP")) {
-//        sql_query=QString("SELECT * FROM PRODUCTION_REPORT_SHIFT_PDP");
-//        res_file=QString("PDP %1.xlsx").arg(QDate::currentDate().toString("ddd d MMMM"));
-//        subject=QString("Производственный отчёт %1 за %2 смену ")
-//                .arg(QDate::currentDate().toString("ddd d MMMM")).arg(QTime::currentTime().hour()<15?1:2);
-//    }
-//    if(report==QString("Weekly_PDP")) {
-//        sql_query="SELECT * FROM PRODUCTION_REPORT_PDP";
-//        template_file="PDP.xlsx";
-//        res_file=QString("PDP W%1.xlsx").arg(QDate::currentDate().weekNumber());
-//        subject=QString("Производственный отчёт большие тримы за неделю %1").arg(QDate::currentDate().weekNumber()) ;
-//    }
-//    if(report==QString("REPORT_BREAKDOWNS")) {
-//        sql_query="SELECT * FROM REPORT_BREAKDOWNS";
-//        res_file=QString("REPORT_BREAKDOWNS_%1.xlsx").arg(QDate::currentDate().toString("dd_MM_yyyy"));
-//        subject=QString("Простои производства %1").arg(QDate::currentDate().toString("ddd d MMMM"));
-//        sheet=QString("Отчёт по простоям %1").arg(QDate::currentDate().toString("ddd d MMMM"));
-//    }
+    //    QString sql_query;
+    //    QString template_file;
+    //    QString res_file="report.xlsx";
+    //    QString subject;
+    //    QString sheet;
+    //    //SELECT p.DESCRIPTION
+    //    //FROM DB_REPORT_DESCRIPTION(PROCEDURE_NAME) p
+    //    if(report==QString("Daily_PDP")) {
+    //        sql_query=QString("SELECT * FROM PRODUCTION_REPORT_SHIFT_PDP");
+    //        res_file=QString("PDP %1.xlsx").arg(QDate::currentDate().toString("ddd d MMMM"));
+    //        subject=QString("Производственный отчёт %1 за %2 смену ")
+    //                .arg(QDate::currentDate().toString("ddd d MMMM")).arg(QTime::currentTime().hour()<15?1:2);
+    //    }
+    //    if(report==QString("Weekly_PDP")) {
+    //        sql_query="SELECT * FROM PRODUCTION_REPORT_PDP";
+    //        template_file="PDP.xlsx";
+    //        res_file=QString("PDP W%1.xlsx").arg(QDate::currentDate().weekNumber());
+    //        subject=QString("Производственный отчёт большие тримы за неделю %1").arg(QDate::currentDate().weekNumber()) ;
+    //    }
+    //    if(report==QString("REPORT_BREAKDOWNS")) {
+    //        sql_query="SELECT * FROM REPORT_BREAKDOWNS";
+    //        res_file=QString("REPORT_BREAKDOWNS_%1.xlsx").arg(QDate::currentDate().toString("dd_MM_yyyy"));
+    //        subject=QString("Простои производства %1").arg(QDate::currentDate().toString("ddd d MMMM"));
+    //        sheet=QString("Отчёт по простоям %1").arg(QDate::currentDate().toString("ddd d MMMM"));
+    //    }
 
-//    qDebug()<<"getSqlQuery"<<report<<emails<<sql_query;
-//    getSqlQuery(sql_query, [this,&subject,&sheet,&template_file,&res_file,emails]
-//                    (QSqlQuery *query){
-//            QXlsx::Document * xlsx;
-//            if(template_file.isEmpty())
-//                xlsx = new QXlsx::Document();
-//            else
-//                xlsx = new QXlsx::Document(template_file);
-//            xlsx->addSheet(sheet);
-//            int i=1;
-//            QTextCodec *codec = QTextCodec::codecForName("iso8859-1");
-//            for(int j=0; j < query->record().count(); j++)
-//                xlsx->write(i,j+1,QString(codec->fromUnicode(query->record().fieldName(j))));
-//            while(query->next()) {
-//                i++;
-//                for(int j=0; j < query->record().count(); j++)
-//                    xlsx->write(i,j+1,query->value(j));
-//            }
-//            if(i>1){
-//                QBuffer buffer(new QByteArray);
-//                xlsx->saveAs(&buffer);
-//                buffer.setProperty("FILE_NAME",res_file);
-//                emit sendReport2email(subject,"",emails,&(QList<QBuffer*>()<<&buffer));
-//            }
-//        });
+    //    qDebug()<<"getSqlQuery"<<report<<emails<<sql_query;
+    //    getSqlQuery(sql_query, [this,&subject,&sheet,&template_file,&res_file,emails]
+    //                    (QSqlQuery *query){
+    //            QXlsx::Document * xlsx;
+    //            if(template_file.isEmpty())
+    //                xlsx = new QXlsx::Document();
+    //            else
+    //                xlsx = new QXlsx::Document(template_file);
+    //            xlsx->addSheet(sheet);
+    //            int i=1;
+    //            QTextCodec *codec = QTextCodec::codecForName("iso8859-1");
+    //            for(int j=0; j < query->record().count(); j++)
+    //                xlsx->write(i,j+1,QString(codec->fromUnicode(query->record().fieldName(j))));
+    //            while(query->next()) {
+    //                i++;
+    //                for(int j=0; j < query->record().count(); j++)
+    //                    xlsx->write(i,j+1,query->value(j));
+    //            }
+    //            if(i>1){
+    //                QBuffer buffer(new QByteArray);
+    //                xlsx->saveAs(&buffer);
+    //                buffer.setProperty("FILE_NAME",res_file);
+    //                emit sendReport2email(subject,"",emails,&(QList<QBuffer*>()<<&buffer));
+    //            }
+    //        });
 }

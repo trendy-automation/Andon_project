@@ -65,28 +65,24 @@ Ext.define('AndonPortal.Application', {
                                             listeners: {
                                                 ready: function (ws) {
                                                     //debugger;
+                                                    console.log('SqlSocket ready');
                                                     Ext.GlobalEvents.fireEvent('appSqlSocketReady',ws);
-                                                    AndonPortal.app.fireEvent('appSqlSocketReady',ws);
-                                                    console.log('SqlSocket opened');
-                                                    this.sql("TREE_GET_JSONTREE",
-                                                             "PLANT",
-                                                             "JSON_BRANCH",
-                                                                     function(resp){
-                                                                         var JSONdata=resp.map(function(node) {
-                                                                                          return eval('['+node.JSON_BRANCH+']')[0];
-                                                                                          });
-                                                                         Ext.ux.ajax.SimManager.init({
-                                                                                                         delay: 300,
-                                                                                                         defaultSimlet: null
-                                                                                                     }).register({'/json/treePanel': {
-                                                                                                                         data: JSONdata,
-                                                                                                                         stype: 'json'
-                                                                                                                     }
-                                                                                                                 });
-                                                                         Ext.getStore('treeStore').load();
-                                                                     });
-                                                }
-                                            }
+                                                    //AndonPortal.app.fireEvent('appSqlSocketReady',ws);
+                                                },
+                                                 global : {
+                                                     sql : 'onSqlQuery'
+                                                 }
+                                            },
+                                             listen : {
+                                                     //listen to events using GlobalEvents
+                                                     global : {
+                                                         sql : 'onSqlQuery'
+                                                     }
+                                                 },
+                                             onSqlQuery: function(proc,input,fields,result){
+                                                 console.log('SqlSocket onSqlQuery');
+                                                 this.sql(proc,input,fields,result);
+                                             }
                                         });
                    },
                onAppUpdate: function () {

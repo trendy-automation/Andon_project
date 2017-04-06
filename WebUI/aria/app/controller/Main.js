@@ -15,33 +15,6 @@ Ext.define('AndonPortal.controller.Main', {
             selector: 'mysimpletree'
         },
         {
-            ref: 'refsqlsocket',
-            selector: 'sqlsocket'
-        },
-                   {
-                       ref: 'refsqlsocket2',
-                       selector: 'xsqlsocket'
-                   },
-                   {
-                       ref: 'refsqlsocket2',
-                       selector: '#mysqlsocket'
-                   },        {
-            ref: 'andonPortal',
-            selector: 'AndonPortal.Application'
-        },
-                   {
-                       ref: 'AndonPortal',
-                       selector: 'AndonPortal.Application'
-                   },
-                   {
-                       ref: 'AndonPortalApp',
-                       selector: '#AndonPortal.$application'
-                   },
-                   {
-                       ref: 'AndonPortalApp2',
-                       selector: 'andonportal'
-                   },
-        {
             ref: 'simplegrid',
             selector: 'grid'
         }
@@ -109,53 +82,36 @@ Ext.define('AndonPortal.controller.Main', {
         console.log('onTreePanelItemClick',record);
         //this.redirectTo(record.get('className'));
     },
-    onSqlSocketOpen:  function(ws) {
-        console.log('sqlsocket open control event',ws);
-    },
-    onSqlSocketReady:  function(ws) {
-        console.log('sqlsocket ready control event',ws);
-    },
     onAppSqlSocketReady:  function(ws) {
         console.log('App sqlsocket ready control event',ws);
+        ws.sql("TREE_GET_JSONTREE",
+                 "PLANT",
+                 "JSON_BRANCH",
+                         function(resp){
+                             var JSONdata=resp.map(function(node) {
+                                              return eval('['+node.JSON_BRANCH+']')[0];
+                                              });
+                             Ext.ux.ajax.SimManager.init({
+                                                             delay: 300,
+                                                             defaultSimlet: null
+                                                         }).register({'/json/treePanel': {
+                                                                             data: JSONdata,
+                                                                             stype: 'json'
+                                                                         }
+                                                                     });
+                             Ext.getStore('treeStore').load();
+                         });
+        Ext.GlobalEvents.fireEvent('sql');
     },
     onGridItemClick:  function( grid , record , item , index , e , eOpts ) {
         console.log('onGridClick control event',record);
     },
     init: function(application) {
-        debugger; //Ext.ComponentQuery.query()
+        //debugger; //Ext.ComponentQuery.query()
         this.control({
             'treePanel': {
                 itemclick: this.onTreePanelItemClick
             },
-            'andonPortal':{
-                sqlSocketReady: this.onAppSqlSocketReady
-            },
-            'Ext.ux.SqlSocket':{
-                ready : this.onSqlSocketReady
-            },
-            'ux.sqlsocket':{
-                ready : this.onSqlSocketReady
-            },
-            '#mysqlsocket':{
-                ready : this.onSqlSocketReady
-            },
-            'AndonPortalApp' :{
-                appSqlSocketReady: this.onAppSqlSocketReady
-            },
-            application :{
-                appSqlSocketReady: this.onAppSqlSocketReady
-            },
-            'AndonPortal' :{
-                appSqlSocketReady: this.onAppSqlSocketReady
-             },
-             global :{
-                 appSqlSocketReady: this.onAppSqlSocketReady
-             },             AndonPortal :{
-                 appSqlSocketReady: this.onAppSqlSocketReady
-             },
-             'andonPortal' :{
-                 appSqlSocketReady: this.onAppSqlSocketReady
-             },
              'simplegrid' :{
                  itemclick: this.onGridItemClick
              }
@@ -164,11 +120,7 @@ Ext.define('AndonPortal.controller.Main', {
                listen : {
                        //listen to events using GlobalEvents
                        global : {
-                           appSqlSocketReady : 'onCustomEvent'
+                           appSqlSocketReady : 'onAppSqlSocketReady'
                        }
-                   },
-
-                   onCustomEvent : function(arg1) {
-                       console.log('global event domain', arg1);
                    }
 });

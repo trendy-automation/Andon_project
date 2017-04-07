@@ -33,17 +33,31 @@ bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
             return false;
         }else{
             qDebug() << "DB connected: " << DB.databaseName();
-            QTimer cleanTimer(this);
-            QObject::connect(&cleanTimer, &QTimer::timeout,[this,&cleanTimer](){
-                for(auto &q:queryMap)
-                    if(q.t_time.msecsTo(QDateTime::currentDateTime())>cleanTimer.interval()){
-                        q.p_query->finish();
-                        queryMap.remove(queryMap.key(q));
+            QTimer *cleanTimer = new QTimer(this);
+            QObject::connect(cleanTimer, &QTimer::timeout,[this,cleanTimer](){
+                for(auto &q:queryMap){
+                    qDebug() << 1;
+                    qDebug() << q.t_time;
+                    qDebug() << q.t_time.msecsTo(QDateTime::currentDateTime());
+                    if(q.t_time.msecsTo(QDateTime::currentDateTime())>cleanTimer->interval()){
+                        qDebug() << 2;
+                        if(q.p_query){
+                            qDebug() << 3;
+                            if(q.p_query->isActive()){
+                                qDebug() << 4;
+                                q.p_query->finish();
+                            }
+                        }
+                        queryMap.remove(QString(queryKeyMask).arg(q.s_sql_query).arg(q.s_method));
                     }
-                if(queryMap.isEmpty())
+                }
+                qDebug() << "queryMap.count()" << queryMap.count();
+                if(queryMap.isEmpty()){
+                    qDebug() << 5;
                     DB.close();
+                }
             });
-            cleanTimer.start(DB_CASH_CLAEN_INTERVAL);
+            cleanTimer->start(DB_CASH_CLAEN_INTERVAL);
             emit DBConnected();
         }
     }
@@ -52,18 +66,20 @@ bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
 
 queryStruc DBWrapper::appendQuery(const QString &queryStr,const QString &methodStr, int cashTime)
 {
+    QString key=QString(queryKeyMask).arg(queryStr).arg(methodStr);
     if(!queryMap.contains(queryStr)){
         if(queryMap.count()>DB_QUERIES_LIMIT)
-            queryMap.insert(QString("%1=>%2").arg(queryStr).arg(methodStr),
+            return
+            //queryMap.insert(key,
             {0, queryStr, methodStr, QString(), QString("query`s limit(%1) exhausted").arg(DB_QUERIES_LIMIT),
-             cashTime, QDateTime::currentDateTime()});
+             cashTime, QDateTime::currentDateTime()};//);
         else
-            queryMap.insert(QString("%1=>%2").arg(queryStr).arg(methodStr),
-            {new QSqlQuery(queryStr,DB), queryStr, methodStr, QString(), QString(),
+            queryMap.insert(key,
+            {0, queryStr, methodStr, QString(), QString(),
              cashTime, QDateTime::currentDateTime()});
     }
     qDebug()<<"queryMap.count()"<<queryMap.count();
-    return queryMap.value(queryStr);
+    return queryMap.value(key);
     /*    if(queryMap.contains(queryStr)){
         if(queryMap.value(queryText).p_query->isActive()){
             if(queryMap.value(queryStr).t_time.msecsTo(QDateTime::currentDateTime())<cashTime)
@@ -98,54 +114,55 @@ bool DBWrapper::queryIsCashed(queryStruc &queryItem)
 
 bool DBWrapper::queryExecute (queryStruc &queryItem)
 {
+//    qDebug() << queryItem.i_cashTime << queryItem.j_result << queryItem.p_query << queryItem.s_error
+//                << queryItem.s_method << queryItem.s_sql_query << queryItem.t_time;
     if(queryItem.s_sql_query.isEmpty())
-        queryItem.s_error = "s_sql_query isEmpty";
+        queryItem.s_error = "Query is empty";
     if(!DB.open())
         queryItem.s_error = DB.lastError().text();
 
-    bool trans = DB.transaction();
-    qDebug() << "DB.transaction()" << trans;
-    //    if(queryMap.contains(queryText)){
-    //        if(queryMap.value(queryText).p_query->isActive()){
-    //            if(queryMap.value(queryText).t_time.msecsTo(QDateTime::currentDateTime())<DB_CASH_INTERVAL)
-    //                return queryMap.value(queryText);
-    //            else
-    //                queryItem = queryMap.value(queryText);
-    //        }else{
-    //            queryMap.insert(queryText,{queryMap.value(queryText).p_query,QString(),QString(),QDateTime::currentDateTime()});
-    //            queryItem.s_error = "query already runing";
-    //        }
-    //    }else{
-    //        if(queryMap.count()<DB_QUERIES_LIMIT){
-    //            queryItem.p_query = new QSqlQuery(queryText,DB);
-    //            queryMap.insert(queryText,{queryItem.p_query,QString(),QString(),QDateTime::currentDateTime()});
-    //        }else{
-    //            queryItem.s_error = QString("query`s limit(%1) exhausted").arg(DB_QUERIES_LIMIT);
-    //        }
-    //    }
-    if(queryItem.p_query && !queryItem.s_error.isEmpty()){
-        //    try{
-        if(!queryItem.p_query->exec()){
-            queryItem.s_error =queryItem.p_query->lastError().text();
-            //qDebug() << queryItem.s_sql_query << queryItem.s_error;
-            if(trans && queryItem.p_query->isSelect()){
-                queryItem.p_query->clear();
-                DB.rollback();
+//    if(queryItem.p_query->lastError().isValid())
+//        qDebug()<<"queryItem.p_query->lastError().isValid()"<<queryItem.p_query->lastError();
+
+/*
+        if(queryMap.contains(queryText)){
+            if(queryMap.value(queryText).p_query->isActive()){
+                if(queryMap.value(queryText).t_time.msecsTo(QDateTime::currentDateTime())<DB_CASH_INTERVAL)
+                    return queryMap.value(queryText);
+                else
+                    queryItem = queryMap.value(queryText);
+            }else{
+                queryMap.insert(queryText,{queryMap.value(queryText).p_query,QString(),QString(),QDateTime::currentDateTime()});
+                queryItem.s_error = "query already runing";
             }
+        }else{
+            if(queryMap.count()<DB_QUERIES_LIMIT){
+                queryItem.p_query = new QSqlQuery(queryText,DB);
+                queryMap.insert(queryText,{queryItem.p_query,QString(),QString(),QDateTime::currentDateTime()});
+            }else{
+                queryItem.s_error = QString("query`s limit(%1) exhausted").arg(DB_QUERIES_LIMIT);
+            }
+        }
+*/
+    if(queryItem.s_error.isEmpty()){
+        //    try{
+        DB.transaction();
+        if(!queryItem.p_query)
+            queryItem.p_query = new QSqlQuery(DB);
+        if(queryItem.p_query->exec(queryItem.s_sql_query)){
+            //DB.commit();
+            if(queryItem.p_query->lastError().isValid())
+                qDebug()<<"queryItem.p_query->lastError().isValid()"<<queryItem.p_query->lastError();
             return true;
         }
-        if(queryItem.p_query->lastError().isValid())
-            qDebug()<<"queryItem.p_query->lastError().isValid()"<<queryItem.p_query->lastError();
         //    }
         //    catch(IBPP::Exception& e)
         //    {
         //        qDebug() << "IBPP::Exception" << e.ErrorMessage();
         //    }
-        //DB.commit();
-        //        if(queryItem.p_query->isSelect()){
-        //            queryItem.p_query->finish();
-        //            DB.commit();
-        //        }
+        queryItem.s_error=queryItem.p_query->lastError().text();
+        //qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);
+        DB.rollback();
     }
     return false;
 }
@@ -155,10 +172,11 @@ bool DBWrapper::executeProc(const QString & queryStr)
     queryStruc queryItem = appendQuery(queryStr,"",0);
     if(queryExecute(queryItem)){
         queryItem.p_query->finish();
+        DB.commit();
         return true;
     }
     else
-        qDebug()<< queryStr << queryItem.s_error;
+        qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);
     return false;
 }
 
@@ -185,10 +203,11 @@ QString DBWrapper::query2jsonstrlist(const QString & queryStr)
                     =QJsonValue::fromVariant(ValueList.join("|"));
         }
         queryItem.p_query->finish();
+        DB.commit();
         QJsonDocument json(tableObject);
         return json.toJson();
     }
-    qDebug()<< queryStr << queryItem.s_error;
+    qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);
     return str2Json("Error", queryItem.s_error);
 }
 
@@ -247,12 +266,13 @@ QString DBWrapper::query2fulljson(const QString &queryStr)
         for(int x=0; x < queryItem.p_query->record().count(); x++)
             FieldList << QJsonValue::fromVariant(codec2->fromUnicode(queryItem.p_query->record().fieldName(x)));
         queryItem.p_query->finish();
+        DB.commit();
         QJsonDocument FieldDoc(FieldList);
         rowarray.append(QJsonValue::fromVariant(FieldDoc.toVariant()));
         QJsonDocument json(rowarray);
         return json.toJson(QJsonDocument::Compact);
     }
-    qDebug()<< queryStr << queryItem.s_error;
+    qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);
     return str2Json("Error", queryItem.s_error);
 }
 
@@ -282,10 +302,11 @@ QString DBWrapper::query2json(const QString & queryStr)
             jatmp.append(QJsonValue::fromVariant(QJsonDocument(jotmp).toVariant()));
         }
         QJsonDocument json(jatmp);
+        DB.commit();
         return json.toJson(QJsonDocument::Compact);
     }
-    qDebug()<< queryStr << queryItem.s_error;
-    return str2Json("Error", queryItem.s_error);
+    //qDebug() << QString("Error in query:/'%1/' - %2").arg(queryStr).arg(queryItem.s_error);
+    return QString(); //str2Json("Error", queryItem.s_error);
 }
 
 void DBWrapper::executeQuery(const QString &queryStr, const QString &query_method,
@@ -303,9 +324,9 @@ void DBWrapper::executeQuery(const QString & queryStr,
     queryStruc queryItem = appendQuery(queryStr,"",0);
     if(queryExecute(queryItem))
         return functor(queryItem.p_query);
-    qDebug()<< queryStr << queryItem.s_error;
+    qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);
     //return str2Json("Error", queryItem.s_error);
-    returnfunctor(0);
+    return functor(0);
 }
 
 QString DBWrapper::getQueryLastError(QSqlQuery *query)

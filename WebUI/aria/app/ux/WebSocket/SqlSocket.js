@@ -226,7 +226,7 @@ Ext.define ('Ext.ux.SqlSocket', {
                 },
                 listeners: {
                     open: function(ws){
-                        console.log('SqlSocket opened');
+                        console.log('SqlSocket.js opened');
                         this.sql('DB_PROCEDURES','',['PROCEDURE_NAME', 'INPUT_FIELDS', 'RETURN_FIELDS'],
                                  function(procs){
                                      ws.db.procedures={};
@@ -243,6 +243,7 @@ Ext.define ('Ext.ux.SqlSocket', {
                                              outputs : outputs
                                          };
                                      }
+                                     //console.log('ws.db.procedures',ws.db.procedures);
                                      ws.fireEvent('ready', ws);
                                  });
                     }

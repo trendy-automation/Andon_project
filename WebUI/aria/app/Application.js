@@ -60,8 +60,8 @@ Ext.define('AndonPortal.Application', {
 //                   console.log('Application launch function');
                    var qws = Ext.create ('Ext.ux.SqlSocket',{
                                             id:'mysqlsocket',
-                                            //url: "ws://127.0.0.1:12346",
-                                            url:"ws://10.208.110.75:12346",
+                                            url: "ws://127.0.0.1:12346",
+                                            //url:"ws://10.208.110.75:12346",
                                             listeners: {
                                                 ready: function (ws) {
                                                     //debugger;
@@ -72,19 +72,13 @@ Ext.define('AndonPortal.Application', {
                                                  global : {
                                                      sql : 'onSqlQuery'
                                                  }
-                                            },
-                                             listen : {
-                                                     //listen to events using GlobalEvents
-                                                     global : {
-                                                         sql : 'onSqlQuery'
-                                                     }
-                                                 },
-                                             onSqlQuery: function(proc,input,fields,result){
-                                                 console.log('SqlSocket onSqlQuery');
-                                                 this.sql(proc,input,fields,result);
-                                             }
+                                            }
                                         });
-                   },
+                   Ext.GlobalEvents.on('exetuteSqlQuery', function(proc,input,fields,result){
+                       //debugger;
+                       this.sql(proc,input,fields,result);
+                   }, qws);
+               },
                onAppUpdate: function () {
                    Ext.Msg.confirm('Application Update', 'This application has an update, reload?',
                                    function (choice) {

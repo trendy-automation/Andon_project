@@ -181,7 +181,6 @@ Ext.define('AndonPortal.view.Grid', {
     
     onSelectionModeChange: function(combo, newValue, oldValue) {
         var me = this;
-        
         if (newValue !== me.selectionMode) {
             me.selectionMode = newValue;
             me.recreateGrid({

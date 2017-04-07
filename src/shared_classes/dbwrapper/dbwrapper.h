@@ -40,9 +40,6 @@ public slots:
     QString query2jsonstrlist(const QString & queryStr);
     QString query2json(const QString & queryStr);
     bool ConnectDB(const QString &DB_Path,const QString &DB_Name);
-    queryStruc appendQuery(const QString &queryStr, const QString &methodStr="json", int cashTime = DB_CASH_INTERVAL);
-    bool queryIsCashed(queryStruc &queryItem);
-    bool queryExecute(queryStruc &queryItem);
     void executeQuery(const QString & queryStr, const QString &query_method,
                       std::function<void(QString jsontext)> functor=[] (QString jsontext) {});
     void executeQuery(const QString & queryStr,
@@ -52,7 +49,12 @@ public slots:
     void receiveText(const QString &query, const QString &query_method);
     void snedReport(const QString &report, const QStringList &emails);
 
+
 private:
+    queryStruc appendQuery(const QString &queryStr, const QString &methodStr="json", int cashTime = DB_CASH_INTERVAL);
+    bool queryIsCashed(queryStruc &queryItem);
+    bool queryExecute(queryStruc &queryItem);
+
     queryStruc emptyQuery = {0, QString(), QString(), QString(), QString(), 0, QDateTime()};
     QString errorStr;
     QJSEngine *engine;
@@ -60,6 +62,8 @@ private:
     QString getQueryLastError(QSqlQuery *query);
     QString str2Json(const QString & name, const QString &val);
     QSqlDatabase DB;
+    const QString queryKeyMask = "%1=>%2";
+
 
 };
 

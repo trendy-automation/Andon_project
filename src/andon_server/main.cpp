@@ -464,9 +464,8 @@ int main(int argc, char *argv[])
 
     QObject::connect(sms_sender,&Sms_service::SmsStatusUpdate,[andondb]
                          (int SmsLogId, int SmsId, int Status){
-            QString lastError;
-            andondb->queryExecute(QString("EXECUTE PROCEDURE SERVER_UPDATE_SMSSTATUS(%1, %2, %3)")
-                          .arg(SmsLogId).arg(SmsId).arg(Status), lastError);
+            andondb->executeProc(QString("EXECUTE PROCEDURE SERVER_UPDATE_SMSSTATUS(%1, %2, %3)")
+                          .arg(SmsLogId).arg(SmsId).arg(Status));
     });
 
     QString sqlqueryres = andondb->query2json("SELECT AUX_PROPERTIES_LIST "

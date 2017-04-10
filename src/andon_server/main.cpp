@@ -382,8 +382,10 @@ int main(int argc, char *argv[])
     const int msecsPerDay = 24 * 60 * 60 * 1000;
     andondb->executeQuery("SELECT * FROM PRODUCTION_DECLARATION_HISTORY",
                                 [](QSqlQuery *query){
+        qDebug()<<"createReport";
         createReport(query,QDate::currentDate().toString("dd"),
                      QString("P:\\!Common Documents\\AutomaticDeclarating\\export_%1")
+                     //QString("test_%1")
                         .arg(QDate::currentDate().toString("MM_yyyy")));
     });
 

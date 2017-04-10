@@ -1,4 +1,4 @@
-#include <QTcpServer>
+п»ї#include <QTcpServer>
 #include <QTcpSocket>
 
 #include "qjsonrpcsocket.h"
@@ -22,10 +22,10 @@ public:
 QJsonRpcTcpServer::QJsonRpcTcpServer(QObject *parent)
 #if defined(USE_QT_PRIVATE_HEADERS)
     : QTcpServer(*new QJsonRpcTcpServerPrivate, parent)
-#else
+    #else
     : QTcpServer(parent),
       d_ptr(new QJsonRpcTcpServerPrivate)
-#endif
+    #endif
 {
 }
 
@@ -49,9 +49,9 @@ bool QJsonRpcTcpServer::addService(QJsonRpcService *service)
         return false;
 
     connect(service, SIGNAL(notifyConnectedClients(QJsonRpcMessage)),
-               this, SLOT(notifyConnectedClients(QJsonRpcMessage)));
+            this, SLOT(notifyConnectedClients(QJsonRpcMessage)));
     connect(service, SIGNAL(notifyConnectedClients(QString,QJsonArray)),
-               this, SLOT(notifyConnectedClients(QString,QJsonArray)));
+            this, SLOT(notifyConnectedClients(QString,QJsonArray)));
     return true;
 }
 
@@ -61,9 +61,9 @@ bool QJsonRpcTcpServer::removeService(QJsonRpcService *service)
         return false;
 
     disconnect(service, SIGNAL(notifyConnectedClients(QJsonRpcMessage)),
-                  this, SLOT(notifyConnectedClients(QJsonRpcMessage)));
+               this, SLOT(notifyConnectedClients(QJsonRpcMessage)));
     disconnect(service, SIGNAL(notifyConnectedClients(QString,QJsonArray)),
-                  this, SLOT(notifyConnectedClients(QString,QJsonArray)));
+               this, SLOT(notifyConnectedClients(QString,QJsonArray)));
     return true;
 }
 
@@ -90,31 +90,31 @@ void QJsonRpcTcpServer::incomingConnection(int socketDescriptor)
 
 
     struct tcp_keepalive {
-    u_long onoff;
-    u_long keepalivetime;
-    u_long keepaliveinterval;
+        u_long onoff;
+        u_long keepalivetime;
+        u_long keepaliveinterval;
     };
 
     DWORD dwError = 0L,dwBytes;
-    tcp_keepalive pClSock_tcpKeepalive={0}, sReturned = {0};
+    tcp_keepalive pClSock_tcpKeepalive={1,QJSONRPC_ALIVE_TIMEOUT,150}, sReturned = {0,0,0};
     pClSock_tcpKeepalive.onoff=1;
-    //включить keepalive
+    //РІРєР»СЋС‡РёС‚СЊ keepalive
     pClSock_tcpKeepalive.keepalivetime=QJSONRPC_ALIVE_TIMEOUT;
-    // каждые KE_ALIVE_TIMEOUT милисекунд отсылать пакет
+    // РєР°Р¶РґС‹Рµ KE_ALIVE_TIMEOUT РјРёР»РёСЃРµРєСѓРЅРґ РѕС‚СЃС‹Р»Р°С‚СЊ РїР°РєРµС‚
     pClSock_tcpKeepalive.keepaliveinterval=150;
-    // Если не пришел ответ выслать через 1.5с повторно
+    // Р•СЃР»Рё РЅРµ РїСЂРёС€РµР» РѕС‚РІРµС‚ РІС‹СЃР»Р°С‚СЊ С‡РµСЂРµР· 1.5СЃ РїРѕРІС‚РѕСЂРЅРѕ
     if (WSAIoctl(socketDescriptor, SIO_KEEPALIVE_VALS, &pClSock_tcpKeepalive,
-    sizeof(pClSock_tcpKeepalive), &sReturned, sizeof(sReturned), &dwBytes,
-    NULL, NULL) != 0)
+                 sizeof(pClSock_tcpKeepalive), &sReturned, sizeof(sReturned), &dwBytes,
+                 NULL, NULL) != 0)
     {dwError = WSAGetLastError() ;
-    qWarning((char*)dwError); }
+        qWarning((char*)dwError); }
 
 
     QIODevice *device = qobject_cast<QIODevice*>(tcpSocket);
     QJsonRpcSocket *socket = new QJsonRpcSocket(device, this);
     socket->setProperty("address",tcpSocket->peerAddress().toString()); //my hack 170615
     connect(socket, SIGNAL(messageReceived(QJsonRpcMessage)),
-              this, SLOT(_q_processMessage(QJsonRpcMessage)));
+            this, SLOT(_q_processMessage(QJsonRpcMessage)));
     d->clients.append(socket);
     connect(tcpSocket, SIGNAL(disconnected()), this, SLOT(_q_clientDisconnected()));
     d->socketLookup.insert(tcpSocket, socket);

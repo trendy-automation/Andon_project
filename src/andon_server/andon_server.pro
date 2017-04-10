@@ -14,8 +14,8 @@ include(sendemail/sendemail.pri)
 DEFINES += DEBUG_NAME='\\"Server\\"'
 DEFINES += APP_NAME='\\"SERVER\\"'
 
-SMTPCLIENTDESTDIR= $${DESTDIR}/../lib/SmtpClient/release
-QJSONRPCDESTDIR= $${DESTDIR}/../lib/qjsonrpc/release
+#SMTPCLIENTDESTDIR= $${DESTDIR}/../lib/SmtpClient/release
+#QJSONRPCDESTDIR= $${DESTDIR}/../lib/qjsonrpc/release
 
 #include($${ANDNPRJ_LIBPATH}/qjsonrpc/qjsonrpc.pri)
 #INCLUDEPATH += $${ANDNPRJ_LIBPATH}/qjsonrpc/src \
@@ -56,3 +56,4 @@ TARGET = andon_server
 TEMPLATE = app
 
 SOURCES += main.cpp \
+

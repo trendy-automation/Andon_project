@@ -37,6 +37,7 @@ bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
             QObject::connect(cleanTimer, &QTimer::timeout,[this,cleanTimer](){
                 for(auto &q:queryMap){
                     qDebug() << 1;
+                    qDebug() << q.s_sql_query;
                     qDebug() << q.t_time;
                     qDebug() << q.t_time.msecsTo(QDateTime::currentDateTime());
                     if(q.t_time.msecsTo(QDateTime::currentDateTime())>cleanTimer->interval()){
@@ -184,7 +185,7 @@ QString DBWrapper::query2jsonstrlist(const QString & queryStr)
 {
     queryStruc queryItem = appendQuery(queryStr,"jsonstrlist");
     if(queryIsCashed(queryItem))
-        return queryItem.j_result;
+        return queryItem.s_result;
     if(queryExecute(queryItem)){
         QJsonObject tableObject;
         QStringList FieldList;
@@ -251,7 +252,7 @@ QString DBWrapper::query2fulljson(const QString &queryStr)
     QTextCodec *codec2 = QTextCodec::codecForName("iso8859-1");
     queryStruc queryItem = appendQuery(queryStr,"fulljson");
     if(queryIsCashed(queryItem))
-        return queryItem.j_result;
+        return queryItem.s_result;
     if(queryExecute(queryItem)){
         QJsonArray rowarray;
         QJsonArray FieldList;
@@ -283,7 +284,7 @@ QString DBWrapper::query2json(const QString & queryStr)
 {
     queryStruc queryItem = appendQuery(queryStr,"json");
     if(queryIsCashed(queryItem))
-        return queryItem.j_result;
+        return queryItem.s_result;
     if(queryExecute(queryItem)){
         QJsonArray jatmp;
         while(queryItem.p_query->next()) {

@@ -1,4 +1,4 @@
-include(qjsonrpc.pri)
+#include(qjsonrpc.pri)
 include(http-parser/http-parser.pri)
 
 DEFINES += QJSONRPC_ALIVE_TIMEOUT=10000

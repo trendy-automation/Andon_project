@@ -4,8 +4,10 @@ CONFIG  += c++14
 ANDNPRJ_VERSION = 2.2
 ANDNPRJ_INCLUDEPATH = $${PWD}/inc
 ANDNPRJ_LIBPATH = $${PWD}/lib
-DEFINES += SMTPCLIENTDESTDIR='\\"$${SMTPCLIENTDESTDIR}\\"'
+#DEFINES += SMTPCLIENTDESTDIR='\\"$${SMTPCLIENTDESTDIR}\\"'
 DEFINES += QT_MESSAGELOGCONTEXT
+DEFINES += BUILD_PATH=$${OUT_PWD}
+
 
 DEFINES += APP_VER='\\"$${ANDNPRJ_VERSION}\\"'
 #______________SERVER_______________
@@ -34,7 +36,7 @@ DEFINES += EMAIL_PASS='\\"And0n2016\\"'
 #_______________ dbwarpper _______________
 DEFINES += DB_DATABASE_FILE='\\"ANDON_DB.FDB\\"'
 DEFINES += DB_CASH_INTERVAL=20000 #keep result for 20 SECONDS
-DEFINES += DB_CASH_CLAEN_INTERVAL=60000 #clean result for 10 MINUTES
+DEFINES += DB_CASH_CLAEN_INTERVAL=30000 #clean result for 10 MINUTES
 DEFINES += DB_QUERIES_LIMIT=30 #limit of differient queries in cash
 
 #_______________ webui _______________

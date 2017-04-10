@@ -91,6 +91,8 @@ void listenPort(T * obj, int port, int interval, int delay) {
 
 int main(int argc, char *argv[])
 {
+//    QLibrary lib(QJSONRPC_LIB_PATH);
+//    lib.load();
     QApplication a(argc, argv);
 
     /*****************************************

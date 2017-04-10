@@ -44,15 +44,15 @@ else:win32:CONFIG(debug, debug|release): BUILD_TYPE=debug
 win32:CONFIG(release, debug|release): LIB_NAME=Qt5ExtSerialPort1.dll
 else:win32:CONFIG(debug, debug|release): LIB_NAME=Qt5ExtSerialPortd1.dll
 
-copydata.commands = $(COPY_FILE)  $$shell_path($$clean_path($$OUT_PWD/../../lib/qextserialport-1.2rc/$$BUILD_TYPE/$$LIB_NAME))  $$shell_path($$OUT_PWD/$$BUILD_TYPE)
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../lib/qextserialport-1.2rc/release/ -lQt5ExtSerialPort1
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../lib/qextserialport-1.2rc/debug/ -lQt5ExtSerialPortd1
+else:unix:!macx: LIBS += -L$$OUT_PWD/../../lib/qextserialport-1.2rc/ -lQt5ExtSerialPort1
+
+copydata.commands = $(COPY_FILE)  \"$$shell_path($$clean_path($$OUT_PWD/../../lib/qextserialport-1.2rc/$$BUILD_TYPE/$$LIB_NAME))\" \"$$shell_path($$OUT_PWD/$$BUILD_TYPE)\"
 first.depends = $(first) copydata
 export(first.depends)
 export(copydata.commands)
 QMAKE_EXTRA_TARGETS += first copydata
-
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../lib/qextserialport-1.2rc/release/ -lQt5ExtSerialPort1
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../lib/qextserialport-1.2rc/debug/ -lQt5ExtSerialPortd1
-else:unix:!macx: LIBS += -L$$OUT_PWD/../../lib/qextserialport-1.2rc/ -lQt5ExtSerialPort1
 
 INCLUDEPATH += $$PWD/../../lib/qextserialport-1.2rc/src
 DEPENDPATH += $$PWD/../../lib/qextserialport-1.2rc/src

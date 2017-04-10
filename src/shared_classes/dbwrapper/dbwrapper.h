@@ -9,6 +9,8 @@
 #include <QJSEngine>
 
 
+
+
 //#include "ibpp.h"
 using namespace std;
 #include <functional>
@@ -48,7 +50,6 @@ public slots:
     bool getDbState();
     void receiveText(const QString &query, const QString &query_method);
     void snedReport(const QString &report, const QStringList &emails);
-
 
 private:
     queryStruc appendQuery(const QString &queryStr, const QString &methodStr="json", int cashTime = DB_CASH_INTERVAL);

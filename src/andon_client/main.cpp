@@ -289,7 +289,7 @@ void ServerFound(QHostAddress ServerAddress)
                     });
                     QObject::connect(fileTimer,&QTimer::timeout,
                                      [serverRpc,ftp,buffer,fileTimer](){
-                        int interval = qMax(FTP_INTERVAL, QTime::currentTime().msecsTo(QTime(QTime::currentTime().hour()+1,58)));
+                        int interval = qMin(FTP_INTERVAL, abs(QTime::currentTime().msecsTo(QTime(QTime::currentTime().hour()+1,58))));
                         //qDebug() << "fileTimer->start(" << interval << ");";
                         fileTimer->start(interval);
                         serverRpc->Query2Json("SELECT ID_TASK, PART_REFERENCE, PART_COUNT, MANUFACTURE_DATE "
@@ -321,7 +321,7 @@ void ServerFound(QHostAddress ServerAddress)
                             }
                         });
                     });
-                    int interval = qMin(5000,QTime::currentTime().msecsTo(QTime(QTime::currentTime().hour(),58)));
+                    int interval = qMin(5000,abs(QTime::currentTime().msecsTo(QTime(QTime::currentTime().hour(),58))));
                     fileTimer->start(interval);
                     //qDebug() << "ftp cur interval" << interval;
                 }

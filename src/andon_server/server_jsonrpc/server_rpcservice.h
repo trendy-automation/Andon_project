@@ -7,7 +7,7 @@
 
 #include "dbwrapper.h"
 //_______QtTelnet class_______________
-#include "qttelnet.h"
+//#include "qttelnet.h"
 
 //class QJsonRpcService;
 class ServerRpcService : public QJsonRpcService
@@ -35,16 +35,16 @@ public slots:
     void ResumeSms(const QString &Sms_id);
     void CancelSms(const QString &Sms_id);
     QString StartSms(const QString &sms_param);
-    int telnetDeclareKanban(const QByteArray &kanbanNumber);
+//    int telnetDeclareKanban(const QByteArray &kanbanNumber);
     void setDB(DBWrapper* db);
-    void setTelnet(QtTelnet* telnetClnt);
+//    void setTelnet(QtTelnet* telnetClnt);
 
 
 
 
 private:
     DBWrapper* andondb;
-    QtTelnet* telnetClient;
+//    QtTelnet* telnetClient;
     QMap<QString,QMap<QString,QThread*>> ThreadsMap;
 
 };

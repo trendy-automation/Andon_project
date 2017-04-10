@@ -309,23 +309,23 @@ void ServerRpcService::executeProc(const QString & sqlquery)
 //        return andondb->query2jsonarrays(QString(sqlquery).replace(":CLIENT_IP",curClientIP().append("\'").prepend("\'")));
 //}
 
-int ServerRpcService::telnetDeclareKanban(const QByteArray &kanbanNumber)
-{
-    if (telnetClient)
-        return 1;
-    else
-        return 0;
-//connect to telnet server
-//logon by SAP user
-//recognize main menu pattern
-//send 2
-//recognize production menu pattern
-//send 3
-//recognize declare kanban pattern
-//send count for declare
-//recognize declare sucess pattern
-//return result
-}
+//int ServerRpcService::telnetDeclareKanban(const QByteArray &kanbanNumber)
+//{
+//    if (telnetClient)
+//        return 1;
+//    else
+//        return 0;
+////connect to telnet server
+////logon by SAP user
+////recognize main menu pattern
+////send 2
+////recognize production menu pattern
+////send 3
+////recognize declare kanban pattern
+////send count for declare
+////recognize declare sucess pattern
+////return result
+//}
 
 
 
@@ -334,7 +334,7 @@ void ServerRpcService::setDB(DBWrapper* db)
     andondb=db;
 }
 
-void ServerRpcService::setTelnet(QtTelnet* telnetClnt)
-{
-    telnetClient=telnetClnt;
-}
+//void ServerRpcService::setTelnet(QtTelnet* telnetClnt)
+//{
+//    telnetClient=telnetClnt;
+//}

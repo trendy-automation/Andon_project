@@ -37,7 +37,11 @@ bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
             QObject::connect(cleanTimer, &QTimer::timeout,[this,cleanTimer](){
                 for(auto &q:queryMap){
                     qDebug() << 1;
-                    qDebug() << q.s_sql_query;
+                    qDebug() << q.s_sql_query.isNull();
+                    qDebug() << q.s_sql_query.data();
+                    qDebug() << q.s_sql_query.size();
+                    if(!q.s_sql_query.isNull())
+                        qDebug() << q.s_sql_query;
                     qDebug() << q.t_time;
                     qDebug() << q.t_time.msecsTo(QDateTime::currentDateTime());
                     if(q.t_time.msecsTo(QDateTime::currentDateTime())>cleanTimer->interval()){
@@ -313,9 +317,9 @@ QString DBWrapper::query2json(const QString & queryStr)
 void DBWrapper::executeQuery(const QString &queryStr, const QString &query_method,
                              std::function<void(QString jsontext)> functor)
 {
-    if(query_method=="query2json")
+    if(query_method.compare("query2json")==0)
         return functor(query2json(queryStr));
-    if(query_method=="query2fulljson")
+    if(query_method.compare("query2fulljson")==0)
         return functor(query2fulljson(queryStr));
 }
 
@@ -323,11 +327,16 @@ void DBWrapper::executeQuery(const QString & queryStr,
                              std::function<void(QSqlQuery *query)> functor)
 {
     queryStruc queryItem = appendQuery(queryStr,"",0);
-    if(queryExecute(queryItem))
-        return functor(queryItem.p_query);
+    if(queryExecute(queryItem)){
+        functor(queryItem.p_query);
+        queryItem.p_query->finish();
+        DB.commit();
+        return;
+    }
     qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);
     //return str2Json("Error", queryItem.s_error);
-    return functor(0);
+    functor(0);
+    return;
 }
 
 QString DBWrapper::getQueryLastError(QSqlQuery *query)

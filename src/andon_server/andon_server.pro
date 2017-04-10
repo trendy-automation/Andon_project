@@ -1,5 +1,5 @@
 include(../../andon_project.pri)
-include(../shared_classes/qttelnet/qttelnet.pri)
+#include(../shared_classes/qttelnet/qttelnet.pri)
 include(../shared_classes/iostreamtheard/iostreamtheard.pri)
 include(../shared_classes/dbwrapper/dbwrapper.pri)
 include(../shared_classes/message_handler/message_handler.pri)
@@ -56,4 +56,7 @@ TARGET = andon_server
 TEMPLATE = app
 
 SOURCES += main.cpp \
+
+HEADERS += \
+    main.h
 

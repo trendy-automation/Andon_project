@@ -50,11 +50,13 @@
 
 
 //_______QtTelnet class_______________
-#include "qttelnet.h"
+//#include "qttelnet.h"
 
 //using namespace std;
 #include <functional>
 #include <QJSEngine>
+
+#include <main.h>
 
 
 
@@ -248,10 +250,10 @@ int main(int argc, char *argv[])
     /*****************************************
      * Start QtTelnet
      *****************************************/
-    qDebug()<<"Start telnetClient";
-    QtTelnet * telnetClient = new QtTelnet;
-    telnetClient->setObjectName("telnetClient");
-    telnetClient->start();
+//    qDebug()<<"Start telnetClient";
+//    QtTelnet * telnetClient = new QtTelnet;
+//    telnetClient->setObjectName("telnetClient");
+//    telnetClient->start();
 
     /*****************************************
      * Start andonrpcservice
@@ -378,6 +380,12 @@ int main(int argc, char *argv[])
     *****************************************/
     qDebug()<<"Start pdpTimer";
     const int msecsPerDay = 24 * 60 * 60 * 1000;
+    andondb->executeQuery("SELECT * FROM PRODUCTION_DECLARATION_HISTORY",
+                                [](QSqlQuery *query){
+        createReport(query,QDate::currentDate().toString("dd"),
+                     QString("P:\\!Common Documents\\AutomaticDeclarating\\export_%1")
+                        .arg(QDate::currentDate().toString("MM_yyyy")));
+    });
 
     QTimer * pdpTimer = new QTimer(QAbstractEventDispatcher::instance());
     pdpTimer->setTimerType(Qt::VeryCoarseTimer);
@@ -385,6 +393,12 @@ int main(int argc, char *argv[])
     qDebug()<<"pdpTimer start"<<pdpTimer->interval()/3600000.0<<"hours";
     QObject::connect(pdpTimer,&QTimer::timeout, [WThread,pdpTimer,msecsPerDay,andondb](){
         //qDebug()<<"pdpTimer timeout"<<"dayOfWeek"<<QDate::currentDate().dayOfWeek();
+        andondb->executeQuery("SELECT * FROM PRODUCTION_DECLARATION_HISTORY",
+                                    [](QSqlQuery *query){
+            createReport(query,QDate::currentDate().toString("dd"),
+                         QString("P:\\!Common Documents\\AutomaticDeclarating\\export_%1")
+                            .arg(QDate::currentDate().toString("MM_yyyy")));
+        });
         if(QDate::currentDate().dayOfWeek()<6) {
             andondb->executeQuery("SELECT LIST(EMAIL) FROM TBL_STAFF WHERE EMAIL_REPORTING=1",
                                         [WThread](QSqlQuery *query){
@@ -394,6 +408,11 @@ int main(int argc, char *argv[])
                         WThread->snedReport("REPORT_BREAKDOWNS", rcpnts);
                 }
             });
+
+
+
+
+
                 //rcpnts<<"evgeny.zaychenko@faurecia.com";
 //            if(QDate::currentDate().weekNumber() &
 //             ((QTime::currentTime().hour()*60+QTime::currentTime().minute())/870))
@@ -552,7 +571,7 @@ int main(int argc, char *argv[])
 
     QJSEngine *engine = new QJSEngine;
     engine->globalObject().setProperty("msgHandler",engine->newQObject(&msgHandler));
-    engine->globalObject().setProperty("telnetClient",engine->newQObject(telnetClient));
+//    engine->globalObject().setProperty("telnetClient",engine->newQObject(telnetClient));
     engine->globalObject().setProperty("andonrpcservice",engine->newQObject(andonrpcservice));
     engine->globalObject().setProperty("sms_sender",engine->newQObject(sms_sender));
     engine->globalObject().setProperty("andondb",engine->newQObject(andondb));

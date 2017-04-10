@@ -11,7 +11,7 @@ include(client_interface/client_interface.pri)
 include(widgetkeyboard/widgetkeyboard.pri)
 include(broadcastreceiver/broadcastreceiver.pri)
 include(plc_station/plc_station.pri)
-include($${ANDNPRJ_LIBPATH}/qextserialport-1.2rc/src/qextserialport.pri)
+#include($${ANDNPRJ_LIBPATH}/qextserialport-1.2rc/src/qextserialport.pri)
 #include(opcua_client/opcua_client.pri)
 include(../shared_classes/serlock_manager/serlock_manager.pri)
 include(main_lambdas/main_lambdas.pri)
@@ -19,7 +19,7 @@ include(main_lambdas/main_lambdas.pri)
 DEFINES += DEBUG_NAME='\\"Client\\"'
 DEFINES += APP_NAME='\\"CLIENT\\"'
 
-QJSONRPCDESTDIR= $${DESTDIR}/../lib/qjsonrpc/release
+#QJSONRPCDESTDIR= $${DESTDIR}/../lib/qjsonrpc/release
 
 CONFIG  += console
 
@@ -35,3 +35,24 @@ TEMPLATE = app
 SOURCES += main.cpp
 
 RESOURCES += clientjs.qrc
+
+
+############       qextserialport.pri      #################
+win32:CONFIG(release, debug|release): BUILD_TYPE=release
+else:win32:CONFIG(debug, debug|release): BUILD_TYPE=debug
+
+win32:CONFIG(release, debug|release): LIB_NAME=Qt5ExtSerialPort1.dll
+else:win32:CONFIG(debug, debug|release): LIB_NAME=Qt5ExtSerialPortd1.dll
+
+copydata.commands = $(COPY_FILE)  $$shell_path($$clean_path($$OUT_PWD/../../lib/qextserialport-1.2rc/$$BUILD_TYPE/$$LIB_NAME))  $$shell_path($$OUT_PWD/$$BUILD_TYPE)
+first.depends = $(first) copydata
+export(first.depends)
+export(copydata.commands)
+QMAKE_EXTRA_TARGETS += first copydata
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../lib/qextserialport-1.2rc/release/ -lQt5ExtSerialPort1
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../lib/qextserialport-1.2rc/debug/ -lQt5ExtSerialPortd1
+else:unix:!macx: LIBS += -L$$OUT_PWD/../../lib/qextserialport-1.2rc/ -lQt5ExtSerialPort1
+
+INCLUDEPATH += $$PWD/../../lib/qextserialport-1.2rc/src
+DEPENDPATH += $$PWD/../../lib/qextserialport-1.2rc/src

@@ -17,7 +17,7 @@ struct queryStruc{
     QSqlQuery* p_query;
     QString s_sql_query;
     QString s_method;
-    QString j_result;
+    QString s_result;
     QString s_error;
     int i_cashTime; //ms
     QDateTime t_time;

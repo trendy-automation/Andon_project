@@ -713,7 +713,6 @@ int main(int argc, char *argv[])
 //    QObject::connect(&singleApp, &SingleAppRun::destroyed,[](){qDebug()<<"SingleAppRun::destroyed";});
     QObject::connect(&a, &QApplication::aboutToQuit,&msgHandler,&MessageHandler::deleteLater);
 //    QObject::connect(&a, &QApplication::aboutToQuit,[&msgHandler](){msgHandler.deleteLater();});
-
     //renewInterface
     QObject::connect(udpreceiver, &UdpReceiver::renewInterface, [=] (QHostAddress ServerAddress){
         qDebug() << "renewInterface";

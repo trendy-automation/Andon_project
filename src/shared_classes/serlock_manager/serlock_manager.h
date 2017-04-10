@@ -66,7 +66,7 @@ private:
     QTimer *initTimer;
 //    QTcpServer       *tcpServer;
 //    QStringList      messageList = QString("Inspecting_ON;Inspecting_OFF;Wrong_model").split(";");
-    QTimer           *                   connectTimer;
+    QTimer           *connectTimer;
 
 
 };

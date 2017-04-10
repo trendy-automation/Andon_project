@@ -56,17 +56,16 @@ SherlockManager::SherlockManager(const QString &tcpServerIp, quint16 tcpServerPo
         u_long keepaliveinterval;
         };
         DWORD dwError = 0L,dwBytes ;
-        tcp_keepalive pClSock_tcpKeepalive={0}, sReturned = {0};
-        pClSock_tcpKeepalive.onoff=1;
-        pClSock_tcpKeepalive.keepalivetime=TC_ALIVE_TIMEOUT; // enable keepalive
-        pClSock_tcpKeepalive.keepaliveinterval=150; // Every KE_ALIVE_TIMEOUT ms send pack
+        tcp_keepalive pClSock_tcpKeepalive={0,0,0}, sReturned = {0,0,0};
+        pClSock_tcpKeepalive.onoff=1;// enable keepalive
+        pClSock_tcpKeepalive.keepalivetime=TC_ALIVE_TIMEOUT; // Every KE_ALIVE_TIMEOUT ms send pack
         pClSock_tcpKeepalive.keepaliveinterval=150; // If pack does not recieved in 1.5s send again
         if (WSAIoctl(tcpSocket->socketDescriptor(), SIO_KEEPALIVE_VALS, &pClSock_tcpKeepalive,
         sizeof(pClSock_tcpKeepalive), &sReturned, sizeof(sReturned), &dwBytes,
         NULL, NULL) != 0)
         {dwError = WSAGetLastError() ;
         qWarning((char*)dwError); }
-        qDebug()<< "Sherlock TcpClient connected	 to " << serverIp << ":" << serverPort;
+        qDebug()<< QString("Sherlock TcpClient connected to %1:%2").arg(serverIp).arg(serverPort);
         emit this->socketConnected();
     });
 

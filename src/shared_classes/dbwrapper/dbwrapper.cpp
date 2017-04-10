@@ -35,30 +35,18 @@ bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
             qDebug() << "DB connected: " << DB.databaseName();
             QTimer *cleanTimer = new QTimer(this);
             QObject::connect(cleanTimer, &QTimer::timeout,[this,cleanTimer](){
-                for(auto &q:queryMap){
-                    qDebug() << 1;
-                    qDebug() << q.s_sql_query.isNull();
-                    qDebug() << q.s_sql_query.data();
-                    qDebug() << q.s_sql_query.size();
-                    if(!q.s_sql_query.isNull())
-                        qDebug() << q.s_sql_query;
-                    qDebug() << q.t_time;
-                    qDebug() << q.t_time.msecsTo(QDateTime::currentDateTime());
-                    if(q.t_time.msecsTo(QDateTime::currentDateTime())>cleanTimer->interval()){
-                        qDebug() << 2;
-                        if(q.p_query){
-                            qDebug() << 3;
-                            if(q.p_query->isActive()){
-                                qDebug() << 4;
-                                q.p_query->finish();
-                            }
-                        }
-                        queryMap.remove(QString(queryKeyMask).arg(q.s_sql_query).arg(q.s_method));
+                QMapIterator<QString,queryStruc> q(queryMap);
+                while (q.hasNext()) {
+                    q.next();
+                    if(q.value().t_time.msecsTo(QDateTime::currentDateTime())>cleanTimer->interval()){
+                        if(q.value().p_query)
+                            if(q.value().p_query->isActive())
+                                q.value().p_query->finish();
+                        queryMap.remove(q.key());
                     }
                 }
                 qDebug() << "queryMap.count()" << queryMap.count();
                 if(queryMap.isEmpty()){
-                    qDebug() << 5;
                     DB.close();
                 }
             });

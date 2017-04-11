@@ -312,7 +312,7 @@ void DBWrapper::executeQuery(const QString &queryStr, const QString &query_metho
 }
 
 void DBWrapper::executeQuery(const QString & queryStr,
-                             std::function<(QSqlQuery *)> functor)
+                             std::function<void(QSqlQuery *)> functor)
 {
     queryStruc queryItem = appendQuery(queryStr,"",0);
     if(queryExecute(queryItem)){
@@ -323,7 +323,7 @@ void DBWrapper::executeQuery(const QString & queryStr,
     }
     qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);
     //return str2Json("Error", queryItem.s_error);
-    functor(0,parameters);
+    functor(0);
     return;
 }
 

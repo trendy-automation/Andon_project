@@ -35,7 +35,7 @@ bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
             qDebug() << "DB connected: " << DB.databaseName();
             QTimer *cleanTimer = new QTimer(this);
             QObject::connect(cleanTimer, &QTimer::timeout,[this,cleanTimer](){
-                QMapIterator<QString,queryStruc> q(queryMap);
+                QMapIterator<QString,queryTextuc> q(queryMap);
                 while (q.hasNext()) {
                     q.next();
                     if(q.value().t_time.msecsTo(QDateTime::currentDateTime())>cleanTimer->interval()){
@@ -57,45 +57,45 @@ bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
     return true;
 }
 
-queryStruc DBWrapper::appendQuery(const QString &queryStr,const QString &methodStr, int cashTime)
+queryTextuc DBWrapper::appendQuery(const QString &queryText,const QString &methodStr, int cashTime)
 {
-    QString key=QString(queryKeyMask).arg(queryStr).arg(methodStr);
-    if(!queryMap.contains(queryStr)){
+    QString key=QString(queryKeyMask).arg(queryText).arg(methodStr);
+    if(!queryMap.contains(queryText)){
         if(queryMap.count()>DB_QUERIES_LIMIT)
             return
             //queryMap.insert(key,
-            {0, queryStr, methodStr, QString(), QString("query`s limit(%1) exhausted").arg(DB_QUERIES_LIMIT),
+            {0, queryText, methodStr, QString(), QString("query`s limit(%1) exhausted").arg(DB_QUERIES_LIMIT),
              cashTime, QDateTime::currentDateTime()};//);
         else
             queryMap.insert(key,
-            {0, queryStr, methodStr, QString(), QString(),
+            {0, queryText, methodStr, QString(), QString(),
              cashTime, QDateTime::currentDateTime()});
     }
     //qDebug()<<"queryMap.count()"<<queryMap.count();
     return queryMap.value(key);
-    /*    if(queryMap.contains(queryStr)){
+    /*    if(queryMap.contains(queryText)){
         if(queryMap.value(queryText).p_query->isActive()){
-            if(queryMap.value(queryStr).t_time.msecsTo(QDateTime::currentDateTime())<cashTime)
-                return queryMap.value(queryStr);
+            if(queryMap.value(queryText).t_time.msecsTo(QDateTime::currentDateTime())<cashTime)
+                return queryMap.value(queryText);
             else
-                queryItem = queryMap.value(queryStr);
+                queryItem = queryMap.value(queryText);
         }else{
-            queryMap.insert(queryStr,{queryMap.value(queryStr).p_query,QString(),QString(),QDateTime::currentDateTime()});
+            queryMap.insert(queryText,{queryMap.value(queryText).p_query,QString(),QString(),QDateTime::currentDateTime()});
             errorStr = "query already runing";
         }
     }else{
         if(queryMap.count()<DB_QUERIES_LIMIT){
-            queryMap.insert(queryStr,{new QSqlQuery(queryStr,DB), QString(), QString(), QString(), cashTime,
+            queryMap.insert(queryText,{new QSqlQuery(queryText,DB), QString(), QString(), QString(), cashTime,
                                        QDateTime::currentDateTime()});
         }else{
             errorStr = QString("query`s limit(%1) exhausted").arg(DB_QUERIES_LIMIT);
         }
     }
-    return queryMap.value(queryStr);
+    return queryMap.value(queryText);
 */
 }
 
-bool DBWrapper::queryIsCashed(queryStruc &queryItem)
+bool DBWrapper::queryIsCashed(queryTextuc &queryItem)
 {
     if(!queryItem.s_error.isEmpty())
         if(queryItem.p_query)
@@ -105,7 +105,7 @@ bool DBWrapper::queryIsCashed(queryStruc &queryItem)
     return false;
 }
 
-bool DBWrapper::queryExecute (queryStruc &queryItem)
+bool DBWrapper::queryExecute (queryTextuc &queryItem)
 {
 //    qDebug() << queryItem.i_cashTime << queryItem.j_result << queryItem.p_query << queryItem.s_error
 //                << queryItem.s_method << queryItem.s_sql_query << queryItem.t_time;
@@ -160,9 +160,9 @@ bool DBWrapper::queryExecute (queryStruc &queryItem)
     return false;
 }
 
-bool DBWrapper::executeProc(const QString & queryStr)
+bool DBWrapper::executeProc(const QString & queryText)
 {
-    queryStruc queryItem = appendQuery(queryStr,"",0);
+    queryTextuc queryItem = appendQuery(queryText,"",0);
     if(queryExecute(queryItem)){
         queryItem.p_query->finish();
         DB.commit();
@@ -173,9 +173,9 @@ bool DBWrapper::executeProc(const QString & queryStr)
     return false;
 }
 
-QString DBWrapper::query2jsonstrlist(const QString & queryStr)
+QString DBWrapper::query2jsonstrlist(const QString & queryText)
 {
-    queryStruc queryItem = appendQuery(queryStr,"jsonstrlist");
+    queryTextuc queryItem = appendQuery(queryText,"jsonstrlist");
     if(queryIsCashed(queryItem))
         return queryItem.s_result;
     if(queryExecute(queryItem)){
@@ -206,10 +206,10 @@ QString DBWrapper::query2jsonstrlist(const QString & queryStr)
 
 /*
 
-QString DBWrapper::query2jsonarrays(const QString & queryStr)
+QString DBWrapper::query2jsonarrays(const QString & queryText)
 {
     QString lastError;
-    QSqlQuery *query=queryexecute(queryStr, lastError);
+    QSqlQuery *query=queryexecute(queryText, lastError);
     if(!query)
         return str2Json("Error", lastError);
 
@@ -239,10 +239,10 @@ QString DBWrapper::query2jsonarrays(const QString & queryStr)
 
 */
 
-QString DBWrapper::query2fulljson(const QString &queryStr)
+QString DBWrapper::query2fulljson(const QString &queryText)
 {
     QTextCodec *codec2 = QTextCodec::codecForName("iso8859-1");
-    queryStruc queryItem = appendQuery(queryStr,"fulljson");
+    queryTextuc queryItem = appendQuery(queryText,"fulljson");
     if(queryIsCashed(queryItem))
         return queryItem.s_result;
     if(queryExecute(queryItem)){
@@ -272,9 +272,9 @@ QString DBWrapper::query2fulljson(const QString &queryStr)
 
 
 
-QString DBWrapper::query2json(const QString & queryStr)
+QString DBWrapper::query2json(const QString & queryText)
 {
-    queryStruc queryItem = appendQuery(queryStr,"json");
+    queryTextuc queryItem = appendQuery(queryText,"json");
     if(queryIsCashed(queryItem))
         return queryItem.s_result;
     if(queryExecute(queryItem)){
@@ -298,23 +298,23 @@ QString DBWrapper::query2json(const QString & queryStr)
         DB.commit();
         return json.toJson(QJsonDocument::Compact);
     }
-    //qDebug() << QString("Error in query:/'%1/' - %2").arg(queryStr).arg(queryItem.s_error);
+    //qDebug() << QString("Error in query:/'%1/' - %2").arg(queryText).arg(queryItem.s_error);
     return QString(); //str2Json("Error", queryItem.s_error);
 }
 
-void DBWrapper::executeQuery(const QString &queryStr, const QString &query_method,
+void DBWrapper::executeQuery(const QString &queryText, const QString &query_method,
                              std::function<void(QString jsontext)> functor)
 {
     if(query_method.compare("query2json")==0)
-        return functor(query2json(queryStr));
+        return functor(query2json(queryText));
     if(query_method.compare("query2fulljson")==0)
-        return functor(query2fulljson(queryStr));
+        return functor(query2fulljson(queryText));
 }
 
-void DBWrapper::executeQuery(const QString & queryStr,
+void DBWrapper::executeQuery(const QString & queryText,
                              std::function<void(QSqlQuery *)> functor)
 {
-    queryStruc queryItem = appendQuery(queryStr,"",0);
+    queryTextuc queryItem = appendQuery(queryText,"",0);
     if(queryExecute(queryItem)){
         functor(queryItem.p_query);
         queryItem.p_query->finish();

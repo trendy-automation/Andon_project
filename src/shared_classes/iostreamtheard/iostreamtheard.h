@@ -14,7 +14,7 @@ public:
         : QThread(parent)
     {
     }
-
+    void startThread(){this->start();}
 signals:
     void inputReceived(const QString &text);
 protected:

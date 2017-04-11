@@ -28,7 +28,7 @@ bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
         DB.setUserName("andon");
         DB.setPassword("andon");
         if(!DB.open()) {
-            qDebug() << "DB connection failed in ConnectDB";
+            qDebug() << "DB connection failed";
             qDebug() << DB.lastError().text();
             return false;
         }else{
@@ -45,7 +45,7 @@ bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
                         queryMap.remove(q.key());
                     }
                 }
-                qDebug() << "queryMap.count()" << queryMap.count();
+                //qDebug() << "queryMap.count()" << queryMap.count();
                 if(queryMap.isEmpty()){
                     DB.close();
                 }
@@ -71,7 +71,7 @@ queryStruc DBWrapper::appendQuery(const QString &queryStr,const QString &methodS
             {0, queryStr, methodStr, QString(), QString(),
              cashTime, QDateTime::currentDateTime()});
     }
-    qDebug()<<"queryMap.count()"<<queryMap.count();
+    //qDebug()<<"queryMap.count()"<<queryMap.count();
     return queryMap.value(key);
     /*    if(queryMap.contains(queryStr)){
         if(queryMap.value(queryText).p_query->isActive()){
@@ -312,7 +312,7 @@ void DBWrapper::executeQuery(const QString &queryStr, const QString &query_metho
 }
 
 void DBWrapper::executeQuery(const QString & queryStr,
-                             std::function<void(QSqlQuery *query)> functor)
+                             std::function<(QSqlQuery *)> functor)
 {
     queryStruc queryItem = appendQuery(queryStr,"",0);
     if(queryExecute(queryItem)){
@@ -323,7 +323,7 @@ void DBWrapper::executeQuery(const QString & queryStr,
     }
     qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);
     //return str2Json("Error", queryItem.s_error);
-    functor(0);
+    functor(0,parameters);
     return;
 }
 

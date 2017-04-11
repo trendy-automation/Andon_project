@@ -12,11 +12,13 @@
 //#define STR(X) _STR(x)
 
 
-Sender::Sender(QObject* parent) :QObject(parent)
+BCSender::BCSender(int interval, int port, QObject* parent) :QObject(parent)
 {
+    bcInterval = interval;
+    bcPort = port;
 }
 
-void Sender::run(int interval, int port)
+void BCSender::run()
 {
 //    foreach (const QHostAddress &address, QNetworkInterface::allAddresses()) {
 //        if (address.protocol() == QAbstractSocket::IPv4Protocol && address != QHostAddress(QHostAddress::LocalHost))
@@ -28,24 +30,24 @@ void Sender::run(int interval, int port)
 //    qDebug() << interval<<udpport;
     udpSocket = new QUdpSocket(this);
     messageNo = 1;
-    QObject::connect(timer, &QTimer::timeout, this, &Sender::broadcastDatagram);
+    QObject::connect(timer, &QTimer::timeout, this, &BCSender::broadcastDatagram);
     startBroadcasting();
 }
 
-void Sender::startBroadcasting()
+void BCSender::startBroadcasting()
 {
 //    qDebug() << "startBroadcasting";
     timer->start();
 }
 
-void Sender::stop()
+void BCSender::stop()
 {
     timer->stop();
     udpSocket->close();
     this->deleteLater();
 }
 
-void Sender::broadcastDatagram()
+void BCSender::broadcastDatagram()
 {
     QByteArray datagram = (UDP_SRVRNAME);//. msg num " + QByteArray::number(messageNo);
     for (int i=0;i<ClientList.count();++i)
@@ -57,7 +59,7 @@ void Sender::broadcastDatagram()
     //TODO: if > max
 }
 
-void Sender::renewInterface(const QString &ClientIp)
+void BCSender::renewInterface(const QString &ClientIp)
 {
     QByteArray datagram = "Andon client,renewInterface";
     if (ClientIp.isEmpty())
@@ -70,13 +72,13 @@ void Sender::renewInterface(const QString &ClientIp)
     qDebug() << datagram << ClientIp;
 }
 
-void Sender::addClient(const  QString &IP)
+void BCSender::addClient(const  QString &IP)
 {
     ClientList.append(QHostAddress(IP));
     qDebug() << "UDP Sender: Client added" << IP;
 }
 
-void Sender::clearClients()
+void BCSender::clearClients()
 {
     ClientList.clear();
 }

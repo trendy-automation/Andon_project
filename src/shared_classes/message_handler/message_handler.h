@@ -46,6 +46,7 @@ public:
           consoleContextList(new QStringList),
           activeContextList(new QStringList)
     {
+        qDebug()<<"Start MessageHandler";
         QByteArray consoleCodecName;
         if(qApp->applicationDirPath().contains("build"))
             consoleCodecName="CP1251";

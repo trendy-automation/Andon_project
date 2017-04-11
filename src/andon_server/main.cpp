@@ -10,17 +10,6 @@
 #include "message_handler.h"
 #include "single_apprun.h"
 
-//#include <QTextCodec>
-//#include <QTimer>
-
-//#include <QSharedMemory>
-//#include <QSystemSemaphore>
-
-//#include <iostream>
-//#include <QTextStream>
-//#include <QThread>
-//#include "mainappclass.h"
-
 //________WebUI____________
 #include "serverwebthread.h"
 #include "qwebchannel.h"
@@ -28,225 +17,33 @@
 #include "websocketclientwrapper.h"
 #include "websockettransport.h"
 
-//_______QtScript_______________
-//#include <QtScriptTools/QJSEngineDebugger>
-//#include <QtScript>
-
-//_______Debug_______________
-//#include <QFile>
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <windows.h>
-
-//_______SMTPEmail Lib_______________
-//#include "smtpclient.h"
-//#include "mimepart.h"
-//#include "mimehtml.h"
-//#include "mimeattachment.h"
-//#include "mimemessage.h"
-//#include "mimetext.h"
-//#include "mimeinlinefile.h"
-//#include "mimefile.h"
-
-
 //_______QtTelnet class_______________
 //#include "qttelnet.h"
 
-//using namespace std;
 #include <functional>
 #include <QJSEngine>
-
 #include <main.h>
-
-
-
-
-
-bool Step_3_OpenDB(DBWrapper *andondb)
-{
-    /*****************************************
-     * Start DB
-     *****************************************/
-    qDebug()<<"Start DB";
-    //DBWrapper *andondb = new DBWrapper;
-    return andondb->ConnectDB(QCoreApplication::applicationDirPath(),DB_DATABASE_FILE);
-}
-
-
-
-
-template<class T>
-void listenPort(T * obj, int port, int interval, int delay) {
-    QTimer *listenPortTimer = new QTimer;
-    QObject::connect(listenPortTimer,&QTimer::timeout,[obj,port,listenPortTimer,interval](){
-        if (obj->listen(QHostAddress::AnyIPv4, port)) {
-            qDebug()<<QString("%1: %2 port opened").arg(obj->objectName()).arg(QString::number(port));
-            listenPortTimer->stop();
-            listenPortTimer->deleteLater();
-        } else {
-            qDebug()<<QString("%1: Failed to open port %2").arg(obj->objectName()).arg(port);
-            listenPortTimer->start(interval);
-        }
-    });
-    listenPortTimer->start(delay);
-}
 
 int main(int argc, char *argv[])
 {
-//    QLibrary lib(QJSONRPC_LIB_PATH);
-//    lib.load();
     QApplication a(argc, argv);
-
     /*****************************************
      * Start Single Application
      *****************************************/
-
     SingleAppRun singleApp(&a);
-
     /*****************************************
      * Start MessageHandler
      *****************************************/
-    qDebug()<<"Start MessageHandler";
     MessageHandler msgHandler;//("cp866")
-//    msgHndlr.setLists(sl1,sl2,sl3);
-
-
-
-/*
-    if(isRunning(QString("<ANDON SERVER VER%1>").arg(APP_VER),QString("<ANDON SERVER VER%1 RUNNING>").arg(APP_VER)))
-    {
-        qDebug() << "Server is already running!";
-        a.quit();
-        return 0;
-    }
-    else
-    {
-        //qDebug() << "It is first Server!";
-    }
-
-*/
-
-//    QString pid= QString::number(a.applicationPid());
-//    QSharedMemory shmem;
-//    if(isRunning(QString("<ANDON SERVER VER%1>").arg(APP_VER),
-//                 QString("<ANDON SERVER VER%1 RUNNING>").arg(APP_VER),
-//                 pid,shmem)) {
-//        qDebug()<<"SERVER is already running";
-//        int answer=QMessageBox::question(new QWidget, "SERVER already running!",
-//                                     "Terminate concurent application?");
-//        QString old_pid;
-//        switch (answer) {
-//            case QMessageBox::Yes:
-//                QProcess * processKill;
-//                shmem.lock();
-//                old_pid = QString::number(a.applicationPid());
-//                memcpy( (char*)shmem.data(), (char *)old_pid.toLatin1().data(),
-//                        qMin( shmem.size(), old_pid.size()));
-//                shmem.unlock();
-//                qDebug()<<QString("taskkill /t /PID %1").arg(pid); // /f
-//                processKill->startDetached(QString("taskkill /t /PID %1").arg(pid)); // /f
-
-//                break;
-//            case QMessageBox::No:
-// //                a.quit();
-// //                return 0;
-// //                break;
-//            default:
-//                qDebug()<<"answer"<<answer;
-//                a.quit();
-//                return 0;
-//                break;
-//        }
-//    }
-
-
-    /*****************************************
-     * Start QTextCodec
-     *****************************************/
-//    qDebug()<<"Start QTextCodec";
-/*    QTextCodec *codec;
-    if (QCoreApplication::applicationDirPath().toLower().contains("build")) {
-        //if (QCoreApplication::applicationDirPath().toLower().contains("cp866"))
-//            codec = QTextCodec::codecForName("cp866");
-        //codec = QTextCodec::codecForName("iso8859-1");
-        //else
-            codec = QTextCodec::codecForName("cp866");
-        //    codec = QTextCodec::codecForName("utf8");
-        //QJSEngineDebugger * ScriptDebuger = new QJSEngineDebugger;
-        //ScriptDebuger->action(QJSEngineDebugger::InterruptAction);
-        //ScriptDebuger->attachTo(engine);
-        //ScriptDebuger->standardWindow()->show();
-    } else {
-        codec = QTextCodec::codecForName("cp866");
-    }
-    qDebug()<<"QTextCodec" << codec->name();
-    QTextCodec::setCodecForLocale(codec);
- */
-//    codec = QTextCodec::codecForName("cp866");
-//    codecUTF8 = QTextCodec::codecForName("UTF8");
-//    QTextCodec::setCodecForLocale(codecUTF8);
-//    QTextCodec::setCodecForLocale(codecCP866);
-//    QTextCodec::setCodecForLocale(codecCP1251);
-
-
-
-//    QString fileNameFormat="DebugLogServer_yyyy_MMMM.txt";
-//    logFile->setFileName(QDate().currentDate().toString(fileNameFormat));
-//    outStream->setDevice(logFile);
-//    outStream->setCodec(codecCP1251);
-
-
-//    auto timerFN = new QTimer(QAbstractEventDispatcher::instance());
-//    timerFN->setTimerType(Qt::VeryCoarseTimer);
-//    QObject::connect(timerFN, &QTimer::timeout, [logFile,fileNameFormat,timerFN]{
-//        qDebug()<<"timerFN restart";
-//        logFile->setFileName(QDate().currentDate().toString(fileNameFormat));
-//        timerFN->stop();
-//        timerFN->start(msecsPerDay-QTime::currentTime().msecsSinceStartOfDay()+1000);
-//    });
-//    timerFN->start(0);
-
-//    //Default log escape
-//    consoleContextEscapeList->append("sms_service.cpp");
-//    logfileContextEscapeList->append("serverwebthread.h");
-//    consoleContextEscapeList->append("serverwebthread.h");
-
-//    qInstallMessageHandler([outStream,logFile,consoleContextEscapeList,logfileContextEscapeList]
-//                           (QtMsgType Type,const QMessageLogContext &Context,const QString &Message){
-//        QString contextFile = QString(Context.file).split("\\").last().split("/").last();
-//        QString contextFunction = QString(Context.function).split("(").first().split(" ").last();
-//        QStringList msgList;
-//        msgList << QDateTime::currentDateTime().toString("d ddd HH:mm:ss.zzz");
-//        if ((!contextFile.isEmpty()) && (Context.line!=0))
-//            msgList << contextFile << contextFunction << QString::number(Context.line);
-//        msgList << Message << "\n";
-//        QString msg=msgList.join(" ");
-//        if (!consoleContextEscapeList->contains(contextFile)){
-//            fprintf(stdout,msg.toLocal8Bit().constData());
-//            fflush(stdout);
-//        }
-//        if (!logfileContextEscapeList->contains(contextFile)){
-//            if(logFile->open(QIODevice::WriteOnly|QIODevice::Text|QIODevice::Append)) {
-//                outStream->operator <<(msg.replace("\\\"","\""));
-//                logFile->close();
-//            }
-//        }
-//    });
-
-//    qDebug()<<"____________________________________________";
-
     /*****************************************
      * Start DataBase
      *****************************************/
-
     DBWrapper *andondb = new DBWrapper;
-    if(!Step_3_OpenDB(andondb)) {
-        qDebug() << "Cannot connect to DB";
+    andondb->setObjectName("db");
+    if(!andondb->ConnectDB(QCoreApplication::applicationDirPath(),DB_DATABASE_FILE)){
         a.quit();
         return 0;
     }
-
-
     /*****************************************
      * Start QtTelnet
      *****************************************/
@@ -254,49 +51,19 @@ int main(int argc, char *argv[])
 //    QtTelnet * telnetClient = new QtTelnet;
 //    telnetClient->setObjectName("telnetClient");
 //    telnetClient->start();
-
     /*****************************************
-     * Start andonrpcservice
+     * Start andonRpcService
      *****************************************/
-    qDebug()<<"Start andonrpcservice";
-    ServerRpcService * andonrpcservice = new ServerRpcService;
+    qDebug()<<"Start andonRpcService";
+    ServerRpcService * andonRpcService = new ServerRpcService;
+    andonRpcService->setObjectName("andonRpcService");
     QJsonRpcTcpServer * rpcserver = new QJsonRpcTcpServer;
     rpcserver->setObjectName("JSONRPC_SERVER");
 
-    QObject::connect(rpcserver, &QJsonRpcTcpServer::clientConnected, [=] (const QHostAddress &clientIP) {
-        qDebug()<<"clientConnected"<<clientIP.toString();
-        QJsonObject joClient;
-        joClient.insert("STATION_IP", clientIP.toString());
-        joClient.insert("EVENT_ID", QTime::currentTime().toString("HH:mm:ss.zzz"));
-        joClient.insert("STATUS", "CONNECTED");
-        QJsonDocument jdClient(joClient);
-        andonrpcservice->StartSms(jdClient.toJson(QJsonDocument::Compact));
-    });
-    QObject::connect(rpcserver, &QJsonRpcTcpServer::clientDisconnected, [=] (const QHostAddress &clientIP) {
-        qDebug()<<"clientDisconnected"<<clientIP.toString();
-        QJsonObject joClient;
-        joClient.insert("STATION_IP",clientIP.toString());
-        joClient.insert("EVENT_ID",QTime::currentTime().toString("HH:mm:ss.zzz"));
-        joClient.insert("STATUS", "DISCONNECTED");
-        QJsonDocument jdClient(joClient);
-        andonrpcservice->StartSms(jdClient.toJson(QJsonDocument::Compact));
-    });
-    rpcserver->addService(andonrpcservice);
-    andonrpcservice->setDB(andondb);
-
-//    QTimer *rpcTimer = new QTimer;
-//    QObject::connect(rpcTimer,&QTimer::timeout,[=](){
-//        if (rpcserver->listen(QHostAddress::AnyIPv4, JSONRPC_SERVER_PORT)) {
-//            qDebug()<<"JSONRPC PROT OPENED"<<JSONRPC_SERVER_PORT;
-//            rpcTimer->stop();
-//            rpcTimer->deleteLater();
-//        } else {
-//            qDebug() << "rpcTimer: can't start JSONRPC service on server: " << rpcserver->errorString();
-//            rpcTimer->start(2000);
-//        }
-//    });
-//    rpcTimer->start(700);
-
+    QObject::connect(rpcserver, &QJsonRpcTcpServer::clientConnected, appClientConnected);
+    QObject::connect(rpcserver, &QJsonRpcTcpServer::clientDisconnected, appclientDisconnected);
+    rpcserver->addService(andonRpcService);
+    andonRpcService->setDB(andondb);
     listenPort<QJsonRpcTcpServer>(rpcserver,JSONRPC_SERVER_PORT,3000,700);
     /*****************************************
      * Start Unicast UDP Sender
@@ -304,47 +71,13 @@ int main(int argc, char *argv[])
     qDebug()<<"Start Unicast UDP Sender";
     //TODO: server startup delay to DB
     ioStreamThread * iotheard = new ioStreamThread;
-    Sender * sender = new Sender;
-
-    //QJsonDocument jdocClients(QJsonDocument::fromJson(andondb->query2jsonarrays(
-    QJsonDocument jdocClients(QJsonDocument::fromJson(andondb->query2json(
-                                                          QString("SELECT IP_ADDRESS "
-                                                                  "FROM TBL_STATIONS "
-                                                                  "WHERE ENABLED='1'")
-                                                          ).toUtf8()));
-    //QJsonObject ClientsObject = jdocClients.object();
-    QJsonArray ClientsArray = jdocClients.array();
-    QJsonObject recordObject;
-    //ClientsObject.remove("FieldList");
-    for (int i=0;i<ClientsArray.count();++i) {
-        recordObject=ClientsArray.at(i).toObject();
-        sender->addClient(recordObject[recordObject.keys().at(0)].toString());
-    }
-
-
-    QTimer StartUpDelay;
-    StartUpDelay.setInterval(2000);
-    StartUpDelay.setSingleShot(true);
-    StartUpDelay.start();
-    QObject::connect(&StartUpDelay,&QTimer::timeout,[=](){
-        iotheard->start();
-        sender->run(UDP_INTERVAL,UDP_PORT);
-        //TODO: stop broadcast after connect all clients
-        QObject::connect(iotheard, &ioStreamThread::inputReceived, [sender] (const QString &text) {
-            qDebug()<<"recived text:" << text;
-            if (text.toUpper().left(5)=="RENEW" && text.length()>7) {
-                QString ClientIPstr =text.toUpper().mid(6);
-                qDebug()<<"ClientIPstr:" << ClientIPstr;
-                if (ClientIPstr=="ALL")
-                    sender->renewInterface();
-                else
-                    sender->renewInterface(ClientIPstr);
-                //qDebug()<<"sender->renewInterface" << ClientIPstr;
-            }
-        });
-        iotheard->start();
-    });
-
+    iotheard->setObjectName("iotheard");
+    BCSender * bcSender = new BCSender(UDP_INTERVAL,UDP_PORT);
+    bcSender->setObjectName("bcSender");
+    andondb->executeQuery("SELECT IP_ADDRESS FROM TBL_STATIONS WHERE ENABLED='1'",appAddbcClients);
+    QObject::connect(iotheard, &ioStreamThread::inputReceived, appParseInput);
+    QObject::connect(iotheard, &ioStreamThread::started, bcSender, &BCSender::run);
+    QTimer::singleShot(2000,iotheard,&ioStreamThread::start);
  /*****************************************
  * Start WebUI
  *****************************************/
@@ -380,15 +113,6 @@ int main(int argc, char *argv[])
     *****************************************/
     qDebug()<<"Start pdpTimer";
     const int msecsPerDay = 24 * 60 * 60 * 1000;
-    andondb->executeQuery("SELECT * FROM PRODUCTION_DECLARATION_HISTORY",
-                                [](QSqlQuery *query){
-        qDebug()<<"createReport";
-        createReport(query,QDate::currentDate().toString("dd"),
-                     QString("P:\\!Common Documents\\AutomaticDeclarating\\export_%1")
-                     //QString("test_%1")
-                        .arg(QDate::currentDate().toString("MM_yyyy")));
-    });
-
     QTimer * pdpTimer = new QTimer(QAbstractEventDispatcher::instance());
     pdpTimer->setTimerType(Qt::VeryCoarseTimer);
     pdpTimer->start(qMax(msecsPerDay-QTime::fromString("23:50:00").elapsed(),86400000));
@@ -397,10 +121,18 @@ int main(int argc, char *argv[])
         //qDebug()<<"pdpTimer timeout"<<"dayOfWeek"<<QDate::currentDate().dayOfWeek();
         andondb->executeQuery("SELECT * FROM PRODUCTION_DECLARATION_HISTORY",
                                     [](QSqlQuery *query){
-            createReport(query,QDate::currentDate().toString("dd"),
+            appCreateReport(query,QDate::currentDate().toString("dd"),
                          QString("P:\\!Common Documents\\AutomaticDeclarating\\export_%1")
                             .arg(QDate::currentDate().toString("MM_yyyy")));
         });
+        if(QDate::currentDate().daysInMonth()==QDate::currentDate().day()) {
+            andondb->executeQuery("SELECT * FROM PRODUCTION_DECLARATION_HISTORY",
+                                        [](QSqlQuery *query){
+                appCreateReport(query,QDate::currentDate().toString("dd"),
+                             QString("P:\\!Common Documents\\AutomaticDeclarating\\export_%1")
+                                .arg(QDate::currentDate().toString("MM_yyyy")));
+            });
+        }
         if(QDate::currentDate().dayOfWeek()<6) {
             andondb->executeQuery("SELECT LIST(EMAIL) FROM TBL_STAFF WHERE EMAIL_REPORTING=1",
                                         [WThread](QSqlQuery *query){
@@ -464,25 +196,26 @@ int main(int argc, char *argv[])
     });
 */
 
-    //snedReport(const QString &report, const QStringList &emails)
+/*
+    snedReport(const QString &report, const QStringList &emails)
 
-//    QTimer WebuiUpdate;
-//    WebuiUpdate.setInterval(10000);
-//    WebuiUpdate.setSingleShot(false);
-//    WebuiUpdate.start();
-//    QObject::connect(&WebuiUpdate,&QTimer::timeout,[andondb,WThread](){
-//        WThread->updateCurStatuses("table",QJsonDocument::fromJson(
-//            andondb->query2fulljson("SELECT * FROM VIEW_CURRENT_STATUSES_RU").toUtf8()).toJson());
-//        WThread->updateCurStatuses("graff",QJsonDocument::fromJson(
-//            andondb->query2json("SELECT * FROM VIEW_STATUS_LOG2GRAFF").toUtf8()).toJson());
-//    });
-
+    QTimer WebuiUpdate;
+    WebuiUpdate.setInterval(10000);
+    WebuiUpdate.setSingleShot(false);
+    WebuiUpdate.start();
+    QObject::connect(&WebuiUpdate,&QTimer::timeout,[andondb,WThread](){
+        WThread->updateCurStatuses("table",QJsonDocument::fromJson(
+            andondb->query2fulljson("SELECT * FROM VIEW_CURRENT_STATUSES_RU").toUtf8()).toJson());
+        WThread->updateCurStatuses("graff",QJsonDocument::fromJson(
+            andondb->query2json("SELECT * FROM VIEW_STATUS_LOG2GRAFF").toUtf8()).toJson());
+    });
+*/
     /*****************************************
      * Start SMS Server
      *****************************************/
     qDebug()<<"Start SMS Server";
     Sms_service * sms_sender = new Sms_service;
-    QObject::connect(andonrpcservice,&ServerRpcService::SendSMS, sms_sender,
+    QObject::connect(andonRpcService,&ServerRpcService::SendSMS, sms_sender,
              &Sms_service::sendSMSFECT,Qt::QueuedConnection);
 
     QObject::connect(sms_sender,&Sms_service::SmsStatusUpdate,[andondb]
@@ -574,7 +307,7 @@ int main(int argc, char *argv[])
     QJSEngine *engine = new QJSEngine;
     engine->globalObject().setProperty("msgHandler",engine->newQObject(&msgHandler));
 //    engine->globalObject().setProperty("telnetClient",engine->newQObject(telnetClient));
-    engine->globalObject().setProperty("andonrpcservice",engine->newQObject(andonrpcservice));
+    engine->globalObject().setProperty("andonRpcService",engine->newQObject(andonRpcService));
     engine->globalObject().setProperty("sms_sender",engine->newQObject(sms_sender));
     engine->globalObject().setProperty("andondb",engine->newQObject(andondb));
     engine->globalObject().setProperty("emailClient",engine->newQObject(emailClient));

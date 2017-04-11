@@ -56,3 +56,6 @@ QMAKE_EXTRA_TARGETS += first copydata
 
 INCLUDEPATH += $$PWD/../../lib/qextserialport-1.2rc/src
 DEPENDPATH += $$PWD/../../lib/qextserialport-1.2rc/src
+
+HEADERS += \
+    main.h

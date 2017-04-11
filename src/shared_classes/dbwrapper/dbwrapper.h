@@ -43,7 +43,7 @@ public slots:
     QString query2json(const QString & queryStr);
     bool ConnectDB(const QString &DB_Path,const QString &DB_Name);
     void executeQuery(const QString & queryStr, const QString &query_method,
-                      std::function<void(QString jsontext)> functor=[] (QString jsontext) {});
+                      std::function<(QString)> functor=[] (QString jsontext) {});
     void executeQuery(const QString & queryStr,
                       std::function<void(QSqlQuery *query)> functor=[] (QSqlQuery *query) {});
     bool executeProc(const QString & queryStr);

@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
     rpcserver->setObjectName("JSONRPC_SERVER");
 
     QObject::connect(rpcserver, &QJsonRpcTcpServer::clientConnected, appClientConnected);
-    QObject::connect(rpcserver, &QJsonRpcTcpServer::clientDisconnected, appclientDisconnected);
+    QObject::connect(rpcserver, &QJsonRpcTcpServer::clientDisconnected, appClientDisconnected);
     rpcserver->addService(andonRpcService);
     andonRpcService->setDB(andondb);
     listenPort<QJsonRpcTcpServer>(rpcserver,JSONRPC_SERVER_PORT,3000,700);
@@ -326,6 +326,7 @@ int main(int argc, char *argv[])
                                                           QString("SELECT SCRIPT_TEXT "
                                                           "FROM TBL_SCRIPTS WHERE SCRIPT_NAME='ScriptServerStart'")).toUtf8()));
     QJsonArray tableArray = jdocScripts.array();
+    QJsonObject recordObject;
     if (!tableArray.isEmpty())
         recordObject=tableArray.at(0).toObject();
 

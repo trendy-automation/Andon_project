@@ -25,8 +25,8 @@ void BCSender::run()
 //            qDebug() << address.toString();
 //    }
     timer = new QTimer(this);
-    timer->setInterval(interval);
-    udpport=port;
+    timer->setInterval(bcInterval);
+    udpport=bcPort;
 //    qDebug() << interval<<udpport;
     udpSocket = new QUdpSocket(this);
     messageNo = 1;

@@ -10,7 +10,7 @@
 InterfaceManager::InterfaceManager(QWidget *parent) : QMainWindow(parent)
 {
     QObject::connect(buttonGroup, static_cast<void (QButtonGroup::*)(QAbstractButton *)>
-                     (&QButtonGroup::buttonClicked), [=]
+                     (&QButtonGroup::buttonClicked), [this]
                      (QAbstractButton * clickedBtn){
             proccessPressed(clickedBtn);
         });
@@ -496,10 +496,10 @@ QObject *InterfaceManager::addButton(const QVariant &resp, const int &ScreenNum,
 
     if (!updateTimer->isActive()){
         updateTimer->start();
-        QObject::connect(updateTimer,&QTimer::timeout,[=](){
+        QObject::connect(updateTimer,&QTimer::timeout,[this](){
             RpcTcp->Query2Json("SELECT OBJECT_NAME, OBJECT_TEXT, USER_COMMENT "
                                                          " FROM CLIENT_ACTIVE_BUTTONS(:CLIENT_IP)",
-                                  [=](QVariant resp){updateButtons(resp);});
+                                  [this](QVariant resp){updateButtons(resp);});
         });
     }
     return new_wgt;

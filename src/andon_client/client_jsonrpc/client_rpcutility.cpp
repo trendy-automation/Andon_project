@@ -42,7 +42,7 @@ QJsonRpcServiceReply *ClientRpcUtility::ServerExecute(const QString &RemoteMetho
     QJsonRpcServiceReply *reply = m_client->invokeRemoteMethod(QString(JSONRPC_SERVER_SERVICENAME).append(".").append(RemoteMethodName),
                                                                arg[0],arg[1],arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],arg[9]);
     if(functor)
-        QObject::connect(reply, &QJsonRpcServiceReply::finished, [=] () {
+        QObject::connect(reply, &QJsonRpcServiceReply::finished, [reply,functor] () {
             QVariant result = reply->response().result().toVariant();
             if (result.isValid())
                 functor(result);
@@ -60,7 +60,7 @@ void ClientRpcUtility::ServerExecute(const QString &RemoteMethodName, QVariantLi
     qDebug()<<"scriptFunctor.isCallable()"<<scriptFunctor.isCallable();
     if(engine && scriptFunctor.isCallable()){
         //        qDebug() << "scriptFunctor callable";
-        functor = [=](QVariant response){
+        functor = [this,scriptFunctor](QVariant response){
             QJSValue result = QJSValue(scriptFunctor).call( //scriptFunctor.call(
                                                             QJSValueList() << engine->toScriptValue(response));
             if (result.isError()){

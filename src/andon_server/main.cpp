@@ -38,9 +38,9 @@ int main(int argc, char *argv[])
     /*****************************************
      * Start DataBase
      *****************************************/
-    DBWrapper *andondb = new DBWrapper;
-    andondb->setObjectName("db");
-    if(!andondb->ConnectDB(QCoreApplication::applicationDirPath(),DB_DATABASE_FILE)){
+    DBWrapper *andonDb = new DBWrapper;
+    andonDb->setObjectName("db");
+    if(!andonDb->ConnectDB(QCoreApplication::applicationDirPath(),DB_DATABASE_FILE)){
         a.quit();
         return 0;
     }
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
     QObject::connect(rpcserver, &QJsonRpcTcpServer::clientConnected, appClientConnected);
     QObject::connect(rpcserver, &QJsonRpcTcpServer::clientDisconnected, appClientDisconnected);
     rpcserver->addService(andonRpcService);
-    andonRpcService->setDB(andondb);
+    andonRpcService->setDB(andonDb);
     listenPort<QJsonRpcTcpServer>(rpcserver,JSONRPC_SERVER_PORT,3000,700);
     /*****************************************
      * Start Unicast UDP Sender
@@ -74,10 +74,10 @@ int main(int argc, char *argv[])
     iotheard->setObjectName("iotheard");
     BCSender * bcSender = new BCSender(UDP_INTERVAL,UDP_PORT);
     bcSender->setObjectName("bcSender");
-    andondb->executeQuery("SELECT IP_ADDRESS FROM TBL_STATIONS WHERE ENABLED='1'",appAddbcClients);
+    andonDb->executeQuery("SELECT IP_ADDRESS FROM TBL_STATIONS WHERE ENABLED='1'",appAddbcClients);
     QObject::connect(iotheard, &ioStreamThread::inputReceived, appParseInput);
     QObject::connect(iotheard, &ioStreamThread::started, bcSender, &BCSender::run);
-    QTimer::singleShot(2000,iotheard,&ioStreamThread::start);
+    QTimer::singleShot(2000,iotheard,&ioStreamThread::startThread);
  /*****************************************
  * Start WebUI
  *****************************************/
@@ -97,44 +97,34 @@ int main(int argc, char *argv[])
     QObject::connect(&clientWrapper, &WebSocketClientWrapper::clientConnected,
                      &channel, &QWebChannel::connectTo);
     channel.registerObject(QStringLiteral("serverWeb"), WThread);
-    channel.registerObject(QStringLiteral("db"), andondb);
-
+    channel.registerObject(QStringLiteral("db"), andonDb);
     QObject::connect(WThread,static_cast<void (WebuiThread::*)(const QString &sql_query,
                               std::function<void(QSqlQuery *query)> functor)>(&WebuiThread::getSqlQuery),
-                     andondb, static_cast<void (DBWrapper::*)(const QString &sql_query,
+                     andonDb, static_cast<void (DBWrapper::*)(const QString &sql_query,
                               std::function<void(QSqlQuery *query)> functor)>(&DBWrapper::executeQuery));
 
     QObject::connect(WThread,static_cast<void (WebuiThread::*)(const QString &sql_query,const QString &query_method,
                               std::function<void(QString jsontext)> functor)>(&WebuiThread::getSqlQuery),
-                     andondb, static_cast<void (DBWrapper::*)(const QString &sql_query,const QString &query_method,
+                     andonDb, static_cast<void (DBWrapper::*)(const QString &sql_query,const QString &query_method,
                               std::function<void(QString jsontext)> functor)>(&DBWrapper::executeQuery));
     /*****************************************
-    * Start pdpTimer
+    * Start dailyTimer
     *****************************************/
-    qDebug()<<"Start pdpTimer";
+    qDebug()<<"Start dailyTimer";
     const int msecsPerDay = 24 * 60 * 60 * 1000;
-    QTimer * pdpTimer = new QTimer(QAbstractEventDispatcher::instance());
-    pdpTimer->setTimerType(Qt::VeryCoarseTimer);
-    pdpTimer->start(qMax(msecsPerDay-QTime::fromString("23:50:00").elapsed(),86400000));
-    qDebug()<<"pdpTimer start"<<pdpTimer->interval()/3600000.0<<"hours";
-    QObject::connect(pdpTimer,&QTimer::timeout, [WThread,pdpTimer,msecsPerDay,andondb](){
-        //qDebug()<<"pdpTimer timeout"<<"dayOfWeek"<<QDate::currentDate().dayOfWeek();
-        andondb->executeQuery("SELECT * FROM PRODUCTION_DECLARATION_HISTORY",
-                                    [](QSqlQuery *query){
-            appCreateReport(query,QDate::currentDate().toString("dd"),
-                         QString("P:\\!Common Documents\\AutomaticDeclarating\\export_%1")
-                            .arg(QDate::currentDate().toString("MM_yyyy")));
-        });
-        if(QDate::currentDate().daysInMonth()==QDate::currentDate().day()) {
-            andondb->executeQuery("SELECT * FROM PRODUCTION_DECLARATION_HISTORY",
-                                        [](QSqlQuery *query){
-                appCreateReport(query,QDate::currentDate().toString("dd"),
-                             QString("P:\\!Common Documents\\AutomaticDeclarating\\export_%1")
-                                .arg(QDate::currentDate().toString("MM_yyyy")));
-            });
-        }
+    QTimer * dailyTimer = new QTimer(QAbstractEventDispatcher::instance());
+    dailyTimer->setTimerType(Qt::VeryCoarseTimer);
+    dailyTimer->start(qMax(msecsPerDay-QTime::fromString("23:50:00").elapsed(),86400000));
+    qDebug()<<"dailyTimer start"<<dailyTimer->interval()/3600000.0<<"hours";
+    QObject::connect(dailyTimer,&QTimer::timeout, [WThread,dailyTimer,msecsPerDay,andonDb](){
+        //qDebug()<<"dailyTimer timeout"<<"dayOfWeek"<<QDate::currentDate().dayOfWeek();
+        appExecuteReport("SELECT * FROM PRODUCTION_DECLARATION_HISTORY", QDate::currentDate().toString("dd"),
+            QString("P:\\!Common Documents\\AutomaticDeclarating\\export_%1").arg(QDate::currentDate().toString("MM_yyyy")));
+        if(QDate::currentDate().daysInMonth()==QDate::currentDate().day())
+            appExecuteReport("SELECT * FROM PRODUCTION_DECLARATION_HISTORY", QDate::currentDate().toString("dd"),
+                QString("P:\\!Common Documents\\AutomaticDeclarating\\export_%1").arg(QDate::currentDate().toString("MM_yyyy")));
         if(QDate::currentDate().dayOfWeek()<6) {
-            andondb->executeQuery("SELECT LIST(EMAIL) FROM TBL_STAFF WHERE EMAIL_REPORTING=1",
+            andonDb->executeQuery("SELECT LIST(EMAIL) FROM TBL_STAFF WHERE EMAIL_REPORTING=1",
                                         [WThread](QSqlQuery *query){
                 if(query->next()){
                     QStringList rcpnts=query->value(0).toString().split(',');
@@ -142,21 +132,11 @@ int main(int argc, char *argv[])
                         WThread->snedReport("REPORT_BREAKDOWNS", rcpnts);
                 }
             });
-
-
-
-
-
-                //rcpnts<<"evgeny.zaychenko@faurecia.com";
-//            if(QDate::currentDate().weekNumber() &
-//             ((QTime::currentTime().hour()*60+QTime::currentTime().minute())/870))
-//                 rcpnts<<"evgeny.stadulsky@faurecia.com";
-//            else rcpnts<<"alexander.poloznov@faurecia.com";
         }
-        pdpTimer->stop();
-        pdpTimer->start(msecsPerDay-qMax(QTime::fromString("23:50:00").elapsed(),
+        dailyTimer->stop();
+        dailyTimer->start(msecsPerDay-qMax(QTime::fromString("23:50:00").elapsed(),
                                         QTime::fromString("23:50:00").elapsed())+1000);
-        qDebug()<<"pdpTimer start"<<pdpTimer->interval()/3600000.0<<"hours";
+        qDebug()<<"dailyTimer start"<<dailyTimer->interval()/3600000.0<<"hours";
     });
     //qDebug()<<"WThread->snedReport";
 
@@ -203,11 +183,11 @@ int main(int argc, char *argv[])
     WebuiUpdate.setInterval(10000);
     WebuiUpdate.setSingleShot(false);
     WebuiUpdate.start();
-    QObject::connect(&WebuiUpdate,&QTimer::timeout,[andondb,WThread](){
+    QObject::connect(&WebuiUpdate,&QTimer::timeout,[andonDb,WThread](){
         WThread->updateCurStatuses("table",QJsonDocument::fromJson(
-            andondb->query2fulljson("SELECT * FROM VIEW_CURRENT_STATUSES_RU").toUtf8()).toJson());
+            andonDb->query2fulljson("SELECT * FROM VIEW_CURRENT_STATUSES_RU").toUtf8()).toJson());
         WThread->updateCurStatuses("graff",QJsonDocument::fromJson(
-            andondb->query2json("SELECT * FROM VIEW_STATUS_LOG2GRAFF").toUtf8()).toJson());
+            andonDb->query2json("SELECT * FROM VIEW_STATUS_LOG2GRAFF").toUtf8()).toJson());
     });
 */
     /*****************************************
@@ -218,13 +198,13 @@ int main(int argc, char *argv[])
     QObject::connect(andonRpcService,&ServerRpcService::SendSMS, sms_sender,
              &Sms_service::sendSMSFECT,Qt::QueuedConnection);
 
-    QObject::connect(sms_sender,&Sms_service::SmsStatusUpdate,[andondb]
+    QObject::connect(sms_sender,&Sms_service::SmsStatusUpdate,[andonDb]
                          (int SmsLogId, int SmsId, int Status){
-            andondb->executeProc(QString("EXECUTE PROCEDURE SERVER_UPDATE_SMSSTATUS(%1, %2, %3)")
+            andonDb->executeProc(QString("EXECUTE PROCEDURE SERVER_UPDATE_SMSSTATUS(%1, %2, %3)")
                           .arg(SmsLogId).arg(SmsId).arg(Status));
     });
 
-    QString sqlqueryres = andondb->query2json("SELECT AUX_PROPERTIES_LIST "
+    QString sqlqueryres = andonDb->query2json("SELECT AUX_PROPERTIES_LIST "
                                                     "FROM TBL_TCPDEVICES "
                                                     "WHERE DEVICE_TYPE='SMS Server' AND DEVICE_TYPE='SMS Server'");
     QJsonDocument jdocURL;
@@ -309,7 +289,7 @@ int main(int argc, char *argv[])
 //    engine->globalObject().setProperty("telnetClient",engine->newQObject(telnetClient));
     engine->globalObject().setProperty("andonRpcService",engine->newQObject(andonRpcService));
     engine->globalObject().setProperty("sms_sender",engine->newQObject(sms_sender));
-    engine->globalObject().setProperty("andondb",engine->newQObject(andondb));
+    engine->globalObject().setProperty("andonDb",engine->newQObject(andonDb));
     engine->globalObject().setProperty("emailClient",engine->newQObject(emailClient));
     engine->globalObject().setProperty("WThread",engine->newQObject(WThread));
 
@@ -322,7 +302,7 @@ int main(int argc, char *argv[])
     qDebug()<<"Start ServerStartScript Evaluate";
 
     QStringList ScriptsList;
-    QJsonDocument jdocScripts(QJsonDocument::fromJson(andondb->query2json(
+    QJsonDocument jdocScripts(QJsonDocument::fromJson(andonDb->query2json(
                                                           QString("SELECT SCRIPT_TEXT "
                                                           "FROM TBL_SCRIPTS WHERE SCRIPT_NAME='ScriptServerStart'")).toUtf8()));
     QJsonArray tableArray = jdocScripts.array();

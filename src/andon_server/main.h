@@ -16,6 +16,8 @@
 #include "server_rpcservice.h"
 #include "sms_service.h"
 #include "bcsender.h"
+#include "dbwrapper.h"
+#include "functional"
 
 
 template<class T>
@@ -82,7 +84,7 @@ static void appParseInput(const QString &text)
     }
 }
 
-static bool appCreateReport(QSqlQuery *query, const QString &reportName,const QString &fileName)
+bool appCreateReport(QSqlQuery *query, const QString &reportName,const QString &fileName)
 {
     QXlsx::Document * xlsx= new QXlsx::Document(QString(fileName).append(".xlsx"));
     if(xlsx->selectSheet(reportName))
@@ -111,6 +113,19 @@ static bool appCreateReport(QSqlQuery *query, const QString &reportName,const QS
     return false;
 }
 
+void appExecuteReport(const QString &queryText, const QString &reportName,const QString &fileName)
+{
+    DBWrapper *andonDb =qApp->findChild<DBWrapper*>("andonDb");
+    if(!andonDb){
+        qDebug()<<"object andonDb not found in App";
+        return;
+    }
+    std::function<bool(QSqlQuery*, const QString&, const QString&)> appCreateReport2 = *appCreateReport;
+    andonDb->executeQuery(queryText, [appCreateReport2,reportName,fileName](QSqlQuery *query){
+        appCreateReport2(query,reportName,fileName);
+    });
+}
+
 static void appAddbcClients(QSqlQuery *query)
 {
     BCSender*bcSender=qApp->findChild<BCSender*>("bcSender");
@@ -119,7 +134,7 @@ static void appAddbcClients(QSqlQuery *query)
         return;
     }
     while(query->next())
-        bcSender->addClient(query->value(0));
+        bcSender->addClient(query->value(0).toString());
 }
 
 #endif // MAIN_H

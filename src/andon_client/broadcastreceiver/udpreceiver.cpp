@@ -24,7 +24,7 @@ UdpReceiver::UdpReceiver()
 //    if(udpSocket->state()!=QAbstractSocket::UnconnectedState){
         if(!udpSocket->bind(UDP_PORT, QUdpSocket::ShareAddress)) {
             QTimer *udpTimer = new QTimer;
-            QObject::connect(udpTimer,&QTimer::timeout,[=](){
+            QObject::connect(udpTimer,&QTimer::timeout,[this,udpTimer](){
                 //qDebug() <<"udpSocket port " << UDP_PORT << " connecting state " << udpSocket->state();
                 //if(udpSocket->state()!=QAbstractSocket::UnconnectedState){
                     if (udpSocket->bind(UDP_PORT, QUdpSocket::ShareAddress)) {
@@ -37,7 +37,7 @@ UdpReceiver::UdpReceiver()
         }
 //    } else {
 //        QTimer *udpTimer = new QTimer;
-//        QObject::connect(udpTimer,&QTimer::timeout,[=](){
+//        QObject::connect(udpTimer,&QTimer::timeout,[this](){
 //            //qDebug() <<"udpSocket port " << UDP_PORT << " connecting state " << udpSocket->state();
 //            if(udpSocket->state()!=QAbstractSocket::UnconnectedState){
 //                if (!udpSocket->bind(UDP_PORT, QUdpSocket::ShareAddress)) {
@@ -90,7 +90,7 @@ void UdpReceiver::processPendingDatagrams()
                     emit serverfound(ServerAddress);
 //                    QTimer * diagramtimer =new QTimer;
 //                    diagramtimer->setInterval(10000);
-//                    QObject::connect(diagramtimer,&QTimer::timeout,[=](){
+//                    QObject::connect(diagramtimer,&QTimer::timeout,[this](){
 //                        QObject::connect(udpSocket, &QUdpSocket::readyRead, this, &UdpReceiver::processPendingDatagrams);
 //                });
                 }

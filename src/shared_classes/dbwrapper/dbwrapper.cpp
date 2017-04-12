@@ -323,7 +323,7 @@ void DBWrapper::executeQuery(const QString & queryText,
     }
     qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);
     //return str2Json("Error", queryItem.s_error);
-    functor(0);
+    //functor(0);
     return;
 }
 

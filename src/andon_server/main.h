@@ -5,6 +5,7 @@
 
 //_______Excel Lib_______________
 #include "xlsxdocument.h"
+QTXLSX_USE_NAMESPACE
 
 #include <QSqlQuery>
 #include <QDebug>
@@ -18,6 +19,7 @@
 #include "bcsender.h"
 #include "dbwrapper.h"
 #include "functional"
+#include <QChar>
 
 
 template<class T>
@@ -84,13 +86,13 @@ static void appParseInput(const QString &text)
     }
 }
 
-bool appCreateReport(QSqlQuery *query, const QString &reportName,const QString &fileName)
+bool appCreateReport(QSqlQuery *query, const QString &sheetName,const QString &fileName,const QString &ariaName="")
 {
-    QXlsx::Document * xlsx= new QXlsx::Document(QString(fileName).append(".xlsx"));
-    if(xlsx->selectSheet(reportName))
-        xlsx->deleteSheet(reportName);
-    xlsx->addSheet(reportName);
-    xlsx->selectSheet(reportName);
+    Document * xlsx= new Document(QString(fileName).append(".xlsx"));
+    if(xlsx->selectSheet(sheetName))
+        xlsx->deleteSheet(sheetName);
+    xlsx->addSheet(sheetName);
+    xlsx->selectSheet(sheetName);
     int i=1;
     QTextCodec *codec = QTextCodec::codecForName("iso8859-1");
     for(int j=0; j < query->record().count(); j++)
@@ -100,6 +102,10 @@ bool appCreateReport(QSqlQuery *query, const QString &reportName,const QString &
         for(int j=0; j < query->record().count(); j++)
             xlsx->write(i,j+1,query->value(j));
     }
+    if(!ariaName.isEmpty())
+        xlsx->defineName(ariaName,QString("='%1'!$A$1:$%2$%3").arg(sheetName)
+                         .arg(QChar(QChar('A').unicode()+query->record().count()-1))
+                         .arg(i));
 //    if(i>1){
         if(xlsx->save()){
             qDebug()<<fileName<<"save OK";
@@ -113,16 +119,16 @@ bool appCreateReport(QSqlQuery *query, const QString &reportName,const QString &
     return false;
 }
 
-void appExecuteReport(const QString &queryText, const QString &reportName,const QString &fileName)
+void appExecuteReport(const QString &queryText, const QString &sheetName,const QString &fileName,const QString &ariaName="")
 {
     DBWrapper *andonDb =qApp->findChild<DBWrapper*>("andonDb");
     if(!andonDb){
         qDebug()<<"object andonDb not found in App";
         return;
     }
-    std::function<bool(QSqlQuery*, const QString&, const QString&)> appCreateReport2 = *appCreateReport;
-    andonDb->executeQuery(queryText, [appCreateReport2,reportName,fileName](QSqlQuery *query){
-        appCreateReport2(query,reportName,fileName);
+    std::function<bool(QSqlQuery*, const QString&, const QString&, const QString&)> appCreateReport2 = *appCreateReport;
+    andonDb->executeQuery(queryText, [appCreateReport2,sheetName,fileName,ariaName](QSqlQuery *query){
+        appCreateReport2(query,sheetName,fileName,ariaName);
     });
 }
 

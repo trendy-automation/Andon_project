@@ -38,8 +38,8 @@ int main(int argc, char *argv[])
     /*****************************************
      * Start DataBase
      *****************************************/
-    DBWrapper *andonDb = new DBWrapper;
-    andonDb->setObjectName("db");
+    DBWrapper *andonDb = new DBWrapper(&a);
+    andonDb->setObjectName("andonDb");
     if(!andonDb->ConnectDB(QCoreApplication::applicationDirPath(),DB_DATABASE_FILE)){
         a.quit();
         return 0;
@@ -55,9 +55,9 @@ int main(int argc, char *argv[])
      * Start andonRpcService
      *****************************************/
     qDebug()<<"Start andonRpcService";
-    ServerRpcService * andonRpcService = new ServerRpcService;
+    ServerRpcService * andonRpcService = new ServerRpcService(&a);
     andonRpcService->setObjectName("andonRpcService");
-    QJsonRpcTcpServer * rpcserver = new QJsonRpcTcpServer;
+    QJsonRpcTcpServer * rpcserver = new QJsonRpcTcpServer(&a);
     rpcserver->setObjectName("JSONRPC_SERVER");
 
     QObject::connect(rpcserver, &QJsonRpcTcpServer::clientConnected, appClientConnected);
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     //TODO: server startup delay to DB
     ioStreamThread * iotheard = new ioStreamThread;
     iotheard->setObjectName("iotheard");
-    BCSender * bcSender = new BCSender(UDP_INTERVAL,UDP_PORT);
+    BCSender * bcSender = new BCSender(UDP_INTERVAL,UDP_PORT,&a);
     bcSender->setObjectName("bcSender");
     andonDb->executeQuery("SELECT IP_ADDRESS FROM TBL_STATIONS WHERE ENABLED='1'",appAddbcClients);
     QObject::connect(iotheard, &ioStreamThread::inputReceived, appParseInput);
@@ -110,6 +110,12 @@ int main(int argc, char *argv[])
     /*****************************************
     * Start dailyTimer
     *****************************************/
+    appExecuteReport(QString("SELECT * FROM REPORT_BREAKDOWNS('%1', '%2')")
+                     .arg(QDate(QDate::currentDate().year(),QDate::currentDate().month(),1).toString("dd.MM.yyyy"))
+                     .arg(QDate(QDate::currentDate().year(),(QDate::currentDate().month()+1)%12,1).toString("dd.MM.yyyy")),
+                     QDate::currentDate().toString("Простои MMMM"),
+        QString("P:\\!Common Documents\\Andon_reports\\Простои по месяцам"),
+        "month_brakedowns");
     qDebug()<<"Start dailyTimer";
     const int msecsPerDay = 24 * 60 * 60 * 1000;
     QTimer * dailyTimer = new QTimer(QAbstractEventDispatcher::instance());
@@ -121,9 +127,13 @@ int main(int argc, char *argv[])
         appExecuteReport("SELECT * FROM PRODUCTION_DECLARATION_HISTORY", QDate::currentDate().toString("dd"),
             QString("P:\\!Common Documents\\AutomaticDeclarating\\export_%1").arg(QDate::currentDate().toString("MM_yyyy")));
         if(QDate::currentDate().daysInMonth()==QDate::currentDate().day())
-            appExecuteReport("SELECT * FROM PRODUCTION_DECLARATION_HISTORY", QDate::currentDate().toString("dd"),
-                QString("P:\\!Common Documents\\AutomaticDeclarating\\export_%1").arg(QDate::currentDate().toString("MM_yyyy")));
-        if(QDate::currentDate().dayOfWeek()<6) {
+            appExecuteReport(QString("SELECT * FROM REPORT_BREAKDOWNS('%1', '%2')")
+                             .arg(QDate(QDate::currentDate().year(),QDate::currentDate().month(),1).toString("dd.MM.yyyy"))
+                             .arg(QDate(QDate::currentDate().year(),(QDate::currentDate().month()+1)%12,1).toString("dd.MM.yyyy")),
+                             QDate::currentDate().toString("Простои MMMM"),
+                QString("P:\\!Common Documents\\AutomaticDeclarating\\export_%1").arg(QDate::currentDate().toString("MM_yyyy")),
+                "month brakedowns");
+        if(QDate::currentDate().dayOfWeek()<6)
             andonDb->executeQuery("SELECT LIST(EMAIL) FROM TBL_STAFF WHERE EMAIL_REPORTING=1",
                                         [WThread](QSqlQuery *query){
                 if(query->next()){
@@ -132,7 +142,6 @@ int main(int argc, char *argv[])
                         WThread->snedReport("REPORT_BREAKDOWNS", rcpnts);
                 }
             });
-        }
         dailyTimer->stop();
         dailyTimer->start(msecsPerDay-qMax(QTime::fromString("23:50:00").elapsed(),
                                         QTime::fromString("23:50:00").elapsed())+1000);

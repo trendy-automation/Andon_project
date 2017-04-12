@@ -64,7 +64,7 @@ void ServerFound(QHostAddress ServerAddress)
     qDebug()<<"ServerFound start";
     InterfaceManager* IM = new InterfaceManager;
     IM->InitVKeyboard();
-    ClientRpcUtility *serverRpc = new ClientRpcUtility;
+    ClientRpcUtility *serverRpc = new ClientRpcUtility(qApp);
     MLserverRpc=serverRpc;
 //    serverRpc->start();
     QObject::connect(serverRpc,&ClientRpcUtility::error,[=](QString errorString){

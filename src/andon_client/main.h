@@ -11,20 +11,17 @@
 #include "qftp.h"
 #include "serlock_manager.h"
 
+#include <QMetaObject>
 
-static void appExecuteQuery(const QString *queryText)
+static void appExecuteQuery(const QString &queryText)
 {
     ClientRpcUtility *serverRpc =qApp->findChild<ClientRpcUtility*>("serverRpc");
     if(!serverRpc){
         qDebug()<<"object serverRpc not found in App";
         return;
     }
-    //serverRpc->Query2Json(queryText);
-//    andondb->executeQuery(queryText, [](QSqlQuery *query){
-//        appCreateReport(query,reportName,fileName);
-//    });
+    serverRpc->Query2Json(queryText);
 }
-
 
 
 template<class T>
@@ -98,5 +95,19 @@ void TelnetKanbanDeclare(ClientRpcUtility *serverRpc, QtTelnet *telnetClient, QB
     });
 }
 
+
+static void appCreateObjects(QVariant resp)
+{
+    QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
+    for (auto row = array.begin(); row != array.end(); row++) {
+        QJsonObject jsonRow=row->toObject();
+        if (jsonRow.contains("DEVICE_TYPE")) {
+            if (jsonRow["DEVICE_TYPE"].toString()=="SHERLOCK") {
+                SherlockManager * sm = new SherlockManager;
+                setProperties(sm,jsonRow.toVariantMap());
+            }
+        }
+    }
+}
 
 #endif // MAIN_H

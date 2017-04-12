@@ -172,6 +172,10 @@ void ServerFound(QHostAddress ServerAddress)
 
     //########### Step 1.2 TCP DEVICES ############
     loadKeObjects(serverRpc,qApp);
+    std::function<void(QVariant)> appCreateObjects_ptr = *appCreateObjects;
+    serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
+                                              "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
+                              " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",appCreateObjects_ptr);
 
     serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
                                           "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
@@ -255,10 +259,10 @@ void ServerFound(QHostAddress ServerAddress)
                     fileTimer->start(interval);
                     //qDebug() << "ftp cur interval" << interval;
                 }
-                if (jsonRow["DEVICE_TYPE"].toString()=="SHERLOCK") {
-                    SherlockManager * sm = new SherlockManager(jsonRow["TCPDEVICE_IP"].toString(),
-                                                               jsonRow["PORT"].toInt());
-                }
+//                if (jsonRow["DEVICE_TYPE"].toString()=="SHERLOCK") {
+//                    SherlockManager * sm = new SherlockManager(jsonRow["TCPDEVICE_IP"].toString(),
+//                                                               jsonRow["PORT"].toInt());
+//                }
             }
         }
 

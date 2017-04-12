@@ -21,7 +21,7 @@ class SherlockManager: public QObject
 
 
 public:
-    SherlockManager(const QString &tcpServerIp, quint16 tcpServerPort,
+    SherlockManager(const QString &tcpServerIp="", quint16 tcpServerPort=0,
                     QObject * parent=0, bool keepConnect=true, bool connectNow=true);
     ~SherlockManager();
     void setClientIp(const QString &tcpServerIp){if (!isSocketConnected()) {serverIp=tcpServerIp; startConnecting();}}
@@ -61,12 +61,12 @@ private:
     bool								autoStart;
     bool								autoReconnect;
 
-    QTcpSocket       *tcpSocket;
-    QStateMachine *vision;
-    QTimer *initTimer;
+    QTcpSocket                         *tcpSocket;
+    QStateMachine                      *vision;
+    QTimer                             *initTimer;
 //    QTcpServer       *tcpServer;
 //    QStringList      messageList = QString("Inspecting_ON;Inspecting_OFF;Wrong_model").split(";");
-    QTimer           *connectTimer;
+    QTimer                             *connectTimer;
 
 
 };

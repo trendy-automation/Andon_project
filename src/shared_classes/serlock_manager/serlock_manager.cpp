@@ -264,7 +264,7 @@ QVariantMap SherlockManager::getProperties(const QStringList &requested)
 void SherlockManager::setProperties(const QVariantMap &smProperties)
 {
 //    qDebug()<<"setProperties";
-    const QMetaObject *metaObj = SherlockManager::metaObject();
+    const QMetaObject *metaObj = this->metaObject();
     for (int i = metaObj->propertyOffset(); i < metaObj->propertyCount(); ++i)
         if (smProperties.contains(metaObj->property(i).name()))
             metaObj->property(i).write(this,smProperties.value(metaObj->property(i).name()));

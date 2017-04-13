@@ -38,7 +38,7 @@ QVariantMap getProperties(T * obj,const QStringList &requested)
 template<class T>
 void setProperties(T * obj,const QVariantMap &objProperties)
 {
-    const QMetaObject *metaObj = T::metaObject();
+    const QMetaObject *metaObj = obj->metaObject();
     for (int i = metaObj->propertyOffset(); i < metaObj->propertyCount(); ++i)
         if (objProperties.contains(metaObj->property(i).name()))
             metaObj->property(i).write(obj,objProperties.value(metaObj->property(i).name()));

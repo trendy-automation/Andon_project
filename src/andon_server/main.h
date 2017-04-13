@@ -92,7 +92,6 @@ bool appCreateReport(QSqlQuery *query, const QString &sheetName,const QString &f
     if(xlsx->selectSheet(sheetName))
         xlsx->deleteSheet(sheetName);
     xlsx->addSheet(sheetName);
-    xlsx->selectSheet(sheetName);
     int i=1;
     QTextCodec *codec = QTextCodec::codecForName("iso8859-1");
     for(int j=0; j < query->record().count(); j++)

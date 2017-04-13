@@ -110,12 +110,14 @@ int main(int argc, char *argv[])
     /*****************************************
     * Start dailyTimer
     *****************************************/
-    appExecuteReport(QString("SELECT * FROM REPORT_BREAKDOWNS('%1', '%2')")
-                     .arg(QDate(QDate::currentDate().year(),QDate::currentDate().month(),1).toString("dd.MM.yyyy"))
-                     .arg(QDate(QDate::currentDate().year(),(QDate::currentDate().month()+1)%12,1).toString("dd.MM.yyyy")),
-                     QDate::currentDate().toString("Простои MMMM"),
-        QString("P:\\!Common Documents\\Andon_reports\\Простои по месяцам"),
-        "month_brakedowns");
+//    appExecuteReport(QString("SELECT * FROM REPORT_BREAKDOWNS('%1', '%2')")
+//                     .arg(QDate(QDate::currentDate().year(),QDate::currentDate().month(),1).toString("dd.MM.yyyy"))
+//                     .arg(QDate(QDate::currentDate().year(),(QDate::currentDate().month()+1)%12,1).toString("dd.MM.yyyy")),
+//                     QDate::currentDate().toString("Простои"),
+//        QString("P:\\!Common Documents\\Andon_reports\\Простои за прошлый месяц"),
+//        "brakedowns");
+    appExecuteReport("SELECT * FROM PRODUCTION_DECLARATION_HISTORY", "AutoDecl",
+        QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_export"),"AutoDecl_aria");
     qDebug()<<"Start dailyTimer";
     const int msecsPerDay = 24 * 60 * 60 * 1000;
     QTimer * dailyTimer = new QTimer(QAbstractEventDispatcher::instance());
@@ -130,9 +132,9 @@ int main(int argc, char *argv[])
             appExecuteReport(QString("SELECT * FROM REPORT_BREAKDOWNS('%1', '%2')")
                              .arg(QDate(QDate::currentDate().year(),QDate::currentDate().month(),1).toString("dd.MM.yyyy"))
                              .arg(QDate(QDate::currentDate().year(),(QDate::currentDate().month()+1)%12,1).toString("dd.MM.yyyy")),
-                             QDate::currentDate().toString("Простои MMMM"),
-                QString("P:\\!Common Documents\\AutomaticDeclarating\\export_%1").arg(QDate::currentDate().toString("MM_yyyy")),
-                "month brakedowns");
+                             QDate::currentDate().toString("Простои"),
+                QString("P:\\!Common Documents\\Andon_reports\\Простои за прошлый месяц"),
+                "brakedowns");
         if(QDate::currentDate().dayOfWeek()<6)
             andonDb->executeQuery("SELECT LIST(EMAIL) FROM TBL_STAFF WHERE EMAIL_REPORTING=1",
                                         [WThread](QSqlQuery *query){

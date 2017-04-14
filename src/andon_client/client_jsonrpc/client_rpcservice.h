@@ -9,6 +9,7 @@ class ClientRpcService : public QJsonRpcService
     Q_CLASSINFO("serviceName", JSONRPC_CLIENT_SERVICENAME)
 public:
     ClientRpcService(QObject *parent = 0);
+    void liveMethod();
     ~ClientRpcService();
 private:
 

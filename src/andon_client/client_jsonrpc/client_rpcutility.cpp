@@ -33,6 +33,7 @@ QJsonRpcServiceReply *ClientRpcUtility::ServerExecute(const QString &RemoteMetho
         qDebug() << "could not connect to server: " << socket->errorString();
         emit error(socket->errorString());
         functor(QVariant());
+        return 0;
     }
     m_client = new QJsonRpcSocket(socket);//(socket,this);
     QVariant arg[10];

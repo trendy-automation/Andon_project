@@ -14,4 +14,8 @@ ClientRpcService::~ClientRpcService()
 {
 }
 
+void ClientRpcService::liveMethod()
+{
+
+}
 

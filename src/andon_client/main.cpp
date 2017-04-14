@@ -205,7 +205,7 @@ void ServerFound(QHostAddress ServerAddress)
                             serverRpc->Query2Json(QString("SELECT PART_REFERENCE, "
                                                           "PART_COUNT FROM PRODUCTION_DECLARATING(%1)").arg(taskId),
                                                       [](QVariant resp){
-//                                    qDebug() << "PRODUCTION_DECLARATING finish "<<resp;
+                                    qDebug() << "PRODUCTION_DECLARATING finish" << resp.toString().size();
                                 QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
                                 if(!array.isEmpty()) {
                                     QJsonObject jsonObj0=array.at(0).toObject();
@@ -229,13 +229,17 @@ void ServerFound(QHostAddress ServerAddress)
                         serverRpc->Query2Json("SELECT ID_TASK, PART_REFERENCE, PART_COUNT, MANUFACTURE_DATE "
                                               "FROM PRODUCTION_DECLARATING",
                                      [ftp,buffer](QVariant resp){
-                            qDebug() << "PRODUCTION_DECLARATING"<<resp;
+                            qDebug() << "PRODUCTION_DECLARATING start" << resp.toString().size();
                             QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
+                            qDebug() << "PRODUCTION_DECLARATING lambda 1";
                             if(!array.isEmpty()) {
+                                qDebug() << "PRODUCTION_DECLARATING lambda 2";
                                 QJsonObject jsonObj0=array.at(0).toObject();
+                                qDebug() << "PRODUCTION_DECLARATING lambda 3";
                                 if(jsonObj0.contains("PART_REFERENCE") && jsonObj0.contains("ID_TASK")
                                         && jsonObj0.contains("PART_COUNT")) {
                                     int taskId=jsonObj0["ID_TASK"].toInt();
+                                    qDebug() << "PRODUCTION_DECLARATING lambda 4";
                                     buffer->setProperty("task", taskId);
                                     buffer->open(QBuffer::ReadWrite);
                                     for (auto object = array.begin(); object != array.end(); object++) {
@@ -247,9 +251,12 @@ void ServerFound(QHostAddress ServerAddress)
                                         //buffer->write(jsonObj["MANUFACTURE_DATE"].toString().toLatin1());
                                         buffer->write("\r\n");
                                     }
+                                    qDebug() << "PRODUCTION_DECLARATING lambda 5";
                                     QTimer::singleShot(0,[ftp,buffer,taskId](){
+                                        qDebug() << "PRODUCTION_DECLARATING lambda 6";
                                         buffer->setProperty("command",ftp->putBuf(buffer,
                                             QString("Decl_%1.txt").arg(QDateTime().currentDateTime().toString("ddMMyy_hh_mm")), QFtp::Binary,taskId));
+                                        qDebug() << "ftp putBuf lambda 7";
                                     });
                                 }
                             }
@@ -603,8 +610,39 @@ void ServerFound(QHostAddress ServerAddress)
 
 int main(int argc, char *argv[])
 {
-    //TODO lymbda to procedures
     QApplication a(argc, argv);
+    QStringList args = a.arguments();
+    if(!args.contains("normal")){
+        ClientRpcUtility *selfRpc = new ClientRpcUtility(&a);
+        QTcpSocket *socket = new QTcpSocket;
+        socket->connectToHost(QHostAddress::LocalHost, JSONRPC_CLIENT_PORT);
+        if (socket->waitForConnected()) {
+            //Run application watchdog
+            QJsonRpcSocket *m_client = new QJsonRpcSocket(socket);
+            for(;;){
+                QJsonRpcServiceReply *reply = m_client->invokeRemoteMethod(QString(JSONRPC_CLIENT_SERVICENAME).append(".liveMethod"));
+                QObject::connect(reply, &QJsonRpcServiceReply::finished, [] () {
+                    if (!reply->response().result().toVariant().isValid()){
+                        qDebug() << "invalid response received!!!" << reply->response().errorMessage();
+                        QProcess::startDetached(a.applicationFilePath().append(" force"));
+                        //Restart application
+                    }
+                });
+                QThread::sleep(3);
+            }
+        }
+        /*else{
+            //Run application normaly
+        }*/
+    }
+
+
+
+
+
+
+
+    //TODO lymbda to procedures
     qmlRegisterType<InterfaceManager>("com.andon.interfacemanager", 1, 0, "InterfaceManager");
     qmlRegisterType<QTimer>("com.andon.timer", 1, 0, "QTimer");
 //    qmlRegisterType<std::function<void(QVariant)>>("com.andon.functor", 1, 0, "std::function<void(QVariant)>");
@@ -620,15 +658,13 @@ int main(int argc, char *argv[])
 //    int qtype2 = qRegisterMetaType<QAbstractSocket::SocketState>("SocketState" );
 //    Q_DECLARE_METATYPE (std::function<void(QVariant)>);
     qRegisterMetaType<std::function<void(QVariant)>>("std::function<void(QVariant)>");
-
-    SingleAppRun singleApp;
+    SingleAppRun singleApp(args.contains("force"),&a);
 
     QByteArray textCodec="cp1251";
     if (!QCoreApplication::applicationDirPath().toLower().contains("build"))
         textCodec="cp866";
 
     MessageHandler msgHandler(textCodec);
-
     ClientRpcService * clientrpcservice = new ClientRpcService;
     QJsonRpcTcpServer * rpcserver = new QJsonRpcTcpServer;
     rpcserver->addService(clientrpcservice);

@@ -13,6 +13,8 @@
 
 #include <QMetaObject>
 
+#include <functional>
+
 static void appExecuteQuery(const QString &queryText)
 {
     ClientRpcUtility *serverRpc =qApp->findChild<ClientRpcUtility*>("serverRpc");
@@ -46,10 +48,12 @@ void setProperties(T * obj,const QVariantMap &objProperties)
 
 
 template<class T>
-void listenPort(T * obj, int port, int interval, int delay) {
+bool listenPort(T * obj, int port, int interval, int delay, std::function<void()> functor=0) {
     QTimer *listenPortTimer = new QTimer(qApp);
-    QObject::connect(listenPortTimer,&QTimer::timeout,[obj,port,listenPortTimer,interval](){
+    QObject::connect(listenPortTimer,&QTimer::timeout,[obj,port,listenPortTimer,interval,functor](){
             if (obj->listen(QHostAddress::AnyIPv4, port)) {
+                if(functor)
+                    functor();
                 qDebug()<<QString("%1: %2 port opened").arg(obj->objectName()).arg(port);
                 listenPortTimer->stop();
                 listenPortTimer->deleteLater();

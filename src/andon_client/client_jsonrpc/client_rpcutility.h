@@ -53,7 +53,6 @@ signals:
     void error(QString errorString);
     void server_proc_reply(QString replyString);
 //    void Query2Json(const QString &queryText, std::function<void(QVariant)> functor=0);
-
 private:
     QJsonRpcSocket *m_client;
     QHostAddress serveraddress;

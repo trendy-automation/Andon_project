@@ -31,6 +31,7 @@
 //using namespace std;
 //#include <functional>
 
+#include <QProcess>
 using namespace ML;
 
 
@@ -66,7 +67,7 @@ void ServerFound(QHostAddress ServerAddress)
     IM->InitVKeyboard();
     ClientRpcUtility *serverRpc = new ClientRpcUtility(qApp);
     MLserverRpc=serverRpc;
-//    serverRpc->start();
+    //    serverRpc->start();
     QObject::connect(serverRpc,&ClientRpcUtility::error,[=](QString errorString){
         qDebug()<<errorString;
         IM->setEnabled(false);
@@ -80,7 +81,7 @@ void ServerFound(QHostAddress ServerAddress)
             udpreceiver->start();
         }
 
-/*        if (QApplication::applicationDirPath().toLower().contains("build"))
+        /*        if (QApplication::applicationDirPath().toLower().contains("build"))
             return;
         //QProcess process; //Anyway Roboot!
         //process.startDetached("shutdown.exe -r -f -t 0");
@@ -107,11 +108,11 @@ void ServerFound(QHostAddress ServerAddress)
     QJSEngine *engine = new QJSEngine;
     engine->installExtensions(QJSEngine::ConsoleExtension);
 
-//    QJSValue result = myEngine.evaluate('');
-//      if (result.isError())
-//          qDebug() << "Uncaught exception at line"
-//                   << result.property("lineNumber").toInt()
-//                   << ":" << result.toString();
+    //    QJSValue result = myEngine.evaluate('');
+    //      if (result.isError())
+    //          qDebug() << "Uncaught exception at line"
+    //                   << result.property("lineNumber").toInt()
+    //                   << ":" << result.toString();
 
 
 
@@ -120,38 +121,38 @@ void ServerFound(QHostAddress ServerAddress)
         engine->globalObject().setProperty("msgHandler",engine->newQObject(msgHandler));
     engine->globalObject().setProperty("IM",engine->newQObject(IM));
     engine->globalObject().setProperty("serverRpc",engine->newQObject(serverRpc));
-//    QJSValue ScriptFunctor = engine->newFunction(construct_Functor);
-//    QJSValue construct_QTimer = engine->evaluate("function QTimer() {}");
-//    construct_QTimer.setPrototype(engine->newQObject(new QTimer));
-//    //QJSValue constructorTimer = engine->newFunction(construct_QTimer);
-//    //QJSValue valueTimer = engine->newQMetaObject(&QPushButton::staticMetaObject, constructorTimer);
+    //    QJSValue ScriptFunctor = engine->newFunction(construct_Functor);
+    //    QJSValue construct_QTimer = engine->evaluate("function QTimer() {}");
+    //    construct_QTimer.setPrototype(engine->newQObject(new QTimer));
+    //    //QJSValue constructorTimer = engine->newFunction(construct_QTimer);
+    //    //QJSValue valueTimer = engine->newQMetaObject(&QPushButton::staticMetaObject, constructorTimer);
     //TODO QJSEngine *engine->newQMetaObject
     //QJSValue valueTimer = engine->newQMetaObject(&QPushButton::staticMetaObject, construct_QTimer);
     //engine->globalObject().setProperty("QTimer", valueTimer);
-//    QJSValue constructorQEngine = engine->newFunction(construct_QEngine);
-//    QJSValue valueEngine = engine->newQMetaObject(&QPushButton::staticMetaObject, constructorQEngine);
-//    engine->globalObject().setProperty("QEngine", valueEngine);
+    //    QJSValue constructorQEngine = engine->newFunction(construct_QEngine);
+    //    QJSValue valueEngine = engine->newQMetaObject(&QPushButton::staticMetaObject, constructorQEngine);
+    //    engine->globalObject().setProperty("QEngine", valueEngine);
     //engine->globalObject().setProperty("engine",engine->newQObject(engine));
 
     IM->setServerRpc(serverRpc);
     IM->setEngine(engine);
     serverRpc->setEngine(engine);
-//    qDebug() << "serverRpc->ServerExecute";
-//    serverRpc->ServerExecute("SQLQuery2Json",
-//           QVariantList()<<"SELECT * FROM PRODUCTION_PARTS_HISTORY",
-//           engine->evaluate("(function foo(resp) { console.log('SQLQuery2Json result',resp);})"));
-//    serverRpc->ServerExecute("SQLQuery2Json",
-//           QVariantList()<<"SELECT * FROM PRODUCTION_PARTS_HISTORY",
-//           engine->evaluate("(function foo() { print('foo'); })"));
+    //    qDebug() << "serverRpc->ServerExecute";
+    //    serverRpc->ServerExecute("SQLQuery2Json",
+    //           QVariantList()<<"SELECT * FROM PRODUCTION_PARTS_HISTORY",
+    //           engine->evaluate("(function foo(resp) { console.log('SQLQuery2Json result',resp);})"));
+    //    serverRpc->ServerExecute("SQLQuery2Json",
+    //           QVariantList()<<"SELECT * FROM PRODUCTION_PARTS_HISTORY",
+    //           engine->evaluate("(function foo() { print('foo'); })"));
 
 
     if (QApplication::applicationDirPath().toLower().contains("build")) {
         IM->setGeometry(0,0,800,600);
-//        QJSEngineDebugger * ScriptDebuger = new QJSEngineDebugger;
-//        ScriptDebuger->action(QJSEngineDebugger::InterruptAction);
-//        //ScriptDebuger->action(QJSEngineDebugger::RunToCursorAction);
-//        ScriptDebuger->attachTo(engine);
-//        //ScriptDebuger->standardWindow()->show();
+        //        QJSEngineDebugger * ScriptDebuger = new QJSEngineDebugger;
+        //        ScriptDebuger->action(QJSEngineDebugger::InterruptAction);
+        //        //ScriptDebuger->action(QJSEngineDebugger::RunToCursorAction);
+        //        ScriptDebuger->attachTo(engine);
+        //        //ScriptDebuger->standardWindow()->show();
     } else {
         QApplication::setOverrideCursor(Qt::BlankCursor);
         IM->setWindowState(Qt::WindowFullScreen);
@@ -174,11 +175,11 @@ void ServerFound(QHostAddress ServerAddress)
     loadKeObjects(serverRpc,qApp);
     std::function<void(QVariant)> appCreateObjects_ptr = *appCreateObjects;
     serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
-                                              "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
-                              " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",appCreateObjects_ptr);
+                          "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
+                          " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",appCreateObjects_ptr);
 
     serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
-                                          "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
+                          "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
                           " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",
                           [=](QVariant resp){
         qDebug()<<"lambda TCPDEVICES start";
@@ -186,10 +187,10 @@ void ServerFound(QHostAddress ServerAddress)
         for (auto row = array.begin(); row != array.end(); row++) {
             QJsonObject jsonRow=row->toObject();
             if (jsonRow.contains("DEVICE_TYPE") && jsonRow.contains("TCPDEVICE_IP")
-                   && jsonRow.contains("LOGIN") && jsonRow.contains("PASS")) {
+                    && jsonRow.contains("LOGIN") && jsonRow.contains("PASS")) {
                 if (jsonRow["DEVICE_TYPE"].toString()=="FTP") {
                     QFtp *ftp = new QFtp(jsonRow["TCPDEVICE_IP"].toString(),jsonRow["PORT"].toInt(),
-                                         jsonRow["LOGIN"].toString(),jsonRow["PASS"].toString());
+                            jsonRow["LOGIN"].toString(),jsonRow["PASS"].toString());
                     QBuffer *buffer=new QBuffer;
                     QTimer *fileTimer = new QTimer;
                     fileTimer->setTimerType(Qt::VeryCoarseTimer);
@@ -204,8 +205,8 @@ void ServerFound(QHostAddress ServerAddress)
                             }
                             serverRpc->Query2Json(QString("SELECT PART_REFERENCE, "
                                                           "PART_COUNT FROM PRODUCTION_DECLARATING(%1)").arg(taskId),
-                                                      [](QVariant resp){
-                                    qDebug() << "PRODUCTION_DECLARATING finish" << resp.toString().size();
+                                                  [](QVariant resp){
+                                qDebug() << "PRODUCTION_DECLARATING finish" << resp.toString().size();
                                 QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
                                 if(!array.isEmpty()) {
                                     QJsonObject jsonObj0=array.at(0).toObject();
@@ -214,7 +215,7 @@ void ServerFound(QHostAddress ServerAddress)
                                         for (auto object:array) {
                                             QJsonObject jsonObj=object.toObject();
                                             qDebug() << jsonObj["PART_REFERENCE"].toString()
-                                                     << jsonObj["PART_COUNT"].toInt();
+                                                    << jsonObj["PART_COUNT"].toInt();
                                         }
                                     }
                                 }
@@ -228,7 +229,7 @@ void ServerFound(QHostAddress ServerAddress)
                         fileTimer->start(interval);
                         serverRpc->Query2Json("SELECT ID_TASK, PART_REFERENCE, PART_COUNT, MANUFACTURE_DATE "
                                               "FROM PRODUCTION_DECLARATING",
-                                     [ftp,buffer](QVariant resp){
+                                              [ftp,buffer](QVariant resp){
                             qDebug() << "PRODUCTION_DECLARATING start" << resp.toString().size();
                             QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
                             qDebug() << "PRODUCTION_DECLARATING lambda 1";
@@ -255,7 +256,7 @@ void ServerFound(QHostAddress ServerAddress)
                                     QTimer::singleShot(0,[ftp,buffer,taskId](){
                                         qDebug() << "PRODUCTION_DECLARATING lambda 6";
                                         buffer->setProperty("command",ftp->putBuf(buffer,
-                                            QString("Decl_%1.txt").arg(QDateTime().currentDateTime().toString("ddMMyy_hh_mm")), QFtp::Binary,taskId));
+                                                                                  QString("Decl_%1.txt").arg(QDateTime().currentDateTime().toString("ddMMyy_hh_mm")), QFtp::Binary,taskId));
                                         qDebug() << "ftp putBuf lambda 7";
                                     });
                                 }
@@ -266,14 +267,14 @@ void ServerFound(QHostAddress ServerAddress)
                     fileTimer->start(interval);
                     //qDebug() << "ftp cur interval" << interval;
                 }
-//                if (jsonRow["DEVICE_TYPE"].toString()=="SHERLOCK") {
-//                    SherlockManager * sm = new SherlockManager(jsonRow["TCPDEVICE_IP"].toString(),
-//                                                               jsonRow["PORT"].toInt());
-//                }
+                //                if (jsonRow["DEVICE_TYPE"].toString()=="SHERLOCK") {
+                //                    SherlockManager * sm = new SherlockManager(jsonRow["TCPDEVICE_IP"].toString(),
+                //                                                               jsonRow["PORT"].toInt());
+                //                }
             }
         }
 
-/*
+        /*
         QJsonDocument jdocKBX100(QJsonDocument::fromJson(resp.toString().toUtf8()));
         QJsonArray tableArray = jdocKBX100.array();
         QJsonObject recordObject;
@@ -510,15 +511,15 @@ void ServerFound(QHostAddress ServerAddress)
 
     //########### Step 1.3 ############
     serverRpc->Query2Json("SELECT WEBSOCKET_PORT FROM TBL_STATIONS "
-                                          " WHERE IP_ADDRESS = :CLIENT_IP;",
+                          " WHERE IP_ADDRESS = :CLIENT_IP;",
                           [=](QVariant resp){
         qDebug()<<"lambda WEBSOCKET start";
 
         QJsonDocument jdocWebsocketPort(QJsonDocument::fromJson(resp.toString().toUtf8()));
-//        qDebug()<<"WEBSOCKET"<< jdocWebsocketPort.toJson();
+        //        qDebug()<<"WEBSOCKET"<< jdocWebsocketPort.toJson();
         QJsonArray tableArray = jdocWebsocketPort.array();
         QJsonObject recordObject=tableArray.at(0).toObject();
-//        qDebug()<<"WEBSOCKET"<< recordObject.toVariantMap();
+        //        qDebug()<<"WEBSOCKET"<< recordObject.toVariantMap();
         if(recordObject.contains("WEBSOCKET_PORT")){
             int websocketPort = recordObject["WEBSOCKET_PORT"].toInt();
             WebsocketInit(websocketPort, serverRpc);
@@ -527,7 +528,7 @@ void ServerFound(QHostAddress ServerAddress)
 
     });
 
-/*    //########### Step 1.4 OPC Client ############
+    /*    //########### Step 1.4 OPC Client ############
     serverRpc->Query2Json("SELECT ID_TCPDEVICE,DEVICE_NAME FROM TBL_TCPDEVICES "
                           "WHERE DEVICE_TYPE='KBX100' AND ENABLED=1",
                           [=](QVariant resp){
@@ -566,15 +567,15 @@ void ServerFound(QHostAddress ServerAddress)
         qDebug()<<"interfaceLoaded";
         //########### Step 2.1 ############
         serverRpc->Query2Json("SELECT IDP, PA, PV "
-                                                     " FROM CLIENT_SELECT_PROPERTIES(:CLIENT_IP)",
+                              " FROM CLIENT_SELECT_PROPERTIES(:CLIENT_IP)",
                               [IM](QVariant resp){IM->loadProperties(resp);});
         //########### Step 2.2 ############
         serverRpc->Query2Json("SELECT IDS, ST "
-                                                    " FROM CLIENT_SELECT_SCRIPTS(:CLIENT_IP)",
+                              " FROM CLIENT_SELECT_SCRIPTS(:CLIENT_IP)",
                               [IM](QVariant resp){IM->loadScripts(resp);});
         //########### Step 2.3 ############
         serverRpc->Query2Json("SELECT IDW, OT, PL, SL "
-                                                    " FROM CLIENT_SELECT_WIDGETS(:CLIENT_IP)",
+                              " FROM CLIENT_SELECT_WIDGETS(:CLIENT_IP)",
                               [IM](QVariant resp){
             IM->loadWidgets(resp);
             if (((QStackedWidget*)IM->centralWidget())->count()>0)
@@ -582,23 +583,23 @@ void ServerFound(QHostAddress ServerAddress)
         });
 
 
-            QObject::connect(IM, &InterfaceManager::interfaceCreated, [=] (){
-                qDebug()<<"interfaceCreated";
-                //########### Step 3.1 ############
-                serverRpc->Query2Json("SELECT EVENT_ID, OBJECT_NAME, OBJECT_TEXT, USER_COMMENT "
-                                                             " FROM CLIENT_ACTIVE_BUTTONS(:CLIENT_IP)",
-                                      [IM](QVariant resp){
+        QObject::connect(IM, &InterfaceManager::interfaceCreated, [=] (){
+            qDebug()<<"interfaceCreated";
+            //########### Step 3.1 ############
+            serverRpc->Query2Json("SELECT EVENT_ID, OBJECT_NAME, OBJECT_TEXT, USER_COMMENT "
+                                  " FROM CLIENT_ACTIVE_BUTTONS(:CLIENT_IP)",
+                                  [IM](QVariant resp){
 
-                    QJsonDocument jdocActBtns(QJsonDocument::fromJson(resp.toString().toUtf8()));
-                    //qDebug()<<"jdocActBtns"<<jdocActBtns;
-                    QJsonArray tableArray  = jdocActBtns.array();
-                    for (int i=0; i<tableArray.count();++i) {
-                        //qDebug()<<"tableArray.at(i).toObject()"<<tableArray.at(i).toObject();
-                        IM->copyButton(QJsonDocument(tableArray.at(i).toObject()).toJson());
-                    }
-                    //qDebug()<<"tableArray"<<tableArray;
-                      });
-          });
+                QJsonDocument jdocActBtns(QJsonDocument::fromJson(resp.toString().toUtf8()));
+                //qDebug()<<"jdocActBtns"<<jdocActBtns;
+                QJsonArray tableArray  = jdocActBtns.array();
+                for (int i=0; i<tableArray.count();++i) {
+                    //qDebug()<<"tableArray.at(i).toObject()"<<tableArray.at(i).toObject();
+                    IM->copyButton(QJsonDocument(tableArray.at(i).toObject()).toJson());
+                }
+                //qDebug()<<"tableArray"<<tableArray;
+            });
+        });
 
     });
 
@@ -607,56 +608,115 @@ void ServerFound(QHostAddress ServerAddress)
     qDebug()<<"ServerFound fineshed";
 }
 
-
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     QStringList args = a.arguments();
-    if(!args.contains("normal")){
+    if(args.contains("watchdog")){
         ClientRpcUtility *selfRpc = new ClientRpcUtility(&a);
-        QTcpSocket *socket = new QTcpSocket;
-        socket->connectToHost(QHostAddress::LocalHost, JSONRPC_CLIENT_PORT);
-        if (socket->waitForConnected()) {
-            //Run application watchdog
-            QJsonRpcSocket *m_client = new QJsonRpcSocket(socket);
-            for(;;){
-                QJsonRpcServiceReply *reply = m_client->invokeRemoteMethod(QString(JSONRPC_CLIENT_SERVICENAME).append(".liveMethod"));
-                QObject::connect(reply, &QJsonRpcServiceReply::finished, [] () {
-                    if (!reply->response().result().toVariant().isValid()){
-                        qDebug() << "invalid response received!!!" << reply->response().errorMessage();
-                        QProcess::startDetached(a.applicationFilePath().append(" force"));
-                        //Restart application
+        QTcpSocket *socket = new QTcpSocket(&a);
+        qDebug() << "connect socket, &QTcpSocket::connected"<<socket;
+        QObject::connect(socket, &QTcpSocket::connected,[&a,socket,args](){
+            qDebug() << "Run application watchdog"<<socket;
+            QJsonRpcSocket *m_client = new QJsonRpcSocket(socket,&a);
+            QTimer *watchTimer = new QTimer(&a);
+            qDebug() << "connect watchTimer timeout";
+            QObject::connect(watchTimer, &QTimer::timeout, [&a,m_client,args,watchTimer,socket] () {
+                QJsonRpcServiceReply *reply = m_client->invokeRemoteMethod(
+                            QString(JSONRPC_CLIENT_SERVICENAME).append(".isAlive"));
+                QTimer *replayTimer=new QTimer(&a);
+                replayTimer->setSingleShot(true);
+                QObject::connect(replayTimer, &QTimer::timeout, [&a,args,replayTimer,watchTimer,m_client,socket] () {
+                    qDebug() << "Force restart application(response timeout)";
+//                    replayTimer->stop();
+//                    replayTimer->deleteLater();
+//                    watchTimer->stop();
+//                    watchTimer->deleteLater();
+                    m_client->deleteLater();
+                    QProcess *restartApp = new QProcess;
+                    QObject::connect(restartApp,&QProcess::errorOccurred,[](QProcess::ProcessError error){
+                        qDebug() << "restartApp errorOccurred"<<error;
+                    });
+                    //restartApp->start(args.at(0));
+                    QObject::connect(restartApp,&QProcess::started,[&a,restartApp](){
+                        qDebug() << "restartApp started with pid" << restartApp->pid();
+
+                    });
+                    //QString("/C start %1 force").arg(args.at(0))
+                    QProcess* watchdogProcess = a.findChild<QProcess*>("watchdogProcess");
+                    if(watchdogProcess)
+                        watchdogProcess->kill();
+                    QJsonRpcTcpServer* rpcServer = a.findChild<QJsonRpcTcpServer*>("rpcServer");
+                    if(rpcServer)
+                        rpcServer->close();
+
+
+
+                    QList<QTimer*> timerList = a.findChildren<QTimer*>();
+                     qDebug() << "Stop and delete timers" << timerList.count();
+                    for(auto &t:timerList){
+                        if(t->isActive())
+                            t->stop();
+                        t->deleteLater();
                     }
+                    a.quit();
+                    restartApp->start("cmd.exe",QStringList()<<"/C"<<"start"<<args.at(0)<<"force");
+                    //restartApp->start(args.at(0),QStringList("force"));
+                    //restartApp->startDetached(args.at(0));
                 });
-                QThread::sleep(3);
-            }
+                replayTimer->start(1000);
+                QObject::connect(reply, &QJsonRpcServiceReply::finished, [&a,reply,args,replayTimer,watchTimer] () {
+                    replayTimer->stop();
+                    replayTimer->deleteLater();
+                    qDebug() << "alive" << reply->response().result().toVariant().toBool();
+                    /*
+                    if (!reply->response().result().toVariant().isValid()){
+                        watchTimer->stop();
+                        //qDebug() << "invalid response received!!!" << reply->response().errorMessage();
+                        qDebug() << "Force restart application(invalid response)";
+                        QProcess *restartApp = new QProcess;
+                        QObject::connect(restartApp,&QProcess::started,[restartApp](){
+                            qDebug() << "restartApp started";
+                            qDebug() << "restartApp->pid()" << restartApp->pid();
+                        });
+                        restartApp->start(QString("cmd.exe /C start ").append(args.at(0)),QStringList("force"));
+                    }
+                    */
+                    reply->deleteLater();
+                });
+            });
+            qDebug() << "start watchTimer 3000";
+            watchTimer->start(3000);
+        });
+        socket->connectToHost(QHostAddress::LocalHost, JSONRPC_CLIENT_PORT);
+        if (socket->waitForConnected(1000)){
+            qDebug() << "watchdog connected" << socket;
+            return a.exec();
+        }else{
+            qDebug() << "delete socket and selfRpc" << socket;
+            socket->disconnect();
+            socket->abort();
+            socket->deleteLater();
+            selfRpc->deleteLater();
+
         }
-        /*else{
-            //Run application normaly
-        }*/
     }
-
-
-
-
-
-
-
+    qDebug() << "Run application normaly" << socket;
     //TODO lymbda to procedures
     qmlRegisterType<InterfaceManager>("com.andon.interfacemanager", 1, 0, "InterfaceManager");
     qmlRegisterType<QTimer>("com.andon.timer", 1, 0, "QTimer");
-//    qmlRegisterType<std::function<void(QVariant)>>("com.andon.functor", 1, 0, "std::function<void(QVariant)>");
-//    qmlRegisterType<QJSEngine>("com.andon.QJSEngine", 1, 0, "QJSEngine");
-//    qmlRegisterType<QJSValue>("com.andon.QJSValue", 1, 0, "QJSValue");
-//    qmlRegisterSingletonType<QJSValue>("com.andon.QJSValue", 1, 0, "QJSValue",);
-//    qmlRegisterType<MessageHandler>("com.andon.messagehandler", 1, 0, "MessageHandler");
+    //    qmlRegisterType<std::function<void(QVariant)>>("com.andon.functor", 1, 0, "std::function<void(QVariant)>");
+    //    qmlRegisterType<QJSEngine>("com.andon.QJSEngine", 1, 0, "QJSEngine");
+    //    qmlRegisterType<QJSValue>("com.andon.QJSValue", 1, 0, "QJSValue");
+    //    qmlRegisterSingletonType<QJSValue>("com.andon.QJSValue", 1, 0, "QJSValue",);
+    //    qmlRegisterType<MessageHandler>("com.andon.messagehandler", 1, 0, "MessageHandler");
 
     //qRegisterMetaType<QAbstractSocket::SocketError>("QAbstractSocket::SocketError");
-//    Q_DECLARE_METATYPE( QAbstractSocket::SocketState )
+    //    Q_DECLARE_METATYPE( QAbstractSocket::SocketState )
 
-//    int qtype1 = qRegisterMetaType<QAbstractSocket::SocketError>("SocketError" );
-//    int qtype2 = qRegisterMetaType<QAbstractSocket::SocketState>("SocketState" );
-//    Q_DECLARE_METATYPE (std::function<void(QVariant)>);
+    //    int qtype1 = qRegisterMetaType<QAbstractSocket::SocketError>("SocketError" );
+    //    int qtype2 = qRegisterMetaType<QAbstractSocket::SocketState>("SocketState" );
+    //    Q_DECLARE_METATYPE (std::function<void(QVariant)>);
     qRegisterMetaType<std::function<void(QVariant)>>("std::function<void(QVariant)>");
     SingleAppRun singleApp(args.contains("force"),&a);
 
@@ -665,12 +725,34 @@ int main(int argc, char *argv[])
         textCodec="cp866";
 
     MessageHandler msgHandler(textCodec);
-    ClientRpcService * clientrpcservice = new ClientRpcService;
-    QJsonRpcTcpServer * rpcserver = new QJsonRpcTcpServer;
-    rpcserver->addService(clientrpcservice);
-    rpcserver->setObjectName("rpcserver");
-    listenPort<QJsonRpcTcpServer>(rpcserver,JSONRPC_CLIENT_PORT,3000,1000);
+    ClientRpcService * clientrpcservice = new ClientRpcService(&a);
+    QJsonRpcTcpServer * rpcServer = new QJsonRpcTcpServer(&a);
+    rpcServer->addService(clientrpcservice);
+    rpcServer->setObjectName("rpcServer");
+    listenPort<QJsonRpcTcpServer>(rpcServer,JSONRPC_CLIENT_PORT,3000,1000,[&a,args](){
+        qDebug() << "Run copy application as watchdog"<<args.at(0);
+        QProcess *watchdogProcess = new QProcess(&a);
+        watchdogProcess->setObjectName("watchdogProcess");
+        QObject::connect(watchdogProcess,&QProcess::errorOccurred,[](QProcess::ProcessError error){
+            qDebug() << "watchdogProcess errorOccurred"<<error;
+        });
+        QObject::connect(watchdogProcess,&QProcess::started,[watchdogProcess](){
+            qDebug() << "watchdogProcess started with pid()" << watchdogProcess->pid();
+        });
+        //watchdogProcess->start(args.at(0));
+        watchdogProcess->startDetached(args.at(0),QStringList("watchdog"));
+        QObject::connect(&a,&QApplication::aboutToQuit, [watchdogProcess](){
+            qDebug() << "QApplication aboutToQuit";
+            watchdogProcess->kill();
+        });
+    });
 
+
+    QTimer::singleShot(10000,[](){
+        qDebug() << "Test crash application";
+        QObject*null=0;
+        null->setObjectName("crash");
+    });
 
     UdpReceiver *udpreceiver = new UdpReceiver;
     udpreceiver->start();
@@ -678,11 +760,11 @@ int main(int argc, char *argv[])
         ServerFound(ServerAddress);
         // TODO: solve vkeyboard error "using null output device, none available"
     });
-//    QObject::connect(udpreceiver, &UdpReceiver::destroyed,[](){qDebug()<<"UdpReceiver::destroyed";});
-//    QObject::connect(&msgHandler, &MessageHandler::destroyed,[](){qDebug()<<"MessageHandler::destroyed";});
-//    QObject::connect(&singleApp, &SingleAppRun::destroyed,[](){qDebug()<<"SingleAppRun::destroyed";});
-    QObject::connect(&a, &QApplication::aboutToQuit,&msgHandler,&MessageHandler::deleteLater);
-//    QObject::connect(&a, &QApplication::aboutToQuit,[&msgHandler](){msgHandler.deleteLater();});
+    //    QObject::connect(udpreceiver, &UdpReceiver::destroyed,[](){qDebug()<<"UdpReceiver::destroyed";});
+    //    QObject::connect(&msgHandler, &MessageHandler::destroyed,[](){qDebug()<<"MessageHandler::destroyed";});
+    //    QObject::connect(&singleApp, &SingleAppRun::destroyed,[](){qDebug()<<"SingleAppRun::destroyed";});
+    //QObject::connect(qApp, &QApplication::aboutToQuit,&msgHandler,&MessageHandler::deleteLater);
+    //    QObject::connect(&a, &QApplication::aboutToQuit,[&msgHandler](){msgHandler.deleteLater();});
     //renewInterface
     QObject::connect(udpreceiver, &UdpReceiver::renewInterface, [=] (QHostAddress ServerAddress){
         qDebug() << "renewInterface";
@@ -697,8 +779,7 @@ int main(int argc, char *argv[])
             IM->close();
             IM->deleteLater();
         }
-//            ServerFound(ServerAddress);
+        //            ServerFound(ServerAddress);
     });
-
     return a.exec();
 }

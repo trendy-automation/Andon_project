@@ -14,8 +14,8 @@ ClientRpcService::~ClientRpcService()
 {
 }
 
-void ClientRpcService::liveMethod()
+bool ClientRpcService::isAlive()
 {
-
+    return true;
 }
 

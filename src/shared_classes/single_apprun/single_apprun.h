@@ -33,13 +33,12 @@ public:
             case QMessageBox::Yes:
             {
                 QProcess * processKill = new QProcess;
+                //shmem->create(new_pid.size());
                 shmem->lock();
-                QString *old_pid = new QString(QString::number(qApp->applicationPid()));
-                //old_pid = QString::number(qApp->applicationPid());
-                memcpy((char*)shmem->data(), (char *)old_pid->toLatin1().data(),
-                        qMin( shmem->size(), old_pid->size()));
+                QString new_pid = QString::number(qApp->applicationPid());
+                memcpy((char*)shmem->data(), (char *)new_pid.toLatin1().data(), qMax(shmem->size(), new_pid.size()));
                 shmem->unlock();
-                QString command = QString("taskkill /t /PID %1").arg(pid); // /f
+                QString command = QString("taskkill /t /f /PID %1").arg(pid); // /f
                 qDebug()<<command;
                 processKill->startDetached(command);
                 break;

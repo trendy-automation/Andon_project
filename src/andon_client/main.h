@@ -4,16 +4,22 @@
 #include "client_rpcservice.h"
 #include "websocketclientwrapper.h"
 #include "websockettransport.h"
+#include <QtWebSockets/QWebSocketServer>
+#include "qwebchannel.h"
 #include "clientwebinterface.h"
 #include "qjsonrpctcpserver.h"
-#include "qwebchannel.h"
-#include <QtWebSockets/QWebSocketServer>
 #include "qftp.h"
 #include "serlock_manager.h"
+#include "watchdog.h"
+
 
 #include <QMetaObject>
 
 #include <functional>
+
+#include "common_functions.h"
+
+#include <QJsonDocument>
 
 static void appExecuteQuery(const QString &queryText)
 {
@@ -25,7 +31,7 @@ static void appExecuteQuery(const QString &queryText)
     serverRpc->Query2Json(queryText);
 }
 
-
+/*
 template<class T>
 QVariantMap getProperties(T * obj,const QStringList &requested)
 {
@@ -64,6 +70,7 @@ bool listenPort(T * obj, int port, int interval, int delay, std::function<void()
     });
     listenPortTimer->start(delay);
 }
+*/
 
 void WebsocketInit(int websocketPort, ClientRpcUtility *serverRpc)
 {
@@ -113,5 +120,24 @@ static void appCreateObjects(QVariant resp)
         }
     }
 }
+
+
+static void appClientDisconnected(const QHostAddress &clientIP=QHostAddress::LocalHost)
+{
+    qDebug()<<"clientDisconnected"<<clientIP.toString();
+    QJsonObject joClient;
+    joClient.insert("STATION_IP",clientIP.toString());
+    joClient.insert("EVENT_ID",QTime::currentTime().toString("HH:mm:ss.zzz"));
+    joClient.insert("STATUS", "DISCONNECTED");
+    QJsonDocument jdClient(joClient);
+
+    ClientRpcUtility *serverRpc =qApp->findChild<ClientRpcUtility*>("serverRpc");
+    if(serverRpc)
+        serverRpc->ServerExecute("StartSms",QVariantList()<<jdClient.toJson(QJsonDocument::Compact));
+    else
+        qDebug()<<"object andonRpcService not found in App";
+}
+
+
 
 #endif // MAIN_H

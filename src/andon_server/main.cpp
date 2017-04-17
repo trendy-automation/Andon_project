@@ -22,11 +22,24 @@
 
 #include <functional>
 #include <QJSEngine>
-#include <main.h>
+#include "main.h"
+#include "watchdog.h"
+
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    /*****************************************
+     * Start Watchdog
+     *****************************************/
+    QStringList args = a.arguments();
+    Watchdog watchdog;
+    if(args.contains("watchdog")){
+        if(!watchdog.listen(JSONRPC_SERVER_PORT,QString(JSONRPC_SERVER_SERVICENAME).append(".isAlive")))
+            appClientDisconnected();
+            qDebug() << "Watchdog application cannot run!";
+        return a.exec();
+    }
     /*****************************************
      * Start Single Application
      *****************************************/

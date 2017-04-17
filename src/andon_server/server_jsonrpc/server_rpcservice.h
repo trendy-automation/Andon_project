@@ -25,6 +25,7 @@ signals:
     void clientDisconnected(const QString &clientIp);
 
 public slots:
+    bool isAlive(){return true;}
     QString SQLQuery2Json(const QString & sqlquery);
 //    QString SQLQueryVariant(const QString & sqlquery);
     QString SQLQueryExec(const QString & sqlquery);

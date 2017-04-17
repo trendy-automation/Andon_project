@@ -13,5 +13,4 @@ HEADERS += \
     $$PWD/client_rpcutility.h \
     $$PWD/client_rpcservice.h
 SOURCES += \
-    $$PWD/client_rpcutility.cpp \
-    $$PWD/client_rpcservice.cpp
+    $$PWD/client_rpcutility.cpp

@@ -18,9 +18,7 @@ using namespace std;
 
 //#include <thread>
 
-//void foo(std::function< void (void) > f) {
-//  f();
-//}
+
 
 class QJsonRpcSocket;
 //class QString;

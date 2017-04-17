@@ -1,9 +1,9 @@
-#include "client_rpcutility.h"
+﻿#include "client_rpcutility.h"
 #include "ketcp_object.h"
 
 
-#ifndef MAIN_LAMBDAS_H
-#define MAIN_LAMBDAS_H
+#ifndef MAIN_CALLBACKS_H
+#define MAIN_CALLBACKS_H
 
 // main_lambdas name space
 namespace ML{
@@ -65,4 +65,4 @@ namespace ML{
         });
     }
 }
-#endif // MAIN_LAMBDAS_H
+#endif // MAIN_CALLBACKS_H

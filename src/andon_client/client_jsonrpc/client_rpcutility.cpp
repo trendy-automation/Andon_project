@@ -90,6 +90,13 @@ void ClientRpcUtility::Query2Json(const QString &queryText, std::function<void(Q
     ServerExecute("SQLQuery2Json", QVariantList()<<queryText, functor);
 }
 
+//void ClientRpcUtility::Query2Json(const QString &queryText, FunctionType function)
+//{
+//    ServerExecute("SQLQuery2Json", QVariantList()<<queryText, [function](QVariant resp){
+//        function(resp);
+//    });
+//}
+
 void ClientRpcUtility::Query2Json(const QString &queryText, QJSValue scriptFunctor)
 {
     ServerExecute("SQLQuery2Json", QVariantList()<<queryText, scriptFunctor);

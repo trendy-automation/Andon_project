@@ -1,3 +1,3 @@
 INCLUDEPATH += $$PWD
 HEADERS += \
-    $$PWD/single_apprun.h
+    $$PWD/main_callbacks.h

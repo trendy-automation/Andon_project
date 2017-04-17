@@ -5,6 +5,10 @@
 #include "message_handler.h"
 #include "qttelnet.h"
 #include "single_apprun.h"
+#include "qftp.h"
+#include "main_callbacks.h"
+#include "main.h"
+#include "serlock_manager.h"
 //#include "opcua_client.h"
 
 #include <QApplication>
@@ -13,25 +17,21 @@
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
 
-#include "client_rpcservice.h"
-#include "qjsonrpctcpserver.h"
+//#include "client_rpcservice.h"
+//#include "qjsonrpctcpserver.h"
 #include <QJSEngine>
-#include "websocketclientwrapper.h"
-#include "websockettransport.h"
-#include "clientwebinterface.h"
-#include "qwebchannel.h"
-#include <QtWebSockets/QWebSocketServer>
+//#include "websocketclientwrapper.h"
+//#include "websockettransport.h"
+//#include "clientwebinterface.h"
+//#include "qwebchannel.h"
+//#include <QtWebSockets/QWebSocketServer>
 #include <QtQml>
-#include "qftp.h"
-#include "main_lambdas.h"
-#include "main.h"
-#include "serlock_manager.h"
 
 //#include "math.h"
 //using namespace std;
 //#include <functional>
 
-#include <QProcess>
+//#include <QProcess>
 using namespace ML;
 
 
@@ -173,10 +173,9 @@ void ServerFound(QHostAddress ServerAddress)
 
     //########### Step 1.2 TCP DEVICES ############
     loadKeObjects(serverRpc,qApp);
-    std::function<void(QVariant)> appCreateObjects_ptr = *appCreateObjects;
     serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
                           "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
-                          " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",appCreateObjects_ptr);
+                          " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",appCreateObjects);
 
     serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
                           "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
@@ -612,96 +611,13 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     QStringList args = a.arguments();
+    Watchdog watchdog;
     if(args.contains("watchdog")){
-        ClientRpcUtility *selfRpc = new ClientRpcUtility(&a);
-        QTcpSocket *socket = new QTcpSocket(&a);
-        qDebug() << "connect socket, &QTcpSocket::connected"<<socket;
-        QObject::connect(socket, &QTcpSocket::connected,[&a,socket,args](){
-            qDebug() << "Run application watchdog"<<socket;
-            QJsonRpcSocket *m_client = new QJsonRpcSocket(socket,&a);
-            QTimer *watchTimer = new QTimer(&a);
-            qDebug() << "connect watchTimer timeout";
-            QObject::connect(watchTimer, &QTimer::timeout, [&a,m_client,args,watchTimer,socket] () {
-                QJsonRpcServiceReply *reply = m_client->invokeRemoteMethod(
-                            QString(JSONRPC_CLIENT_SERVICENAME).append(".isAlive"));
-                QTimer *replayTimer=new QTimer(&a);
-                replayTimer->setSingleShot(true);
-                QObject::connect(replayTimer, &QTimer::timeout, [&a,args,replayTimer,watchTimer,m_client,socket] () {
-                    qDebug() << "Force restart application(response timeout)";
-//                    replayTimer->stop();
-//                    replayTimer->deleteLater();
-//                    watchTimer->stop();
-//                    watchTimer->deleteLater();
-                    m_client->deleteLater();
-                    QProcess *restartApp = new QProcess;
-                    QObject::connect(restartApp,&QProcess::errorOccurred,[](QProcess::ProcessError error){
-                        qDebug() << "restartApp errorOccurred"<<error;
-                    });
-                    //restartApp->start(args.at(0));
-                    QObject::connect(restartApp,&QProcess::started,[&a,restartApp](){
-                        qDebug() << "restartApp started with pid" << restartApp->pid();
-
-                    });
-                    //QString("/C start %1 force").arg(args.at(0))
-                    QProcess* watchdogProcess = a.findChild<QProcess*>("watchdogProcess");
-                    if(watchdogProcess)
-                        watchdogProcess->kill();
-                    QJsonRpcTcpServer* rpcServer = a.findChild<QJsonRpcTcpServer*>("rpcServer");
-                    if(rpcServer)
-                        rpcServer->close();
-
-
-
-                    QList<QTimer*> timerList = a.findChildren<QTimer*>();
-                     qDebug() << "Stop and delete timers" << timerList.count();
-                    for(auto &t:timerList){
-                        if(t->isActive())
-                            t->stop();
-                        t->deleteLater();
-                    }
-                    a.quit();
-                    restartApp->start("cmd.exe",QStringList()<<"/C"<<"start"<<args.at(0)<<"force");
-                    //restartApp->start(args.at(0),QStringList("force"));
-                    //restartApp->startDetached(args.at(0));
-                });
-                replayTimer->start(1000);
-                QObject::connect(reply, &QJsonRpcServiceReply::finished, [&a,reply,args,replayTimer,watchTimer] () {
-                    replayTimer->stop();
-                    replayTimer->deleteLater();
-                    qDebug() << "alive" << reply->response().result().toVariant().toBool();
-                    /*
-                    if (!reply->response().result().toVariant().isValid()){
-                        watchTimer->stop();
-                        //qDebug() << "invalid response received!!!" << reply->response().errorMessage();
-                        qDebug() << "Force restart application(invalid response)";
-                        QProcess *restartApp = new QProcess;
-                        QObject::connect(restartApp,&QProcess::started,[restartApp](){
-                            qDebug() << "restartApp started";
-                            qDebug() << "restartApp->pid()" << restartApp->pid();
-                        });
-                        restartApp->start(QString("cmd.exe /C start ").append(args.at(0)),QStringList("force"));
-                    }
-                    */
-                    reply->deleteLater();
-                });
-            });
-            qDebug() << "start watchTimer 3000";
-            watchTimer->start(3000);
-        });
-        socket->connectToHost(QHostAddress::LocalHost, JSONRPC_CLIENT_PORT);
-        if (socket->waitForConnected(1000)){
-            qDebug() << "watchdog connected" << socket;
-            return a.exec();
-        }else{
-            qDebug() << "delete socket and selfRpc" << socket;
-            socket->disconnect();
-            socket->abort();
-            socket->deleteLater();
-            selfRpc->deleteLater();
-
-        }
+        if(!watchdog.listen(JSONRPC_CLIENT_PORT,QString(JSONRPC_CLIENT_SERVICENAME).append(".isAlive")))
+            qDebug() << "Watchdog application cannot run!";
+        return a.exec();
     }
-    qDebug() << "Run application normaly" << socket;
+    qDebug() << "Run application normaly";
     //TODO lymbda to procedures
     qmlRegisterType<InterfaceManager>("com.andon.interfacemanager", 1, 0, "InterfaceManager");
     qmlRegisterType<QTimer>("com.andon.timer", 1, 0, "QTimer");
@@ -725,11 +641,12 @@ int main(int argc, char *argv[])
         textCodec="cp866";
 
     MessageHandler msgHandler(textCodec);
-    ClientRpcService * clientrpcservice = new ClientRpcService(&a);
-    QJsonRpcTcpServer * rpcServer = new QJsonRpcTcpServer(&a);
+    ClientRpcService * clientrpcservice = new ClientRpcService;
+    QJsonRpcTcpServer * rpcServer = new QJsonRpcTcpServer;
     rpcServer->addService(clientrpcservice);
     rpcServer->setObjectName("rpcServer");
-    listenPort<QJsonRpcTcpServer>(rpcServer,JSONRPC_CLIENT_PORT,3000,1000,[&a,args](){
+    listenPort<QJsonRpcTcpServer>(rpcServer,JSONRPC_CLIENT_PORT,3000,1000,(void(*)())&Watchdog::start);
+        /*                          [&a,args](){
         qDebug() << "Run copy application as watchdog"<<args.at(0);
         QProcess *watchdogProcess = new QProcess(&a);
         watchdogProcess->setObjectName("watchdogProcess");
@@ -739,20 +656,19 @@ int main(int argc, char *argv[])
         QObject::connect(watchdogProcess,&QProcess::started,[watchdogProcess](){
             qDebug() << "watchdogProcess started with pid()" << watchdogProcess->pid();
         });
-        //watchdogProcess->start(args.at(0));
         watchdogProcess->startDetached(args.at(0),QStringList("watchdog"));
         QObject::connect(&a,&QApplication::aboutToQuit, [watchdogProcess](){
             qDebug() << "QApplication aboutToQuit";
-            watchdogProcess->kill();
+            watchdogProcess->terminate();
         });
-    });
+    });*/
 
 
-    QTimer::singleShot(10000,[](){
+    /*QTimer::singleShot(10000,[](){
         qDebug() << "Test crash application";
         QObject*null=0;
         null->setObjectName("crash");
-    });
+    });*/
 
     UdpReceiver *udpreceiver = new UdpReceiver;
     udpreceiver->start();
@@ -768,7 +684,6 @@ int main(int argc, char *argv[])
     //renewInterface
     QObject::connect(udpreceiver, &UdpReceiver::renewInterface, [=] (QHostAddress ServerAddress){
         qDebug() << "renewInterface";
-
         qDebug() << "delete QJSEngine";
         QApplication::instance()->findChild<QJSEngine*>()->deleteLater();
         qDebug() << "delete ClientRpcUtility";

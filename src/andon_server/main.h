@@ -20,23 +20,8 @@ QTXLSX_USE_NAMESPACE
 #include "dbwrapper.h"
 #include "functional"
 #include <QChar>
+#include "common_functions.h"
 
-
-template<class T>
-void listenPort(T * obj, int port, int interval, int delay) {
-    QTimer *listenPortTimer = new QTimer;
-    QObject::connect(listenPortTimer,&QTimer::timeout,[obj,port,listenPortTimer,interval](){
-        if (obj->listen(QHostAddress::AnyIPv4, port)) {
-            qDebug()<<QString("%1: %2 port opened").arg(obj->objectName()).arg(QString::number(port));
-            listenPortTimer->stop();
-            listenPortTimer->deleteLater();
-        } else {
-            qDebug()<<QString("%1: Failed to open port %2").arg(obj->objectName()).arg(port);
-            listenPortTimer->start(interval);
-        }
-    });
-    listenPortTimer->start(delay);
-}
 
 static void appClientConnected(const QHostAddress &clientIP)
 {
@@ -53,7 +38,7 @@ static void appClientConnected(const QHostAddress &clientIP)
         qDebug()<<"object andonRpcService not found in App";
 }
 
-static void appClientDisconnected(const QHostAddress &clientIP)
+static void appClientDisconnected(const QHostAddress &clientIP=QHostAddress::LocalHost)
 {
     qDebug()<<"clientDisconnected"<<clientIP.toString();
     QJsonObject joClient;

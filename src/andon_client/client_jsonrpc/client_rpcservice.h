@@ -15,7 +15,7 @@ private:
 signals:
 
 public slots:
-    bool isAlive();
+    bool isAlive(){return true;}
 private:
 
 };

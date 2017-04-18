@@ -4,9 +4,7 @@
 #include <QTimer>
 #include <QMetaObject>
 #include <QJsonDocument>
-
-typedef void(*FunctionType)();
-
+#include <functional>
 
 template<class T>
 QVariantMap getProperties(T * obj,const QStringList &requested)
@@ -30,12 +28,12 @@ void setProperties(T * obj,const QVariantMap &objProperties)
 
 
 template<class T>
-bool listenPort(T * obj, int port, int interval, int delay, FunctionType function=0) {
+bool listenPort(T * obj, int port, int interval, int delay,const std::function<void()>& functor=0) {
     QTimer *listenPortTimer = new QTimer(qApp);
-    QObject::connect(listenPortTimer,&QTimer::timeout,[obj,port,listenPortTimer,interval,function](){
+    QObject::connect(listenPortTimer,&QTimer::timeout,[obj,port,listenPortTimer,interval,functor](){
             if (obj->listen(QHostAddress::AnyIPv4, port)) {
-                if(function)
-                    function();
+                if(functor)
+                    functor();
                 qDebug()<<QString("%1: %2 port opened").arg(obj->objectName()).arg(port);
                 listenPortTimer->stop();
                 listenPortTimer->deleteLater();

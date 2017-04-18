@@ -4,7 +4,7 @@
 #include <QEventLoop>
 #include <QApplication>
 #include <QTimer>
-//#include <QThread>
+
 
 ClientRpcUtility::ClientRpcUtility(QObject *parent)
     : QObject(parent),
@@ -85,17 +85,18 @@ void ClientRpcUtility::ServerExecute(const QString &RemoteMethodName, QVariantLi
     ServerExecute(RemoteMethodName, InParameterList, functor);
 }
 
-void ClientRpcUtility::Query2Json(const QString &queryText, std::function<void(QVariant)> functor)
-{
-    ServerExecute("SQLQuery2Json", QVariantList()<<queryText, functor);
-}
-
-//void ClientRpcUtility::Query2Json(const QString &queryText, FunctionType function)
+//void ClientRpcUtility::Query2Json(const QString &queryText, std::function<void(QVariant)> functor)
 //{
-//    ServerExecute("SQLQuery2Json", QVariantList()<<queryText, [function](QVariant resp){
-//        function(resp);
-//    });
+//    ServerExecute("SQLQuery2Json", QVariantList()<<queryText, functor);
 //}
+
+void ClientRpcUtility::Query2Json(const QString &queryText, const std::function<void(QVariant)>& functor)
+{
+    ServerExecute("SQLQuery2Json", QVariantList()<<queryText, [functor](QVariant resp){
+        if(functor)
+            functor(resp);
+    });
+}
 
 void ClientRpcUtility::Query2Json(const QString &queryText, QJSValue scriptFunctor)
 {

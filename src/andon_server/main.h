@@ -45,6 +45,7 @@ static void appClientDisconnected(const QHostAddress &clientIP=QHostAddress::Loc
     joClient.insert("STATION_IP",clientIP.toString());
     joClient.insert("EVENT_ID",QTime::currentTime().toString("HH:mm:ss.zzz"));
     joClient.insert("STATUS", "DISCONNECTED");
+    joClient.insert("USER_COMMENT", clientIP.toString());
     QJsonDocument jdClient(joClient);
     ServerRpcService*andonRpcService=qApp->findChild<ServerRpcService*>("andonRpcService");
     if(andonRpcService)

@@ -499,7 +499,11 @@ QObject *InterfaceManager::addButton(const QVariant &resp, const int &ScreenNum,
         QObject::connect(updateTimer,&QTimer::timeout,[this](){
             RpcTcp->Query2Json("SELECT OBJECT_NAME, OBJECT_TEXT, USER_COMMENT "
                                                          " FROM CLIENT_ACTIVE_BUTTONS(:CLIENT_IP)",
-                                  [this](QVariant resp){updateButtons(resp);});
+                                  //static_cast<std::function<void(QVariant)>>(updateButtons));
+                                  //(static_cast<(const std::function<void(QVariant)>&)>)
+                                  //[this](QVariant resp){updateButtons(resp);});
+                                  &updateButtons);
+                                  //static_cast<std::function<void(QVariant)>>(QVariant resp)updateButtons);
         });
     }
     return new_wgt;
@@ -561,7 +565,7 @@ QObject *InterfaceManager::copyButton(const QVariant &resp, const QString &Objec
 }
 
 
-void InterfaceManager::updateButtons(const QVariant &resp)
+void InterfaceManager::updateButtons(QVariant resp)
 {
     qDebug()<<"updateTimer";// resp"<<resp;
     //OBJECT_NAME, OBJECT_TEXT, USER_COMMENT

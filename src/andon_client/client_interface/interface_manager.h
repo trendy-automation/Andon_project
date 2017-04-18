@@ -99,7 +99,7 @@ public slots:
     void resetScreen();
     QObject *addButton(const QVariant &resp, const int &ScreenNum=0, bool RefreshScr=true);
     QObject *copyButton(const QVariant &resp, const QString &ObjectName="DEFAULT_CURRENT_STATUS");
-    void updateButtons(const QVariant &resp);
+    void updateButtons(QVariant resp);
     //Virtual Keyboard
     bool eventFilter(QObject *obj, QEvent *e);
     void InitVKeyboard();

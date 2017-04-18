@@ -13,15 +13,9 @@
 #include <QJSEngine>
 #include <QJSValue>
 #include <functional>
-//#include <QThread>
-
-//QScriptEngine->QJSEngine
-//QScriptValue->QJSValue
 
 //Q_DECLARE_METATYPE (std::function<void(QVariant)>)
 //Q_DECLARE_SMART_POINTER_METATYPE(std::function<QVariant(QVariant)>)
-
-typedef void(*FunctionType)(QVariant);
 
 class QJsonRpcSocket;
 class ClientRpcUtility : public QObject
@@ -46,8 +40,8 @@ public slots:
                         std::function<void(QVariant)> functor=0);
     void ServerExecute(const QString &RemoteMethodName, QVariantList InParameterList,
                         QJSValue scriptFunctor);
-    void Query2Json(const QString &queryText, std::function<void(QVariant)> functor=0);
-//    void Query2Json(const QString &queryText, FunctionType function);
+    //void Query2Json(const QString &queryText, std::function<void(QVariant)> functor=0);
+    void Query2Json(const QString &queryText, const std::function<void(QVariant)>& functor=0);
     void Query2Json(const QString &queryText, QJSValue scriptFunctor);
     QVariant query(const QString &queryText);
     QVariant evaluate(const QString &scriptText);

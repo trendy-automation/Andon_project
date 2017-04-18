@@ -35,11 +35,12 @@ public:
 public slots:
     static void start()
     {
+        //qDebug() << "watchdog start";
         QProcess *watchdogProcess = new QProcess;
         QObject::connect(watchdogProcess,&QProcess::errorOccurred,[](QProcess::ProcessError error){
             qDebug() << "watchdogProcess errorOccurred"<<error;
         });
-        watchdogProcess->startDetached(qApp->applicationFilePath().at(0),QStringList("watchdog"));
+        watchdogProcess->startDetached(qApp->applicationFilePath(),QStringList("watchdog"));
     }
     static void restartAppication()
     {
@@ -48,7 +49,7 @@ public slots:
         QObject::connect(restartApp,&QProcess::errorOccurred,[](QProcess::ProcessError error){
             qDebug() << "restartApp errorOccurred!"<<error;
         });
-        restartApp->start("cmd.exe",QStringList()<<"/C"<<"start"<<qApp->applicationFilePath().at(0)<<"force");
+        restartApp->start("cmd.exe",QStringList()<<"/C"<<"start"<<qApp->applicationFilePath()<<"force");
         qApp->quit();
     }
     static void rebootPC(const QString &reason)

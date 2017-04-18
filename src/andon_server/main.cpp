@@ -53,10 +53,11 @@ int main(int argc, char *argv[])
      *****************************************/
     DBWrapper *andonDb = new DBWrapper(&a);
     andonDb->setObjectName("andonDb");
-    if(!andonDb->ConnectDB(QCoreApplication::applicationDirPath(),DB_DATABASE_FILE)){
+    if(!andonDb->ConnectDB(qApp->applicationDirPath(),DB_DATABASE_FILE)){
         a.quit();
         return 0;
     }
+    QObject::connect(andonDb,&DBWrapper::dbError,&watchdog,&Watchdog::rebootPC);
     /*****************************************
      * Start QtTelnet
      *****************************************/
@@ -77,7 +78,8 @@ int main(int argc, char *argv[])
     QObject::connect(rpcserver, &QJsonRpcTcpServer::clientDisconnected, appClientDisconnected);
     rpcserver->addService(andonRpcService);
     andonRpcService->setDB(andonDb);
-    listenPort<QJsonRpcTcpServer>(rpcserver,JSONRPC_SERVER_PORT,3000,700);
+    listenPort<QJsonRpcTcpServer>(rpcserver,JSONRPC_SERVER_PORT,3000,700,
+                                  [&watchdog](){watchdog.start();});
     /*****************************************
      * Start Unicast UDP Sender
      *****************************************/

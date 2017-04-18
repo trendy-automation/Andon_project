@@ -36,6 +36,7 @@ signals:
     void DBConnected();
     void resultQuery(const QString &sql_query, const QString &jsontext);
     void sendText(const QString &sql_query,const QString &query_method);
+    void dbError(const QString &lastError);
 
 public slots:
     QString query2fulljson(const QString & queryText);
@@ -64,7 +65,9 @@ private:
     QString str2Json(const QString & name, const QString &val);
     QSqlDatabase DB;
     const QString queryKeyMask = "%1=>%2";
-
+    int errorCounter=0;
+    int signalErrorCount=20;
+    int dbOK=0;
 
 };
 

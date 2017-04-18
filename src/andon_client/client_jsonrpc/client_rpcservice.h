@@ -8,8 +8,8 @@ class ClientRpcService : public QJsonRpcService
     Q_OBJECT
     Q_CLASSINFO("serviceName", JSONRPC_CLIENT_SERVICENAME)
 public:
-    ClientRpcService(QObject *parent = 0);
-    ~ClientRpcService();
+    ClientRpcService(QObject *parent = 0):QJsonRpcService(parent){}
+    ~ClientRpcService(){}
 private:
 
 signals:

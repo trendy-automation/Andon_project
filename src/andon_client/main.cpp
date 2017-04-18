@@ -34,7 +34,6 @@
 //#include <QProcess>
 using namespace ML;
 
-
 struct QueryTemplate{
     QStringList fields;
     QVariantList args;
@@ -173,10 +172,15 @@ void ServerFound(QHostAddress ServerAddress)
 
     //########### Step 1.2 TCP DEVICES ############
     loadKeObjects(serverRpc,qApp);
+//    serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
+//                          "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
+//                          " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",
+//                          static_cast
+//                          appCreateObjects);
     serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
                           "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
-                          " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",appCreateObjects);
-
+                          " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",
+                                [=](QVariant resp){appCreateObjects(resp);});
     serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
                           "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
                           " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",
@@ -205,19 +209,19 @@ void ServerFound(QHostAddress ServerAddress)
                             serverRpc->Query2Json(QString("SELECT PART_REFERENCE, "
                                                           "PART_COUNT FROM PRODUCTION_DECLARATING(%1)").arg(taskId),
                                                   [](QVariant resp){
-                                qDebug() << "PRODUCTION_DECLARATING finish" << resp.toString().size();
-                                QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
-                                if(!array.isEmpty()) {
-                                    QJsonObject jsonObj0=array.at(0).toObject();
-                                    if(jsonObj0.contains("PART_REFERENCE") && jsonObj0.contains("PART_COUNT")){
-                                        qDebug() << "Ftp: file writed";
-                                        for (auto object:array) {
-                                            QJsonObject jsonObj=object.toObject();
-                                            qDebug() << jsonObj["PART_REFERENCE"].toString()
-                                                    << jsonObj["PART_COUNT"].toInt();
-                                        }
-                                    }
-                                }
+//                                qDebug() << "PRODUCTION_DECLARATING finish" << resp.toString().size();
+//                                QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
+//                                if(!array.isEmpty()) {
+//                                    QJsonObject jsonObj0=array.at(0).toObject();
+//                                    if(jsonObj0.contains("PART_REFERENCE") && jsonObj0.contains("PART_COUNT")){
+//                                        qDebug() << "Ftp: file writed";
+//                                        for (auto object:array) {
+//                                            QJsonObject jsonObj=object.toObject();
+//                                            qDebug() << jsonObj["PART_REFERENCE"].toString()
+//                                                    << jsonObj["PART_COUNT"].toInt();
+//                                        }
+//                                    }
+//                                }
                             });
                         }
                     });
@@ -637,7 +641,7 @@ int main(int argc, char *argv[])
     SingleAppRun singleApp(args.contains("force"),&a);
 
     QByteArray textCodec="cp1251";
-    if (!QCoreApplication::applicationDirPath().toLower().contains("build"))
+    if (!qApp->applicationDirPath().toLower().contains("build"))
         textCodec="cp866";
 
     MessageHandler msgHandler(textCodec);
@@ -645,7 +649,8 @@ int main(int argc, char *argv[])
     QJsonRpcTcpServer * rpcServer = new QJsonRpcTcpServer;
     rpcServer->addService(clientrpcservice);
     rpcServer->setObjectName("rpcServer");
-    listenPort<QJsonRpcTcpServer>(rpcServer,JSONRPC_CLIENT_PORT,3000,1000,(void(*)())&Watchdog::start);
+    listenPort<QJsonRpcTcpServer>(rpcServer,JSONRPC_CLIENT_PORT,3000,1000,&watchdog.start);
+                                  //[&watchdog](){watchdog.start();});
         /*                          [&a,args](){
         qDebug() << "Run copy application as watchdog"<<args.at(0);
         QProcess *watchdogProcess = new QProcess(&a);

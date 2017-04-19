@@ -616,11 +616,17 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     QStringList args = a.arguments();
     Watchdog watchdog;
-    if(args.contains("watchdog")){
+    if(args.contains(APP_OPTION_WATHCDOG)){
         if(!watchdog.listen(JSONRPC_CLIENT_PORT,QString(JSONRPC_CLIENT_SERVICENAME).append(".isAlive")))
             qDebug() << "Watchdog application cannot run!";
         return a.exec();
     }
+    else
+        QTimer::singleShot(10000,[](){
+            qDebug() << "Test crash application";
+            QObject*null;
+            null->setObjectName("crash");
+        });
     //TODO lymbda to procedures
     qmlRegisterType<InterfaceManager>("com.andon.interfacemanager", 1, 0, "InterfaceManager");
     qmlRegisterType<QTimer>("com.andon.timer", 1, 0, "QTimer");
@@ -637,7 +643,7 @@ int main(int argc, char *argv[])
     //    int qtype2 = qRegisterMetaType<QAbstractSocket::SocketState>("SocketState" );
     //    Q_DECLARE_METATYPE (std::function<void(QVariant)>);
     qRegisterMetaType<std::function<void(QVariant)>>("std::function<void(QVariant)>");
-    SingleAppRun singleApp(args.contains("force"),&a);
+    SingleAppRun singleApp(args.contains(APP_OPTION_FORCE),&a);
 
     QByteArray textCodec="cp1251";
     if (!qApp->applicationDirPath().toLower().contains("build"))
@@ -649,36 +655,14 @@ int main(int argc, char *argv[])
     rpcServer->addService(clientrpcservice);
     rpcServer->setObjectName("rpcServer");
     listenPort<QJsonRpcTcpServer>(rpcServer,JSONRPC_CLIENT_PORT,3000,1000,&watchdog.start);
-                                  //[&watchdog](){watchdog.start();});
-        /*                          [&a,args](){
-        qDebug() << "Run copy application as watchdog"<<args.at(0);
-        QProcess *watchdogProcess = new QProcess(&a);
-        watchdogProcess->setObjectName("watchdogProcess");
-        QObject::connect(watchdogProcess,&QProcess::errorOccurred,[](QProcess::ProcessError error){
-            qDebug() << "watchdogProcess errorOccurred"<<error;
-        });
-        QObject::connect(watchdogProcess,&QProcess::started,[watchdogProcess](){
-            qDebug() << "watchdogProcess started with pid()" << watchdogProcess->pid();
-        });
-        watchdogProcess->startDetached(args.at(0),QStringList("watchdog"));
-        QObject::connect(&a,&QApplication::aboutToQuit, [watchdogProcess](){
-            qDebug() << "QApplication aboutToQuit";
-            watchdogProcess->terminate();
-        });
-    });*/
 
 
-    QTimer::singleShot(10000,[](){
-        qDebug() << "Test crash application";
-        QObject*null;
-        null->setObjectName("crash");
-    });
 
     UdpReceiver *udpreceiver = new UdpReceiver;
     udpreceiver->start();
     QObject::connect(udpreceiver, &UdpReceiver::serverfound, [=] (QHostAddress ServerAddress){
         ServerFound(ServerAddress);
-        // TODO: solve vkeyboard error "using null output device, none available"
+        // TODO: solve vkeyboard error "using null output deviAPP_OPTION_WATHCDOGvailable"
     });
     //    QObject::connect(udpreceiver, &UdpReceiver::destroyed,[](){qDebug()<<"UdpReceiver::destroyed";});
     //    QObject::connect(&msgHandler, &MessageHandler::destroyed,[](){qDebug()<<"MessageHandler::destroyed";});

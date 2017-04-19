@@ -1,12 +1,8 @@
-
-
-#include <QTcpSocket>
 #include "server_rpcutility.h"
 
-
+#include <QTcpSocket>
 #include <QHostAddress>
 
-//#include <QThread>
 
 
 ServerRpcUtility::ServerRpcUtility(QObject *parent)
@@ -20,7 +16,7 @@ void ServerRpcUtility::setEngine(QJSEngine* SharedEngine)
     engine=SharedEngine;
 }
 
-void ServerRpcUtility::ServerExecute(QString RemoteMethodName, QVariantList InParameterList,
+void ServerRpcUtility::ClientExecute(QString RemoteMethodName, QVariantList InParameterList,
                               std::function<void(QVariant response)> functor)
 {
     QTcpSocket *socket = new QTcpSocket(this);
@@ -50,7 +46,7 @@ void ServerRpcUtility::ServerExecute(QString RemoteMethodName, QVariantList InPa
     });
 }
 
-void ServerRpcUtility::ServerExecute(QString RemoteMethodName, QVariantList InParameterList,
+void ServerRpcUtility::ClientExecute(QString RemoteMethodName, QVariantList InParameterList,
                               QJSValue scriptFunctor)
 {
     std::function<void(QVariant response)> functor;
@@ -63,7 +59,7 @@ void ServerRpcUtility::ServerExecute(QString RemoteMethodName, QVariantList InPa
         qDebug()<<"Default scriptFunctor";
         functor=[] (QVariant response) { qDebug()<<"scriptFunctor is not a function."<<"response"<<response; };
     }
-    ServerExecute(RemoteMethodName, InParameterList, functor);
+    ClientExecute(RemoteMethodName, InParameterList, functor);
 }
 
 void ServerRpcUtility::setserverip(QHostAddress newserveraddress)  {

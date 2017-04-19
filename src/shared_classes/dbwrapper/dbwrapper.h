@@ -7,15 +7,14 @@
 #include <QDateTime>
 #include <QTimer>
 #include <QJSEngine>
-
+#include <functional>
 
 
 
 //#include "ibpp.h"
 using namespace std;
 #include <functional>
-
-struct queryTextuc{
+struct queryStruct{
     QSqlQuery* p_query;
     QString s_sql_query;
     QString s_method;
@@ -39,9 +38,10 @@ signals:
     void dbError(const QString &lastError);
 
 public slots:
-    QString query2fulljson(const QString & queryText);
-    QString query2jsonstrlist(const QString & queryText);
-    QString query2json(const QString & queryText);
+    QString query2method(const QString & queryText, const QString &queryMethod, int cashTime=DB_CASH_INTERVAL);
+    QString query2fulljson(const QString & queryText, int cashTime=DB_CASH_INTERVAL);
+    QString query2jsonstrlist(const QString & queryText, int cashTime=DB_CASH_INTERVAL);
+    QString query2json(const QString & queryText, int cashTime=DB_CASH_INTERVAL);
     bool ConnectDB(const QString &DB_Path,const QString &DB_Name);
     void executeQuery(const QString & queryText, const QString &query_method,
                       std::function<void(QString)> functor=[] (QString jsontext) {});
@@ -49,18 +49,17 @@ public slots:
                       std::function<void(QSqlQuery*)> functor=[] (QSqlQuery *query) {});
     bool executeProc(const QString & queryText);
     bool getDbState();
-    void receiveText(const QString &query, const QString &query_method);
-    void snedReport(const QString &report, const QStringList &emails);
 
 private:
-    queryTextuc appendQuery(const QString &queryText, const QString &methodStr="json", int cashTime = DB_CASH_INTERVAL);
-    bool queryIsCashed(queryTextuc &queryItem);
-    bool queryExecute(queryTextuc &queryItem);
+    queryStruct appendQuery(const QString &queryText, const QString &queryMethod, int cashTime);
+    bool queryIsCashed(queryStruct &queryItem);
+    bool queryExecute(queryStruct &queryItem);
 
-    queryTextuc emptyQuery = {0, QString(), QString(), QString(), QString(), 0, QDateTime()};
+    queryStruct emptyQuery = {0, QString(), QString(), QString(), QString(), 0, QDateTime()};
     QString errorStr;
     QJSEngine *engine;
-    QMap<QString,queryTextuc> queryMap;
+    QMap<QString,queryStruct> queryMap;
+    QMap<QString,std::function<QString(QSqlQuery*sqlQuery)>> packFunctionsMap;
     QString getQueryLastError(QSqlQuery *query);
     QString str2Json(const QString & name, const QString &val);
     QSqlDatabase DB;

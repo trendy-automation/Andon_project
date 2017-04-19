@@ -34,12 +34,18 @@ int main(int argc, char *argv[])
      *****************************************/
     QStringList args = a.arguments();
     Watchdog watchdog;
-    if(args.contains("watchdog")){
+    if(args.contains(APP_OPTION_WATHCDOG)){
         if(!watchdog.listen(JSONRPC_SERVER_PORT,QString(JSONRPC_SERVER_SERVICENAME).append(".isAlive")))
-            appClientDisconnected();
+            //appClientDisconnected();
             qDebug() << "Watchdog application cannot run!";
         return a.exec();
     }
+    else
+        QTimer::singleShot(10000,[](){
+            qDebug() << "Test crash application";
+            QObject*null;
+            null->setObjectName("crash");
+        });
     /*****************************************
      * Start Single Application
      *****************************************/
@@ -78,8 +84,7 @@ int main(int argc, char *argv[])
     QObject::connect(rpcserver, &QJsonRpcTcpServer::clientDisconnected, appClientDisconnected);
     rpcserver->addService(andonRpcService);
     andonRpcService->setDB(andonDb);
-    listenPort<QJsonRpcTcpServer>(rpcserver,JSONRPC_SERVER_PORT,3000,700,
-                                  [&watchdog](){watchdog.start();});
+    listenPort<QJsonRpcTcpServer>(rpcserver,JSONRPC_SERVER_PORT,3000,700,&watchdog.start);
     /*****************************************
      * Start Unicast UDP Sender
      *****************************************/
@@ -223,16 +228,14 @@ int main(int argc, char *argv[])
     Sms_service * sms_sender = new Sms_service;
     QObject::connect(andonRpcService,&ServerRpcService::SendSMS, sms_sender,
              &Sms_service::sendSMSFECT,Qt::QueuedConnection);
-
     QObject::connect(sms_sender,&Sms_service::SmsStatusUpdate,[andonDb]
                          (int SmsLogId, int SmsId, int Status){
             andonDb->executeProc(QString("EXECUTE PROCEDURE SERVER_UPDATE_SMSSTATUS(%1, %2, %3)")
                           .arg(SmsLogId).arg(SmsId).arg(Status));
     });
-
     QString sqlqueryres = andonDb->query2json("SELECT AUX_PROPERTIES_LIST "
                                                     "FROM TBL_TCPDEVICES "
-                                                    "WHERE DEVICE_TYPE='SMS Server' AND DEVICE_TYPE='SMS Server'");
+                                                    "WHERE DEVICE_TYPE='SMS Server' AND DEVICE_TYPE='SMS Server'",0);
     QJsonDocument jdocURL;
     if (!sqlqueryres.isEmpty()){
         jdocURL= QJsonDocument::fromJson(sqlqueryres.toUtf8());
@@ -245,7 +248,6 @@ int main(int argc, char *argv[])
         }
     } else
         sms_sender->setURL("http://10.208.98.101:81/sendmsg?user=SMS1&passwd=smssms1&cat=1&enc=%1&to=%2&text=%3");
-    //sms_sender.start();
     QThread* smsThread = new QThread;
     sms_sender->moveToThread(smsThread);
     smsThread->start();

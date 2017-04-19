@@ -19,47 +19,61 @@ public:
     bool listen(int rpcPort, const QString &method)
     {
         aliveMethod=method;
-        socket = new QTcpSocket(this);
+        socket = new QTcpSocket;//(this);
         QObject::connect(socket, &QTcpSocket::connected,this,&Watchdog::runClient);
         socket->connectToHost(QHostAddress::LocalHost, rpcPort);
-        if (socket->waitForConnected(4000))
+        if (socket->waitForConnected(5000)){
+            //qDebug() << "Watchdog waitForConnected OK";
             return true;
+        }
         else{
-            qDebug() << "Watchdog connection falied";
+            //qDebug() << "Watchdog connection falied";
             socket->disconnect();
             socket->abort();
             socket->deleteLater();
         }
+        //qDebug() << "Watchdog listen return false";
         return false;
     }
 public slots:
     static void start()
     {
         //qDebug() << "watchdog start";
-        QProcess *watchdogProcess = new QProcess;
+        QProcess *watchdogProcess = new QProcess(qApp);
         QObject::connect(watchdogProcess,&QProcess::errorOccurred,[](QProcess::ProcessError error){
             qDebug() << "watchdogProcess errorOccurred"<<error;
         });
-        watchdogProcess->startDetached(qApp->applicationFilePath(),QStringList("watchdog"));
+        QObject::connect(watchdogProcess,&QProcess::started,[](){
+            //qDebug() << "WatchdogProcess started:"<<qApp->applicationFilePath()<<APP_OPTION_WATHCDOG;
+        });
+        watchdogProcess->setProcessChannelMode(QProcess::QProcess::ForwardedChannels);
+        watchdogProcess->start(qApp->applicationFilePath(),QStringList(APP_OPTION_WATHCDOG));
     }
     static void restartAppication()
     {
-        qDebug() << "Force restart application(response timeout)!";
-        QProcess *restartApp = new QProcess;
+        qDebug() << "Force restart application(response timeout)!\n\r"
+                 <<QString("cmd.exe /C start \"%1 %2\"").arg(qApp->applicationFilePath()).arg(APP_OPTION_FORCE);
+        QProcess *restartApp = new QProcess;//(this);
         QObject::connect(restartApp,&QProcess::errorOccurred,[](QProcess::ProcessError error){
             qDebug() << "restartApp errorOccurred!"<<error;
         });
-        restartApp->start("cmd.exe",QStringList()<<"/C"<<"start"<<qApp->applicationFilePath()<<"force");
+        QObject::connect(restartApp,&QProcess::started,[](){
+            qDebug() << "restartApp started";
+        });
+        //restartApp->setWorkingDirectory(qApp->applicationDirPath());
+        //restartApp->startDetached(QString("cmd.exe /C start \"%1 %2\"")
+        //.arg(qApp->applicationFilePath()).arg(APP_OPTION_FORCE));
+        restartApp->startDetached(qApp->applicationFilePath(),QStringList()<<APP_OPTION_FORCE);
         qApp->quit();
     }
     static void rebootPC(const QString &reason)
     {
         qDebug() << "Force restart application! Reason:" << reason;
-        QProcess *shutdownPC = new QProcess;
+        QProcess *shutdownPC = new QProcess;//(this);
         QObject::connect(shutdownPC,&QProcess::errorOccurred,[](QProcess::ProcessError error){
             qDebug() << "rebootPC errorOccurred!"<<error;
         });
-        shutdownPC->start("shutdown.exe",QStringList()<<"-r"<<"-f"<<"-t"<<"0");
+        shutdownPC->startDetached("shutdown.exe",QStringList()<<"-r"<<"-f"<<"-t"<<"0");
         qApp->quit();
     }
 
@@ -73,39 +87,31 @@ private:
     {
         qDebug() << "Application watchdog started";
         m_client = new QJsonRpcSocket(socket);
-        watchTimer = new QTimer(this);
+        watchTimer = new QTimer;//(this);
         QObject::connect(watchTimer, &QTimer::timeout, this, &Watchdog::sendReply);
         watchTimer->start(3000);
     }
 private slots:
     void sendReply()
     {
+        qDebug() << "Watchdog sendReply";
         QJsonRpcServiceReply *reply = m_client->invokeRemoteMethod(aliveMethod);
-        QTimer *replayTimer=new QTimer(this);
+        QTimer *replayTimer=new QTimer;//(this);
         replayTimer->setSingleShot(true);
         QObject::connect(replayTimer, &QTimer::timeout, this, &Watchdog::restartAppication);
         QObject::connect(replayTimer, &QTimer::timeout, watchTimer, &QTimer::stop);
         replayTimer->start(1000);
-        QObject::connect(reply, &QJsonRpcServiceReply::finished, replayTimer, &QTimer::stop);
-        /*QObject::connect(reply, &QJsonRpcServiceReply::finished, [reply,replayTimer,watchTimer] () {
+        //QObject::connect(reply, &QJsonRpcServiceReply::finished, replayTimer, &QTimer::stop);
+        //QObject::connect(reply, &QJsonRpcServiceReply::finished, replayTimer, &QTimer::deleteLater);
+        QObject::connect(reply, &QJsonRpcServiceReply::finished, [reply,replayTimer,this] () {
             replayTimer->stop();
             replayTimer->deleteLater();
             //qDebug() << "alive" << reply->response().result().toVariant().toBool();
 
-                if (!reply->response().result().toVariant().isValid()){
-                    watchTimer->stop();
-                    //qDebug() << "invalid response received!!!" << reply->response().errorMessage();
-                    qDebug() << "Force restart application(invalid response)";
-                    QProcess *restartApp = new QProcess;
-                    QObject::connect(restartApp,&QProcess::started,[restartApp](){
-                        qDebug() << "restartApp started";
-                        qDebug() << "restartApp->pid()" << restartApp->pid();
-                    });
-                    restartApp->start(QString("cmd.exe /C start ").append(args.at(0)),QStringList("force"));
-                }
-
+                if (!reply->response().result().toVariant().isValid())
+                    restartAppication();
             reply->deleteLater();
-        });*/
+        });
     }
 };
 

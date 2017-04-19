@@ -48,6 +48,7 @@ static void appClientDisconnected(const QHostAddress &clientIP=QHostAddress::Loc
     joClient.insert("USER_COMMENT", clientIP.toString());
     QJsonDocument jdClient(joClient);
     ServerRpcService*andonRpcService=qApp->findChild<ServerRpcService*>("andonRpcService");
+
     if(andonRpcService)
         andonRpcService->StartSms(jdClient.toJson(QJsonDocument::Compact));
     else

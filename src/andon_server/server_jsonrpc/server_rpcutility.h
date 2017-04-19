@@ -33,13 +33,13 @@ public:
 
 public slots:
     void setEngine(QJSEngine *SharedEngine);
-    void ServerExecute(QString RemoteMethodName, QVariantList InParameterList,
+    void ClientExecute(QString RemoteMethodName, QVariantList InParameterList,
                         std::function<void(QVariant response)> functor=[] (QVariant response) { qDebug()<<"response"<<response; });
-    void ServerExecute(QString RemoteMethodName, QVariantList InParameterList,
+    void ClientExecute(QString RemoteMethodName, QVariantList InParameterList,
                         QJSValue scriptFunctor);
 signals:
     void error(QString errorString);
-    void server_proc_reply(QString replyString);
+    void client_proc_reply(QString replyString);
 
 private:
     QJsonRpcSocket *m_Server;

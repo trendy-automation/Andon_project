@@ -75,10 +75,13 @@ public slots:
                 }
             }
         }
+        appPath = QString("cmd.exe /C start \"\" %1 %2").arg(appPath).arg(APP_OPTION_FORCE);
+        qDebug() << appPath;
+        restartApp->startDetached(appPath);
         //qDebug() << QString("%1 %2").arg(appPath).arg(APP_OPTION_FORCE);
+        //restartApp->startDetached(QString("cmd.exe /C start \"\" \"%1\" -arg \"%2\"").arg(qApp->applicationFilePath()).arg(APP_OPTION_FORCE));
         //restartApp->startDetached(QString("cmd.exe /C start %1 %2").arg(appPath).arg(APP_OPTION_FORCE));
-        //restartApp->startDetached(QString("cmd.exe /C start %1").arg(appPath),QStringList()<<APP_OPTION_FORCE);
-        restartApp->startDetached(QString("%1 %2").arg(appPath).arg(APP_OPTION_FORCE));
+        //restartApp->startDetached(QString("%1 %2").arg(appPath).arg(APP_OPTION_FORCE));
         qApp->quit();
     }
     static void rebootPC(const QString &reason)
@@ -113,7 +116,7 @@ private slots:
         QTimer *replayTimer=new QTimer;//(this);
         QJsonRpcServiceReply *reply  = m_client->invokeRemoteMethod(aliveMethod);
         QObject::connect(reply, &QJsonRpcServiceReply::finished, [reply,replayTimer,this] () {
-            qDebug() << "reply="<<reply->response().result().toVariant();
+            //qDebug() << "reply="<<reply->response().result().toVariant();
             replayTimer->stop();
             replayTimer->deleteLater();
             if (!reply->response().result().toVariant().isValid())

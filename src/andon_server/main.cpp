@@ -40,12 +40,12 @@ int main(int argc, char *argv[])
             qDebug() << "Watchdog application cannot run!";
         return a.exec();
     }
-    //    else
-    //        QTimer::singleShot(20000,[](){
-    //            qDebug() << "Test crash application";
-    //            QObject*null;
-    //            null->setObjectName("crash");
-    //        });
+        else
+            QTimer::singleShot(10000,[](){
+                qDebug() << "Test crash application";
+                QObject*null;
+                null->setObjectName("crash");
+            });
     /*****************************************
      * Start Single Application
      *****************************************/
@@ -80,12 +80,12 @@ int main(int argc, char *argv[])
     andonRpcService->setObjectName("andonRpcService");
     QJsonRpcTcpServer * rpcserver = new QJsonRpcTcpServer;
     rpcserver->setObjectName("rpcserver");
-    //    QObject::connect(rpcserver, &QJsonRpcTcpServer::clientConnected, appClientConnected);
-    //    QObject::connect(rpcserver, &QJsonRpcTcpServer::clientDisconnected, appClientDisconnected);
+        QObject::connect(rpcserver, &QJsonRpcTcpServer::clientConnected, appClientConnected);
+        QObject::connect(rpcserver, &QJsonRpcTcpServer::clientDisconnected, appClientDisconnected);
     rpcserver->addService(andonRpcService);
     andonRpcService->setDB(andonDb);
-    //    listenPort<QJsonRpcTcpServer>(rpcserver,JSONRPC_SERVER_PORT,3000,700,&watchdog.start);
-    listenPort<QJsonRpcTcpServer>(rpcserver,JSONRPC_SERVER_PORT,3000,700,[&watchdog,andonRpcService](){
+        listenPort<QJsonRpcTcpServer>(rpcserver,JSONRPC_SERVER_PORT,3000,700,&watchdog.start);
+/*    listenPort<QJsonRpcTcpServer>(rpcserver,JSONRPC_SERVER_PORT,3000,700,[&watchdog,andonRpcService](){
         qDebug()<<"andonRpcService->isAlive()"<<andonRpcService->isAlive();
         //watchdog.start();
         QTcpSocket*socket = new QTcpSocket;
@@ -94,13 +94,14 @@ int main(int argc, char *argv[])
             qDebug() << "m_client";
             //new QJsonRpcServiceReply; //
             try{
-                QJsonRpcServiceReply *reply = m_client->invokeRemoteMethod(QString(JSONRPC_SERVER_SERVICENAME).append(".isAlive_"));
+                QJsonRpcServiceReply *reply = m_client->invokeRemoteMethod(QString(JSONRPC_SERVER_SERVICENAME).append(".isAlive"));
 
                 qDebug() << "reply"<<reply;
                 QObject::connect(reply, &QJsonRpcServiceReply::finished, [reply] () {
                     qDebug() << "reply finished";
                     if (!reply->response().result().toVariant().isValid())
-                        qDebug() << "!reply->response().result().toVariant().isValid()";
+                        qDebug() << "!reply->response().result().toVariant().isValid()"
+                                 << reply->response().errorMessage();
                     else
                         qDebug() << "reply=" << reply->response().result().toVariant().toBool();
                     reply->deleteLater();
@@ -115,7 +116,7 @@ int main(int argc, char *argv[])
         if (!socket->waitForConnected(5000)){
             qDebug() << "Watchdog application cannot run!";
         }
-    });
+    });*///
     /*****************************************
      * Start Unicast UDP Sender
      *****************************************/

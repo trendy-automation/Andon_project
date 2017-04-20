@@ -77,7 +77,8 @@ bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
     //        ibpp->Connect();
     if(!QSqlDatabase::contains(DB_Name)){
         DB = QSqlDatabase::addDatabase(QLatin1String("QIBASE"),DB_Name); //QFIREBIRD
-        DB.setDatabaseName(DB_Path+QDir::separator()+DB_Name);
+        //DB.setDatabaseName(DB_Path+QDir::separator()+DB_Name);
+        DB.setDatabaseName(DB_Path+DB_Name);
         DB.setUserName("andon");
         DB.setPassword("andon");
     }

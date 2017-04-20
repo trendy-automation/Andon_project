@@ -26,7 +26,6 @@ void setProperties(T * obj,const QVariantMap &objProperties)
             metaObj->property(i).write(obj,objProperties.value(metaObj->property(i).name()));
 }
 
-
 template<class T>
 bool listenPort(T * obj, int port, int interval, int delay,const std::function<void()>& functor=0) {
     QTimer *listenPortTimer = new QTimer(qApp);

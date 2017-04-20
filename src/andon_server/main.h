@@ -25,6 +25,7 @@ QTXLSX_USE_NAMESPACE
 
 static void appClientConnected(const QHostAddress &clientIP)
 {
+    qDebug()<<"appClientConnected()";
     qDebug()<<"clientConnected"<<clientIP.toString();
     QJsonObject joClient;
     joClient.insert("STATION_IP", clientIP.toString());

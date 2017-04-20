@@ -40,16 +40,16 @@ int main(int argc, char *argv[])
             qDebug() << "Watchdog application cannot run!";
         return a.exec();
     }
-    else
-        QTimer::singleShot(10000,[](){
-            qDebug() << "Test crash application";
-            QObject*null;
-            null->setObjectName("crash");
-        });
+    //    else
+    //        QTimer::singleShot(20000,[](){
+    //            qDebug() << "Test crash application";
+    //            QObject*null;
+    //            null->setObjectName("crash");
+    //        });
     /*****************************************
      * Start Single Application
      *****************************************/
-    SingleAppRun singleApp(&a);
+    SingleAppRun singleApp(args.contains(APP_OPTION_FORCE));
     /*****************************************
      * Start MessageHandler
      *****************************************/
@@ -57,9 +57,10 @@ int main(int argc, char *argv[])
     /*****************************************
      * Start DataBase
      *****************************************/
-    DBWrapper *andonDb = new DBWrapper(&a);
+    DBWrapper *andonDb = new DBWrapper;
     andonDb->setObjectName("andonDb");
     if(!andonDb->ConnectDB(qApp->applicationDirPath(),DB_DATABASE_FILE)){
+        //qDebug()<<"ConnectDB failed";
         a.quit();
         return 0;
     }
@@ -67,24 +68,54 @@ int main(int argc, char *argv[])
     /*****************************************
      * Start QtTelnet
      *****************************************/
-//    qDebug()<<"Start telnetClient";
-//    QtTelnet * telnetClient = new QtTelnet;
-//    telnetClient->setObjectName("telnetClient");
-//    telnetClient->start();
+    //    qDebug()<<"Start telnetClient";
+    //    QtTelnet * telnetClient = new QtTelnet;
+    //    telnetClient->setObjectName("telnetClient");
+    //    telnetClient->start();
     /*****************************************
      * Start andonRpcService
      *****************************************/
     qDebug()<<"Start andonRpcService";
-    ServerRpcService * andonRpcService = new ServerRpcService(&a);
+    ServerRpcService * andonRpcService = new ServerRpcService;
     andonRpcService->setObjectName("andonRpcService");
-    QJsonRpcTcpServer * rpcserver = new QJsonRpcTcpServer(&a);
-    rpcserver->setObjectName("JSONRPC_SERVER");
-
-    QObject::connect(rpcserver, &QJsonRpcTcpServer::clientConnected, appClientConnected);
-    QObject::connect(rpcserver, &QJsonRpcTcpServer::clientDisconnected, appClientDisconnected);
+    QJsonRpcTcpServer * rpcserver = new QJsonRpcTcpServer;
+    rpcserver->setObjectName("rpcserver");
+    //    QObject::connect(rpcserver, &QJsonRpcTcpServer::clientConnected, appClientConnected);
+    //    QObject::connect(rpcserver, &QJsonRpcTcpServer::clientDisconnected, appClientDisconnected);
     rpcserver->addService(andonRpcService);
     andonRpcService->setDB(andonDb);
-    listenPort<QJsonRpcTcpServer>(rpcserver,JSONRPC_SERVER_PORT,3000,700,&watchdog.start);
+    //    listenPort<QJsonRpcTcpServer>(rpcserver,JSONRPC_SERVER_PORT,3000,700,&watchdog.start);
+    listenPort<QJsonRpcTcpServer>(rpcserver,JSONRPC_SERVER_PORT,3000,700,[&watchdog,andonRpcService](){
+        qDebug()<<"andonRpcService->isAlive()"<<andonRpcService->isAlive();
+        //watchdog.start();
+        QTcpSocket*socket = new QTcpSocket;
+        QObject::connect(socket, &QTcpSocket::connected, [socket](){
+            QJsonRpcSocket *m_client = new QJsonRpcSocket(socket);
+            qDebug() << "m_client";
+            //new QJsonRpcServiceReply; //
+            try{
+                QJsonRpcServiceReply *reply = m_client->invokeRemoteMethod(QString(JSONRPC_SERVER_SERVICENAME).append(".isAlive_"));
+
+                qDebug() << "reply"<<reply;
+                QObject::connect(reply, &QJsonRpcServiceReply::finished, [reply] () {
+                    qDebug() << "reply finished";
+                    if (!reply->response().result().toVariant().isValid())
+                        qDebug() << "!reply->response().result().toVariant().isValid()";
+                    else
+                        qDebug() << "reply=" << reply->response().result().toVariant().toBool();
+                    reply->deleteLater();
+                });
+            } catch (std::exception &e){qFatal(e.what());
+//                qFatal("Error %s sending event %s to object %s (%s)",
+//                            e.what(), typeid(*event).name(), qPrintable(receiver->objectName()),
+//                            typeid(*receiver).name());
+            }
+        });
+        socket->connectToHost(QHostAddress::LocalHost, JSONRPC_SERVER_PORT);
+        if (!socket->waitForConnected(5000)){
+            qDebug() << "Watchdog application cannot run!";
+        }
+    });
     /*****************************************
      * Start Unicast UDP Sender
      *****************************************/
@@ -98,7 +129,7 @@ int main(int argc, char *argv[])
     QObject::connect(iotheard, &ioStreamThread::inputReceived, appParseInput);
     QObject::connect(iotheard, &ioStreamThread::started, bcSender, &BCSender::run);
     QTimer::singleShot(2000,iotheard,&ioStreamThread::startThread);
- /*****************************************
+    /*****************************************
  * Start WebUI
  *****************************************/
     qDebug()<<"Start WebUI";
@@ -112,32 +143,34 @@ int main(int argc, char *argv[])
     WThread->start();
     listenPort<WebuiThread>(WThread,WUI_PORT,3000,1000);
 
-//    qDebug()<<"Start setup the channel";
+    //    qDebug()<<"Start setup the channel";
     QWebChannel channel;
     QObject::connect(&clientWrapper, &WebSocketClientWrapper::clientConnected,
                      &channel, &QWebChannel::connectTo);
     channel.registerObject(QStringLiteral("serverWeb"), WThread);
     channel.registerObject(QStringLiteral("db"), andonDb);
     QObject::connect(WThread,static_cast<void (WebuiThread::*)(const QString &sql_query,
-                              std::function<void(QSqlQuery *query)> functor)>(&WebuiThread::getSqlQuery),
+                                                               std::function<void(QSqlQuery *query)> functor)>(&WebuiThread::getSqlQuery),
                      andonDb, static_cast<void (DBWrapper::*)(const QString &sql_query,
-                              std::function<void(QSqlQuery *query)> functor)>(&DBWrapper::executeQuery));
+                                                              std::function<void(QSqlQuery *query)> functor)>(&DBWrapper::executeQuery));
 
     QObject::connect(WThread,static_cast<void (WebuiThread::*)(const QString &sql_query,const QString &query_method,
-                              std::function<void(QString jsontext)> functor)>(&WebuiThread::getSqlQuery),
+                                                               std::function<void(QString jsontext)> functor)>(&WebuiThread::getSqlQuery),
                      andonDb, static_cast<void (DBWrapper::*)(const QString &sql_query,const QString &query_method,
-                              std::function<void(QString jsontext)> functor)>(&DBWrapper::executeQuery));
+                                                              std::function<void(QString jsontext)> functor)>(&DBWrapper::executeQuery));
     /*****************************************
     * Start dailyTimer
     *****************************************/
-//    appExecuteReport(QString("SELECT * FROM REPORT_BREAKDOWNS('%1', '%2')")
-//                     .arg(QDate(QDate::currentDate().year(),QDate::currentDate().month(),1).toString("dd.MM.yyyy"))
-//                     .arg(QDate(QDate::currentDate().year(),(QDate::currentDate().month()+1)%12,1).toString("dd.MM.yyyy")),
-//                     QDate::currentDate().toString("Простои"),
-//        QString("P:\\!Common Documents\\Andon_reports\\Простои за прошлый месяц"),
-//        "brakedowns");
-    appExecuteReport("SELECT * FROM PRODUCTION_DECLARATION_HISTORY", "AutoDecl",
-        QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_export"),"AutoDecl_aria");
+    //    appExecuteReport(QString("SELECT * FROM REPORT_BREAKDOWNS('%1', '%2')")
+    //                     .arg(QDate(QDate::currentDate().year(),QDate::currentDate().month(),1).toString("dd.MM.yyyy"))
+    //                     .arg(QDate(QDate::currentDate().year(),(QDate::currentDate().month()+1)%12,1).toString("dd.MM.yyyy")),
+    //                     QDate::currentDate().toString("Простои"),
+    //        QString("P:\\!Common Documents\\Andon_reports\\Простои за прошлый месяц"),
+    //        "brakedowns");
+
+    //    appExecuteReport("SELECT * FROM PRODUCTION_DECLARATION_HISTORY", "AutoDecl",
+    //        QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_export"),"AutoDecl_aria");
+
     qDebug()<<"Start dailyTimer";
     const int msecsPerDay = 24 * 60 * 60 * 1000;
     QTimer * dailyTimer = new QTimer(QAbstractEventDispatcher::instance());
@@ -147,17 +180,17 @@ int main(int argc, char *argv[])
     QObject::connect(dailyTimer,&QTimer::timeout, [WThread,dailyTimer,msecsPerDay,andonDb](){
         //qDebug()<<"dailyTimer timeout"<<"dayOfWeek"<<QDate::currentDate().dayOfWeek();
         appExecuteReport("SELECT * FROM PRODUCTION_DECLARATION_HISTORY", QDate::currentDate().toString("dd"),
-            QString("P:\\!Common Documents\\AutomaticDeclarating\\export_%1").arg(QDate::currentDate().toString("MM_yyyy")));
+                         QString("P:\\!Common Documents\\AutomaticDeclarating\\export_%1").arg(QDate::currentDate().toString("MM_yyyy")));
         if(QDate::currentDate().daysInMonth()==QDate::currentDate().day())
             appExecuteReport(QString("SELECT * FROM REPORT_BREAKDOWNS('%1', '%2')")
                              .arg(QDate(QDate::currentDate().year(),QDate::currentDate().month(),1).toString("dd.MM.yyyy"))
                              .arg(QDate(QDate::currentDate().year(),(QDate::currentDate().month()+1)%12,1).toString("dd.MM.yyyy")),
                              QDate::currentDate().toString("Простои"),
-                QString("P:\\!Common Documents\\Andon_reports\\Простои за прошлый месяц"),
-                "brakedowns");
+                             QString("P:\\!Common Documents\\Andon_reports\\Простои за прошлый месяц"),
+                             "brakedowns");
         if(QDate::currentDate().dayOfWeek()<6)
             andonDb->executeQuery("SELECT LIST(EMAIL) FROM TBL_STAFF WHERE EMAIL_REPORTING=1",
-                                        [WThread](QSqlQuery *query){
+                                  [WThread](QSqlQuery *query){
                 if(query->next()){
                     QStringList rcpnts=query->value(0).toString().split(',');
                     if(!rcpnts.isEmpty()) //??? newer heppend
@@ -166,12 +199,12 @@ int main(int argc, char *argv[])
             });
         dailyTimer->stop();
         dailyTimer->start(msecsPerDay-qMax(QTime::fromString("23:50:00").elapsed(),
-                                        QTime::fromString("23:50:00").elapsed())+1000);
+                                           QTime::fromString("23:50:00").elapsed())+1000);
         qDebug()<<"dailyTimer start"<<dailyTimer->interval()/3600000.0<<"hours";
     });
     //qDebug()<<"WThread->snedReport";
 
-/*
+    /*
     QObject::connect(schedulerTimer,&QTimer::timeout,[&schedulerList,schedulerTimer](){
         for(auto s : schedulerList) {
             if (!s.eventTimer){
@@ -207,7 +240,7 @@ int main(int argc, char *argv[])
     });
 */
 
-/*
+    /*
     snedReport(const QString &report, const QStringList &emails)
 
     QTimer WebuiUpdate;
@@ -227,15 +260,15 @@ int main(int argc, char *argv[])
     qDebug()<<"Start SMS Server";
     Sms_service * sms_sender = new Sms_service;
     QObject::connect(andonRpcService,&ServerRpcService::SendSMS, sms_sender,
-             &Sms_service::sendSMSFECT,Qt::QueuedConnection);
+                     &Sms_service::sendSMSFECT,Qt::QueuedConnection);
     QObject::connect(sms_sender,&Sms_service::SmsStatusUpdate,[andonDb]
-                         (int SmsLogId, int SmsId, int Status){
-            andonDb->executeProc(QString("EXECUTE PROCEDURE SERVER_UPDATE_SMSSTATUS(%1, %2, %3)")
-                          .arg(SmsLogId).arg(SmsId).arg(Status));
+                     (int SmsLogId, int SmsId, int Status){
+        andonDb->executeProc(QString("EXECUTE PROCEDURE SERVER_UPDATE_SMSSTATUS(%1, %2, %3)")
+                             .arg(SmsLogId).arg(SmsId).arg(Status));
     });
     QString sqlqueryres = andonDb->query2json("SELECT AUX_PROPERTIES_LIST "
-                                                    "FROM TBL_TCPDEVICES "
-                                                    "WHERE DEVICE_TYPE='SMS Server' AND DEVICE_TYPE='SMS Server'",0);
+                                              "FROM TBL_TCPDEVICES "
+                                              "WHERE DEVICE_TYPE='SMS Server' AND DEVICE_TYPE='SMS Server'",0);
     QJsonDocument jdocURL;
     if (!sqlqueryres.isEmpty()){
         jdocURL= QJsonDocument::fromJson(sqlqueryres.toUtf8());
@@ -264,7 +297,7 @@ int main(int argc, char *argv[])
         qDebug()<<"Email errorMessage"<<message;
     });
     QObject::connect(WThread,&WebuiThread::sendReport2email,[emailClient]
-                    (const QString &subject, const QString &message,
+                     (const QString &subject, const QString &message,
                      const QStringList &rcptStringList, QList<QBuffer*> *attachments=0){
         emailClient->sendEmail(subject, message, rcptStringList, attachments);
     });
@@ -314,7 +347,7 @@ int main(int argc, char *argv[])
 
     QJSEngine *engine = new QJSEngine;
     engine->globalObject().setProperty("msgHandler",engine->newQObject(&msgHandler));
-//    engine->globalObject().setProperty("telnetClient",engine->newQObject(telnetClient));
+    //    engine->globalObject().setProperty("telnetClient",engine->newQObject(telnetClient));
     engine->globalObject().setProperty("andonRpcService",engine->newQObject(andonRpcService));
     engine->globalObject().setProperty("sms_sender",engine->newQObject(sms_sender));
     engine->globalObject().setProperty("andonDb",engine->newQObject(andonDb));
@@ -332,14 +365,14 @@ int main(int argc, char *argv[])
     QStringList ScriptsList;
     QJsonDocument jdocScripts(QJsonDocument::fromJson(andonDb->query2json(
                                                           QString("SELECT SCRIPT_TEXT "
-                                                          "FROM TBL_SCRIPTS WHERE SCRIPT_NAME='ScriptServerStart'")).toUtf8()));
+                                                                  "FROM TBL_SCRIPTS WHERE SCRIPT_NAME='ScriptServerStart'")).toUtf8()));
     QJsonArray tableArray = jdocScripts.array();
     QJsonObject recordObject;
     if (!tableArray.isEmpty())
         recordObject=tableArray.at(0).toObject();
 
 
-/*
+    /*
     if (recordObject.keys().contains("SCRIPT_ORDER") && recordObject.keys().contains("SCRIPT_TEXT")) {
         QList<QJsonObject> scriptObjectList;
         for (int i=0;i<tableArray.count();++i)
@@ -371,22 +404,22 @@ int main(int argc, char *argv[])
         scriptObjectList.append(tableArray.at(i).toObject());
     for (int i=0;i<scriptObjectList.count();++i){
         QString ScriptText = scriptObjectList.at(i)["SCRIPT_TEXT"].toString().replace("`","'");
-//        QScriptSyntaxCheckResult result = engine->checkSyntax(ScriptText);
-//        if (result.state()==QScriptSyntaxCheckResult::Valid) {
-//            ScriptsList.append(ScriptText);
-//        }
-//        else {
-//            qDebug()<<"Syntax error in script "<<"("<<result.errorLineNumber()<<
-//                      ","<<result.errorColumnNumber()<<"):";
-//            qDebug()<<ScriptText<<"\nMessage:"<<result.errorMessage();
-//        }
+        //        QScriptSyntaxCheckResult result = engine->checkSyntax(ScriptText);
+        //        if (result.state()==QScriptSyntaxCheckResult::Valid) {
+        //            ScriptsList.append(ScriptText);
+        //        }
+        //        else {
+        //            qDebug()<<"Syntax error in script "<<"("<<result.errorLineNumber()<<
+        //                      ","<<result.errorColumnNumber()<<"):";
+        //            qDebug()<<ScriptText<<"\nMessage:"<<result.errorMessage();
+        //        }
     }
-            for (int i = 0; i<ScriptsList.count(); ++i) {
-                //qDebug()<<"server_start"<<ScriptsList.at(i);
-                engine->evaluate(ScriptsList.at(i));
-            }
+    for (int i = 0; i<ScriptsList.count(); ++i) {
+        //qDebug()<<"server_start"<<ScriptsList.at(i);
+        engine->evaluate(ScriptsList.at(i));
+    }
 
-//    WThread->snedReport("Daily_PDP", QStringList()<<"ilya.kolesnik@faurecia.com");
+    //    WThread->snedReport("Daily_PDP", QStringList()<<"ilya.kolesnik@faurecia.com");
     qDebug()<<"main finish";
     return a.exec();
 }

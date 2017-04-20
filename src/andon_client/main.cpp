@@ -621,12 +621,12 @@ int main(int argc, char *argv[])
             qDebug() << "Watchdog application cannot run!";
         return a.exec();
     }
-    else
-        QTimer::singleShot(10000,[](){
-            qDebug() << "Test crash application";
-            QObject*null;
-            null->setObjectName("crash");
-        });
+//    else
+//        QTimer::singleShot(10000,[](){
+//            qDebug() << "Test crash application";
+//            QObject*null;
+//            null->setObjectName("crash");
+//        });
     //TODO lymbda to procedures
     qmlRegisterType<InterfaceManager>("com.andon.interfacemanager", 1, 0, "InterfaceManager");
     qmlRegisterType<QTimer>("com.andon.timer", 1, 0, "QTimer");
@@ -643,7 +643,7 @@ int main(int argc, char *argv[])
     //    int qtype2 = qRegisterMetaType<QAbstractSocket::SocketState>("SocketState" );
     //    Q_DECLARE_METATYPE (std::function<void(QVariant)>);
     qRegisterMetaType<std::function<void(QVariant)>>("std::function<void(QVariant)>");
-    SingleAppRun singleApp(args.contains(APP_OPTION_FORCE),&a);
+    SingleAppRun singleApp(args.contains(APP_OPTION_FORCE));
 
     QByteArray textCodec="cp1251";
     if (!qApp->applicationDirPath().toLower().contains("build"))

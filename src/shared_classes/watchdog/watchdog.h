@@ -4,8 +4,13 @@
 #include <QProcess>
 #include <QTcpSocket>
 #include <QTimer>
-#include "qjsonrpcservicereply.h"
+#include <QRegExp>
+#include <QStringList>
+
 #include "qjsonrpcsocket.h"
+#include "qjsonrpcservice.h"
+#include "qjsonrpcservicereply.h"
+
 
 class Watchdog: public QObject
 {
@@ -51,8 +56,7 @@ public slots:
     }
     static void restartAppication()
     {
-        qDebug() << "Force restart application(response timeout)!\n\r"
-                 <<QString("cmd.exe /C start \"%1 %2\"").arg(qApp->applicationFilePath()).arg(APP_OPTION_FORCE);
+        qDebug() << "Force restart application(response timeout)!";
         QProcess *restartApp = new QProcess;//(this);
         QObject::connect(restartApp,&QProcess::errorOccurred,[](QProcess::ProcessError error){
             qDebug() << "restartApp errorOccurred!"<<error;
@@ -60,10 +64,21 @@ public slots:
         QObject::connect(restartApp,&QProcess::started,[](){
             qDebug() << "restartApp started";
         });
-        //restartApp->setWorkingDirectory(qApp->applicationDirPath());
-        //restartApp->startDetached(QString("cmd.exe /C start \"%1 %2\"")
-        //.arg(qApp->applicationFilePath()).arg(APP_OPTION_FORCE));
-        restartApp->startDetached(qApp->applicationFilePath(),QStringList()<<APP_OPTION_FORCE);
+        QString appPath =qApp->applicationFilePath();
+        QRegExp rx("/((\\w+\\s+)+\\w+)/");
+        if(rx.indexIn(appPath)!=-1){
+            QStringList list = rx.capturedTexts();
+            list.removeDuplicates();
+            for(QString &s:list){
+                if(!s.endsWith(" ") && !s.endsWith("/")){
+                    appPath.replace(s,QString("\"%1\"").arg(s));
+                }
+            }
+        }
+        //qDebug() << QString("%1 %2").arg(appPath).arg(APP_OPTION_FORCE);
+        //restartApp->startDetached(QString("cmd.exe /C start %1 %2").arg(appPath).arg(APP_OPTION_FORCE));
+        //restartApp->startDetached(QString("cmd.exe /C start %1").arg(appPath),QStringList()<<APP_OPTION_FORCE);
+        restartApp->startDetached(QString("%1 %2").arg(appPath).arg(APP_OPTION_FORCE));
         qApp->quit();
     }
     static void rebootPC(const QString &reason)
@@ -89,29 +104,26 @@ private:
         m_client = new QJsonRpcSocket(socket);
         watchTimer = new QTimer;//(this);
         QObject::connect(watchTimer, &QTimer::timeout, this, &Watchdog::sendReply);
-        watchTimer->start(3000);
+        watchTimer->start(5000);
     }
 private slots:
     void sendReply()
     {
         qDebug() << "Watchdog sendReply";
-        QJsonRpcServiceReply *reply = m_client->invokeRemoteMethod(aliveMethod);
         QTimer *replayTimer=new QTimer;//(this);
+        QJsonRpcServiceReply *reply  = m_client->invokeRemoteMethod(aliveMethod);
+        QObject::connect(reply, &QJsonRpcServiceReply::finished, [reply,replayTimer,this] () {
+            qDebug() << "reply="<<reply->response().result().toVariant();
+            replayTimer->stop();
+            replayTimer->deleteLater();
+            if (!reply->response().result().toVariant().isValid())
+                restartAppication();
+            reply->deleteLater();
+        });
         replayTimer->setSingleShot(true);
         QObject::connect(replayTimer, &QTimer::timeout, this, &Watchdog::restartAppication);
         QObject::connect(replayTimer, &QTimer::timeout, watchTimer, &QTimer::stop);
         replayTimer->start(1000);
-        //QObject::connect(reply, &QJsonRpcServiceReply::finished, replayTimer, &QTimer::stop);
-        //QObject::connect(reply, &QJsonRpcServiceReply::finished, replayTimer, &QTimer::deleteLater);
-        QObject::connect(reply, &QJsonRpcServiceReply::finished, [reply,replayTimer,this] () {
-            replayTimer->stop();
-            replayTimer->deleteLater();
-            //qDebug() << "alive" << reply->response().result().toVariant().toBool();
-
-                if (!reply->response().result().toVariant().isValid())
-                    restartAppication();
-            reply->deleteLater();
-        });
     }
 };
 

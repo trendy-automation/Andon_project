@@ -10,6 +10,7 @@
 #include <QDebug>
 #include <QProcess>
 #include <QHostAddress>
+#include <QTimer>
 
 class SingleAppRun: public QObject
 {
@@ -30,20 +31,27 @@ public:
             }
             else
                 doTerminate=QMessageBox::question(new QWidget, QString("%1 is already running").arg(APP_NAME),
-                                             "Terminate concurent application?");
-            //QString old_pid;
+                                                  "Terminate concurent application?");
             switch (doTerminate) {
             case QMessageBox::Yes:
             {
-                QProcess * processKill = new QProcess;
                 //shmem->create(new_pid.size());
                 shmem->lock();
                 QString new_pid = QString::number(qApp->applicationPid());
                 memcpy((char*)shmem->data(), (char *)new_pid.toLatin1().data(), qMax(shmem->size(), new_pid.size()));
                 shmem->unlock();
                 QString command = QString("taskkill /t /f /PID %1").arg(pid);
-                qDebug()<<command;
+                qDebug()<<command<<"pid"<<qApp->applicationPid();
+                QProcess * processKill = new QProcess;
                 processKill->startDetached(command);
+//                QTimer *terminateTimer = new QTimer;
+//                QObject::connect(terminateTimer,&QTimer::timeout,[command](){
+//                    QProcess * processKill = new QProcess;
+//                    processKill->startDetached(command);
+//                });
+//                terminateTimer->setSingleShot(true);
+//                terminateTimer->start(5000);
+
                 break;
             }
             case QMessageBox::No:

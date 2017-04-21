@@ -9,6 +9,9 @@
 #include "main_callbacks.h"
 #include "main.h"
 #include "serlock_manager.h"
+#include "watchdog.h"
+#include "watchdog_rpcservice.h"
+
 //#include "opcua_client.h"
 
 #include <QApplication>
@@ -614,19 +617,23 @@ void ServerFound(QHostAddress ServerAddress)
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    QByteArray textCodec="cp1251";
+    if (!qApp->applicationDirPath().toLower().contains("build"))
+        textCodec="cp866";
+    MessageHandler msgHandler(textCodec);
     QStringList args = a.arguments();
     Watchdog watchdog;
     if(args.contains(APP_OPTION_WATHCDOG)){
-        if(!watchdog.listen(JSONRPC_CLIENT_PORT,QString(JSONRPC_CLIENT_SERVICENAME).append(".isAlive")))
+        if(!watchdog.listen(JSONRPC_WATCHDOG_PORT,QString(JSONRPC_WATCHDOG_SERVICENAME).append(".isAlive")))
             qDebug() << "Watchdog application cannot run!";
         return a.exec();
     }
-//    else
-//        QTimer::singleShot(10000,[](){
-//            qDebug() << "Test crash application";
-//            QObject*null;
-//            null->setObjectName("crash");
-//        });
+    else
+        QTimer::singleShot(10000,[](){
+            qDebug() << "Test crash application";
+            QObject*null;
+            null->setObjectName("crash");
+        });
     //TODO lymbda to procedures
     qmlRegisterType<InterfaceManager>("com.andon.interfacemanager", 1, 0, "InterfaceManager");
     qmlRegisterType<QTimer>("com.andon.timer", 1, 0, "QTimer");
@@ -645,18 +652,24 @@ int main(int argc, char *argv[])
     qRegisterMetaType<std::function<void(QVariant)>>("std::function<void(QVariant)>");
     SingleAppRun singleApp(args.contains(APP_OPTION_FORCE));
 
-    QByteArray textCodec="cp1251";
-    if (!qApp->applicationDirPath().toLower().contains("build"))
-        textCodec="cp866";
-
-    MessageHandler msgHandler(textCodec);
-    ClientRpcService * clientrpcservice = new ClientRpcService;
-    QJsonRpcTcpServer * rpcServer = new QJsonRpcTcpServer;
-    rpcServer->addService(clientrpcservice);
-    rpcServer->setObjectName("rpcServer");
-    listenPort<QJsonRpcTcpServer>(rpcServer,JSONRPC_CLIENT_PORT,3000,1000,&watchdog.start);
 
 
+//    ClientRpcService * clientrpcservice = new ClientRpcService;
+//    QJsonRpcTcpServer * rpcServer = new QJsonRpcTcpServer;
+//    rpcServer->addService(clientrpcservice);
+//    rpcServer->setObjectName("rpcServer");
+//    listenPort<QJsonRpcTcpServer>(rpcServer,JSONRPC_CLIENT_PORT,3000,1000);
+
+    /*****************************************
+     * Start Watchdog
+     *****************************************/
+    qDebug()<<"Start Watchdog";
+    WatchdogRpcService * watchdogRpcService = new WatchdogRpcService(&a);
+    watchdogRpcService->setObjectName("andonRpcService");
+    QJsonRpcTcpServer * watchdogRpcServer = new QJsonRpcTcpServer(&a);
+    watchdogRpcServer->setObjectName("watchdogRpcServer");
+    watchdogRpcServer->addService(watchdogRpcService);
+    listenPort<QJsonRpcTcpServer>(watchdogRpcServer,JSONRPC_WATCHDOG_PORT,3000,700,&watchdog.start);
 
     UdpReceiver *udpreceiver = new UdpReceiver;
     udpreceiver->start();

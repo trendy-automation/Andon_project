@@ -10,7 +10,6 @@
 #include "qjsonrpctcpserver.h"
 #include "qftp.h"
 #include "serlock_manager.h"
-#include "watchdog.h"
 
 
 #include <QMetaObject>

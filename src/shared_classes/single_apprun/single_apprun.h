@@ -18,52 +18,42 @@ class SingleAppRun: public QObject
 public:
     SingleAppRun(bool forseStart=false,QObject *parent=0)
         : QObject(parent),
-          shmem(new QSharedMemory(parent))
+          shmem(new QSharedMemory(parent)),
+          toQuit(false)
     {
         QString pid= QString::number(qApp->applicationPid());
+        qDebug()<<"Application pid"<<pid;
         if(isRunning(QString("<ANDON %1 VER%2>").arg(APP_NAME).arg(APP_VER),
                      QString("<ANDON %1 VER%2 RUNNING>").arg(APP_NAME).arg(APP_VER), pid)) {
             qDebug() << QString("%1 is already running!").arg(APP_NAME);
-            int doTerminate;
             if(forseStart){
-                doTerminate=QMessageBox::Yes;
                 qDebug() << QString("%1 forced restart!").arg(APP_NAME);
+                killProcess(pid);
             }
-            else
-                doTerminate=QMessageBox::question(new QWidget, QString("%1 is already running").arg(APP_NAME),
-                                                  "Terminate concurent application?");
-            switch (doTerminate) {
-            case QMessageBox::Yes:
-            {
-                //shmem->create(new_pid.size());
-                shmem->lock();
-                QString new_pid = QString::number(qApp->applicationPid());
-                memcpy((char*)shmem->data(), (char *)new_pid.toLatin1().data(), qMax(shmem->size(), new_pid.size()));
-                shmem->unlock();
-                QString command = QString("taskkill /t /f /PID %1").arg(pid);
-                qDebug()<<command<<"pid"<<qApp->applicationPid();
-                QProcess * processKill = new QProcess;
-                processKill->startDetached(command);
-//                QTimer *terminateTimer = new QTimer;
-//                QObject::connect(terminateTimer,&QTimer::timeout,[command](){
-//                    QProcess * processKill = new QProcess;
-//                    processKill->startDetached(command);
-//                });
-//                terminateTimer->setSingleShot(true);
-//                terminateTimer->start(5000);
+            else {
+                int doTerminate=QMessageBox::question(new QWidget, QString("%1 is already running").arg(APP_NAME),
+                                                      "Terminate concurent application?");
+                switch (doTerminate) {
+                case QMessageBox::Yes:
+                {
+                    killProcess(pid);
+                    break;
+                }
+                case QMessageBox::No:
+                {
+                    toQuit=true;
 
-                break;
-            }
-            case QMessageBox::No:
-                qApp->quit();
-                break;
-            default:
-                qDebug()<<"doTerminate"<<doTerminate;
-                qApp->quit();
-                break;
+                    break;
+                }
+                default:
+                    qDebug()<<"doTerminate"<<doTerminate;
+                    qApp->quit();
+                    break;
+                }
             }
         }
     }
+    bool isToQuit(){return toQuit;}
 
 private:
     bool isRunning(const QString &semaphore, const QString &memory, QString &pid)
@@ -88,7 +78,21 @@ private:
         sema.release();
         return false;
     }
+
+    void killProcess(const QString &pid)
+    {
+        shmem->lock();
+        QString new_pid = QString::number(qApp->applicationPid());
+        memcpy((char*)shmem->data(), (char *)new_pid.toLatin1().data(), qMax(shmem->size(), new_pid.size()));
+        shmem->unlock();
+        QString command = QString("taskkill /T /F /PID %1").arg(pid);
+        qDebug()<<command<<"pid"<<qApp->applicationPid();
+        QProcess * processKill = new QProcess;
+        processKill->startDetached(command);
+    }
+
     QSharedMemory *shmem;
+    bool toQuit;
 };
 
 #endif // SINGLE_APPRUN_H

@@ -90,9 +90,9 @@ bool appCreateReport(QSqlQuery *query, const QString &sheetName,const QString &f
             xlsx->write(i,j+1,query->value(j));
     }
     if(!ariaName.isEmpty())
-        xlsx->defineName(ariaName,QString("='%1'!$A$1:$%2$%3").arg(sheetName)
-                         .arg(QChar(QChar('A').unicode()+query->record().count()-1))
-                         .arg(i));
+        if(!xlsx->defineName(ariaName,QString("='%1'!$A$1:$%2$%3").arg(sheetName)
+                         .arg(QChar(QChar('A').unicode()+query->record().count()-1)).arg(i)))
+           qDebug()<<"Can not define aria name"<<ariaName;
 //    if(i>1){
         if(xlsx->save()){
             qDebug()<<fileName<<"save OK";

@@ -44,7 +44,7 @@ public slots:
     static void start()
     {
         qDebug() << "watchdog start";
-        QProcess *watchdogProcess = new QProcess;
+        QProcess *watchdogProcess = new QProcess(qApp);
         QObject::connect(watchdogProcess,&QProcess::errorOccurred,[](QProcess::ProcessError error){
             qDebug() << "watchdogProcess errorOccurred"<<error;
         });
@@ -77,18 +77,15 @@ public slots:
         QObject::connect(restartTimer, &QTimer::timeout,[this,cmdFlag](){
             if(!this->property("restarted").toBool())
                 restartAppication("Second restartApp started",!cmdFlag);
-            else
-                qApp->quit();
             this->setProperty("restarted",true);
         });
         restartTimer->start(8000);
         restartApp->startDetached(appPath);
-        //delete restartApp;
         //qDebug() << QString("%1 %2").arg(appPath).arg(APP_OPTION_FORCE);
         //restartApp->startDetached(QString("cmd.exe /C start \"\" \"%1\" -arg \"%2\"").arg(qApp->applicationFilePath()).arg(APP_OPTION_FORCE));
         //restartApp->startDetached(QString("cmd.exe /C start %1 %2").arg(appPath).arg(APP_OPTION_FORCE));
         //restartApp->startDetached(QString("%1 %2").arg(appPath).arg(APP_OPTION_FORCE));
-        //qApp->quit();
+        qApp->quit();
     }
     static void rebootPC(const QString &reason="")
     {

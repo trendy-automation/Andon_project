@@ -269,7 +269,11 @@ void ServerFound(QHostAddress ServerAddress)
                             }
                         });
                     });
-                    int interval = qMin(5000,abs(QTime::currentTime().msecsTo(QTime(QTime::currentTime().hour(),58))));
+
+                    int interval = qMax(5000,QTime::currentTime().msecsTo(QTime(QTime::currentTime().hour(),58)));
+
+                    //qMin(FTP_INTERVAL, QTime::currentTime().msecsTo(QTime(QTime::currentTime().addMSecs(3600000).hour(),58)));
+
                     fileTimer->start(interval);
                     //qDebug() << "ftp cur interval" << interval;
                 }
@@ -617,23 +621,23 @@ void ServerFound(QHostAddress ServerAddress)
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    QStringList args = a.arguments();
+    Watchdog watchdog;
+    if(args.contains(APP_OPTION_WATHCDOG)){
+        if(!watchdog.listen(JSONRPC_CLIENT_WATCHDOG_PORT,QString(JSONRPC_WATCHDOG_SERVICENAME).append(".isAlive")))
+            qDebug() << "Watchdog application cannot run!";
+        return a.exec();
+    }
+//    else
+//        QTimer::singleShot(10000,[](){
+//            qDebug() << "Test crash application";
+//            QObject*null;
+//            null->setObjectName("crash");
+//        });
     QByteArray textCodec="cp1251";
     if (!qApp->applicationDirPath().toLower().contains("build"))
         textCodec="cp866";
     MessageHandler msgHandler(textCodec);
-    QStringList args = a.arguments();
-    Watchdog watchdog;
-    if(args.contains(APP_OPTION_WATHCDOG)){
-        if(!watchdog.listen(JSONRPC_WATCHDOG_PORT,QString(JSONRPC_WATCHDOG_SERVICENAME).append(".isAlive")))
-            qDebug() << "Watchdog application cannot run!";
-        return a.exec();
-    }
-    else
-        QTimer::singleShot(10000,[](){
-            qDebug() << "Test crash application";
-            QObject*null;
-            null->setObjectName("crash");
-        });
     //TODO lymbda to procedures
     qmlRegisterType<InterfaceManager>("com.andon.interfacemanager", 1, 0, "InterfaceManager");
     qmlRegisterType<QTimer>("com.andon.timer", 1, 0, "QTimer");
@@ -669,7 +673,7 @@ int main(int argc, char *argv[])
     QJsonRpcTcpServer * watchdogRpcServer = new QJsonRpcTcpServer(&a);
     watchdogRpcServer->setObjectName("watchdogRpcServer");
     watchdogRpcServer->addService(watchdogRpcService);
-    listenPort<QJsonRpcTcpServer>(watchdogRpcServer,JSONRPC_WATCHDOG_PORT,3000,700,&watchdog.start);
+    listenPort<QJsonRpcTcpServer>(watchdogRpcServer,JSONRPC_CLIENT_WATCHDOG_PORT,3000,700,&watchdog.start);
 
     UdpReceiver *udpreceiver = new UdpReceiver;
     udpreceiver->start();

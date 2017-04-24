@@ -4,6 +4,7 @@ DBWrapper::DBWrapper(QObject *parent) : QObject(parent)
 {
     packFunctionsMap.insert("",[this](QSqlQuery*sqlQuery){return QString();});
     packFunctionsMap.insert("json",[this](QSqlQuery*sqlQuery){
+        qDebug() << "packFunctionsMap json sqlQuery" << sqlQuery;
         QJsonArray jatmp;
         while(sqlQuery->next()) {
             QJsonObject jotmp;
@@ -14,6 +15,7 @@ DBWrapper::DBWrapper(QObject *parent) : QObject(parent)
         sqlQuery->finish();
         DB.commit();
         QJsonDocument json(jatmp);
+        qDebug() << "packFunctionsMap json toJson" << json.toJson(QJsonDocument::Compact);
         return json.toJson(QJsonDocument::Compact);
     });
     packFunctionsMap.insert("fulljson",[this](QSqlQuery*sqlQuery){
@@ -356,10 +358,14 @@ QString DBWrapper::query2json(const QString & queryText, int cashTime)
 
 QString DBWrapper::query2method(const QString & queryText, const QString &queryMethod, int cashTime)
 {
+    qDebug() << queryText << queryMethod << cashTime;
     queryStruct queryItem = appendQuery(queryText,queryMethod,cashTime);
-    if(queryIsCashed(queryItem))
+    if(queryIsCashed(queryItem)){
+        qDebug() << "queryIsCashed";
         return queryItem.s_result;
+    }
     if(queryExecute(queryItem)){
+        qDebug() << "queryExecute OK";
         if(!packFunctionsMap.contains(queryItem.s_method))
              queryItem.s_error=QString("Undefined query method(%1)!").arg(queryItem.s_method);
         else{
@@ -367,7 +373,7 @@ QString DBWrapper::query2method(const QString & queryText, const QString &queryM
             return queryItem.s_result;
         }
     }
-    qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);
+    qDebug() << QString("Error in query:\"%1\"\r\n%2").arg(queryItem.s_sql_query).arg(queryItem.s_error);
     if(queryItem.s_method=="json")
         return QString();
     return str2Json("Error", queryItem.s_error);

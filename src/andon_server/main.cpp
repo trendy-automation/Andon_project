@@ -35,17 +35,17 @@ int main(int argc, char *argv[])
     QStringList args = a.arguments();
     Watchdog watchdog;
     if(args.contains(APP_OPTION_WATHCDOG)){
-        if(!watchdog.listen(JSONRPC_WATCHDOG_PORT,QString(JSONRPC_WATCHDOG_SERVICENAME).append(".isAlive")))
+        if(!watchdog.listen(JSONRPC_SERVER_WATCHDOG_PORT,QString(JSONRPC_WATCHDOG_SERVICENAME).append(".isAlive")))
             //appClientDisconnected();
             qDebug() << "Watchdog application cannot run!";
         return a.exec();
     }
-    else
-        QTimer::singleShot(10000,[](){
-            qDebug() << "Test crash application";
-            QObject*null;
-            null->setObjectName("crash");
-        });
+//    else
+//        QTimer::singleShot(10000,[](){
+//            qDebug() << "Test crash application";
+//            QObject*null;
+//            null->setObjectName("crash");
+//        });
     /*****************************************
      * Start MessageHandler
      *****************************************/
@@ -55,6 +55,11 @@ int main(int argc, char *argv[])
      *****************************************/
     qDebug()<<"Start singleApp";
     SingleAppRun singleApp(args.contains(APP_OPTION_FORCE),&a);
+    if(singleApp.isToQuit()){
+        a.quit();
+        return 0;
+    }
+
     /*****************************************
      * Start DataBase
      *****************************************/
@@ -95,7 +100,7 @@ int main(int argc, char *argv[])
     QJsonRpcTcpServer * watchdogRpcServer = new QJsonRpcTcpServer(&a);
     watchdogRpcServer->setObjectName("watchdogRpcServer");
     watchdogRpcServer->addService(watchdogRpcService);
-    listenPort<QJsonRpcTcpServer>(watchdogRpcServer,JSONRPC_WATCHDOG_PORT,3000,700,&watchdog.start);
+    listenPort<QJsonRpcTcpServer>(watchdogRpcServer,JSONRPC_SERVER_WATCHDOG_PORT,3000,700,&watchdog.start);
     /*****************************************
      * Start Unicast UDP Sender
      *****************************************/
@@ -115,7 +120,7 @@ int main(int argc, char *argv[])
     qDebug()<<"Start WebUI";
     QWebSocketServer webSocketServer(QStringLiteral("QWebChannel Server"), QWebSocketServer::NonSecureMode);
     webSocketServer.setObjectName("webSocketServer");
-    listenPort<QWebSocketServer>(&webSocketServer,WEBCHANEL_PORT,3000,500);
+    listenPort<QWebSocketServer>(&webSocketServer,WEBCHANNEL_PORT,3000,500);
 
     WebSocketClientWrapper clientWrapper(&webSocketServer);
     WebuiThread *WThread = new WebuiThread;
@@ -124,7 +129,7 @@ int main(int argc, char *argv[])
     listenPort<WebuiThread>(WThread,WUI_PORT,3000,1000);
 
     //    qDebug()<<"Start setup the channel";
-    QWebChannel channel;
+    QWebChannel channel(&a);
     QObject::connect(&clientWrapper, &WebSocketClientWrapper::clientConnected,
                      &channel, &QWebChannel::connectTo);
     channel.registerObject(QStringLiteral("serverWeb"), WThread);
@@ -155,12 +160,12 @@ int main(int argc, char *argv[])
     const int msecsPerDay = 24 * 60 * 60 * 1000;
     QTimer * reportTimer = new QTimer(QAbstractEventDispatcher::instance());
     reportTimer->setTimerType(Qt::VeryCoarseTimer);
-    reportTimer->start(qMax(msecsPerDay-QTime::fromString("23:50:00").elapsed(),86400000));
+    reportTimer->start(qMax(msecsPerDay-QTime::fromString("23:50:00").elapsed(),msecsPerDay));
     qDebug()<<"reportTimer start"<<reportTimer->interval()/3600000.0<<"hours";
     QObject::connect(reportTimer,&QTimer::timeout, [WThread,reportTimer,msecsPerDay,andonDb](){
         //qDebug()<<"reportTimer timeout"<<"dayOfWeek"<<QDate::currentDate().dayOfWeek();
-        appExecuteReport("SELECT * FROM PRODUCTION_DECLARATION_HISTORY", QDate::currentDate().toString("dd"),
-                         QString("P:\\!Common Documents\\AutomaticDeclarating\\export_%1").arg(QDate::currentDate().toString("MM_yyyy")));
+        appExecuteReport("SELECT * FROM REPORT_DECLARATION_HISTORY", "AutoDecl",
+                         "P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_export","AutoDecl_aria");
         if(QDate::currentDate().daysInMonth()==QDate::currentDate().day())
             appExecuteReport(QString("SELECT * FROM REPORT_BREAKDOWNS('%1', '%2')")
                              .arg(QDate(QDate::currentDate().year(),QDate::currentDate().month(),1).toString("dd.MM.yyyy"))

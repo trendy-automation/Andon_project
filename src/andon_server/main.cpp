@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
  * Start WebUI
  *****************************************/
     qDebug()<<"Start WebUI";
-    QWebSocketServer webSocketServer(QStringLiteral("QWebChannel Server"), QWebSocketServer::NonSecureMode);
+    QWebSocketServer webSocketServer(QStringLiteral("QWebChannel Server"), QWebSocketServer::NonSecureMode,&a);
     webSocketServer.setObjectName("webSocketServer");
     listenPort<QWebSocketServer>(&webSocketServer,WEBCHANNEL_PORT,3000,500);
 

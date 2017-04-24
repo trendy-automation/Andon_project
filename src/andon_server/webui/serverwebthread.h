@@ -32,6 +32,7 @@
 
 //#include <QtScript>
 #include <QJSEngine>
+#include <QApplication>
 
 
 struct pageInfo
@@ -60,8 +61,10 @@ class WebuiThread : public QThread
 public:
     WebuiThread(QObject *parent=0)    : QThread(parent)
     {
+       QByteArray document_root = (qApp->applicationDirPath().contains("build")>0)?WUI_BUILD_PATH:WUI_PATH;
+       //qDebug() << "document_root" << document_root;
         mgserver = mg_create_server(NULL, event_handler);
-        mg_set_option(mgserver, "document_root", WUI_PATH);
+        mg_set_option(mgserver, "document_root", document_root);
         QObject::connect(&cleanTimer, &QTimer::timeout,[=](){
             for(auto iter = webuiPages.begin();iter!=webuiPages.end();)
                 if (iter.value().pageTime.elapsed()>cleanTimer.interval()) {

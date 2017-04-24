@@ -12,7 +12,7 @@
 
 
 //#include "ibpp.h"
-using namespace std;
+//using namespace std;
 #include <functional>
 struct queryStruct{
     QSqlQuery* p_query;

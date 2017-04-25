@@ -10,14 +10,15 @@
 #include "qjsonrpcsocket.h"
 #include "qjsonrpcservice.h"
 #include "qjsonrpcservicereply.h"
+#include "qjsonrpctcpserver.h"
 
-
-class Watchdog: public QObject
+class Watchdog: public QJsonRpcService
 {
     Q_OBJECT
+    Q_CLASSINFO("serviceName", JSONRPC_WATCHDOG_SERVICENAME)
 public:
     Watchdog(QObject *parent=0)
-        : QObject(parent)
+        : QJsonRpcService(parent)
     {
 
     }
@@ -41,16 +42,11 @@ public:
         return false;
     }
 public slots:
-    static void start()
+    bool isAlive(){return true;}
+    static void startProcess()
     {
-        qDebug() << "watchdog start";
+        //qDebug() << "watchdog start";
         QProcess *watchdogProcess = new QProcess(qApp);
-        QObject::connect(watchdogProcess,&QProcess::errorOccurred,[](QProcess::ProcessError error){
-            qDebug() << "watchdogProcess errorOccurred"<<error;
-        });
-        QObject::connect(watchdogProcess,&QProcess::started,[](){
-            //qDebug() << "WatchdogProcess started:"<<qApp->applicationFilePath()<<APP_OPTION_WATHCDOG;
-        });
         watchdogProcess->setProcessChannelMode(QProcess::QProcess::ForwardedChannels);
         watchdogProcess->start(qApp->applicationFilePath(),QStringList(APP_OPTION_WATHCDOG));
     }
@@ -64,13 +60,7 @@ public slots:
             appPath = QString("%1 %2").arg(appPath).arg(APP_OPTION_FORCE);
         qDebug() << "Force restart application!"<<reason<<appPath;
         watchTimer->stop();
-        QProcess *restartApp = new QProcess(0);//(this);
-        QObject::connect(restartApp,&QProcess::errorOccurred,[](QProcess::ProcessError error){
-            qDebug() << "restartApp errorOccurred!"<<error;
-        });
-        QObject::connect(restartApp,&QProcess::started,[](){
-            qDebug() << "restartApp started";
-        });
+        QProcess *restartApp = new QProcess;//(this);
         QTimer *restartTimer=new QTimer;
         restartTimer->setSingleShot(true);
         this->setProperty("restarted",false);
@@ -97,6 +87,13 @@ public slots:
         shutdownPC->startDetached("shutdown.exe",QStringList()<<"-r"<<"-f"<<"-t"<<"0");
         qApp->quit();
     }
+    void startRpcServer(int port)
+    {
+        QJsonRpcTcpServer * watchdogRpcServer = new QJsonRpcTcpServer(qApp);
+        watchdogRpcServer->setObjectName("watchdogRpcServer");
+        watchdogRpcServer->addService(this);
+        listenPort(watchdogRpcServer,port,3000,700);
+    }
 
 private:
     QTimer *watchTimer;
@@ -105,11 +102,27 @@ private:
     QTcpSocket *socket;
     void runClient()
     {
-        qDebug() << "Application watchdog started";
+        //qDebug() << "Application watchdog started";
         m_client = new QJsonRpcSocket(socket);
         watchTimer = new QTimer;//(this);
         QObject::connect(watchTimer, &QTimer::timeout, this, &Watchdog::sendReply);
-        watchTimer->start(5000);
+        watchTimer->start(10000);
+    }
+
+    void listenPort(QJsonRpcTcpServer * obj, int port, int interval, int delay) {
+        QTimer *listenPortTimer = new QTimer(qApp);
+        QObject::connect(listenPortTimer,&QTimer::timeout,[obj,port,listenPortTimer,interval](){
+                if (obj->listen(QHostAddress::AnyIPv4, port)) {
+                    startProcess();
+                    qDebug()<<QString("%1: %2 port opened").arg(obj->objectName()).arg(port);
+                    listenPortTimer->stop();
+                    listenPortTimer->deleteLater();
+                } else {
+                    qDebug()<<QString("%1: Failed to open port %2").arg(obj->objectName()).arg(port);
+                    listenPortTimer->start(interval);
+                }
+        });
+        listenPortTimer->start(delay);
     }
 
     QString shieldPath(const QString &anyPath)
@@ -149,7 +162,7 @@ private slots:
     QVariant ClientRpcUtility::query(const QString &queryText)
     {
         QEventLoop replyWaitLoop;
-        QJsonRpcServiceReply * reply = ServerExecute("SQLQuery2Json", QVariantList()<<queryText);
+        QJsonRpcServiceReply * reply = ServerExecute("isAlive");
         if (reply){
             QObject::connect(reply, &QJsonRpcServiceReply::finished, &replyWaitLoop, &QEventLoop::quit);
             //TODO signal jsonrpc timeout

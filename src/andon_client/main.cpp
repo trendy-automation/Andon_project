@@ -10,7 +10,6 @@
 #include "main.h"
 #include "serlock_manager.h"
 #include "watchdog.h"
-#include "watchdog_rpcservice.h"
 
 //#include "opcua_client.h"
 
@@ -622,9 +621,10 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     QStringList args = a.arguments();
-    Watchdog watchdog;
+    Watchdog *watchdog = new Watchdog(&a);
+    watchdog->setObjectName("watchdog");
     if(args.contains(APP_OPTION_WATHCDOG)){
-        if(!watchdog.listen(JSONRPC_CLIENT_WATCHDOG_PORT,QString(JSONRPC_WATCHDOG_SERVICENAME).append(".isAlive")))
+        if(!watchdog->listen(JSONRPC_CLIENT_WATCHDOG_PORT,QString(JSONRPC_WATCHDOG_SERVICENAME).append(".isAlive")))
             qDebug() << "Watchdog application cannot run!";
         return a.exec();
     }
@@ -654,8 +654,12 @@ int main(int argc, char *argv[])
     //    int qtype2 = qRegisterMetaType<QAbstractSocket::SocketState>("SocketState" );
     //    Q_DECLARE_METATYPE (std::function<void(QVariant)>);
     qRegisterMetaType<std::function<void(QVariant)>>("std::function<void(QVariant)>");
-    SingleAppRun singleApp(args.contains(APP_OPTION_FORCE));
 
+    SingleAppRun singleApp(args.contains(APP_OPTION_FORCE),&a);
+    if(singleApp.isToQuit()){
+        a.quit();
+        return 0;
+    }
 
 
 //    ClientRpcService * clientrpcservice = new ClientRpcService;
@@ -665,22 +669,15 @@ int main(int argc, char *argv[])
 //    listenPort<QJsonRpcTcpServer>(rpcServer,JSONRPC_CLIENT_PORT,3000,1000);
 
     /*****************************************
-     * Start Watchdog
+     * Start UdpReceiver
      *****************************************/
-    qDebug()<<"Start Watchdog";
-    WatchdogRpcService * watchdogRpcService = new WatchdogRpcService(&a);
-    watchdogRpcService->setObjectName("andonRpcService");
-    QJsonRpcTcpServer * watchdogRpcServer = new QJsonRpcTcpServer(&a);
-    watchdogRpcServer->setObjectName("watchdogRpcServer");
-    watchdogRpcServer->addService(watchdogRpcService);
-    listenPort<QJsonRpcTcpServer>(watchdogRpcServer,JSONRPC_CLIENT_WATCHDOG_PORT,3000,700,&watchdog.start);
-
-    UdpReceiver *udpreceiver = new UdpReceiver;
-    udpreceiver->start();
+    qDebug()<<"Start UdpReceiver";
+    UdpReceiver *udpreceiver = new UdpReceiver(&a);
     QObject::connect(udpreceiver, &UdpReceiver::serverfound, [=] (QHostAddress ServerAddress){
         ServerFound(ServerAddress);
-        // TODO: solve vkeyboard error "using null output deviAPP_OPTION_WATHCDOGvailable"
+        // TODO: solve vkeyboard error "using null output device available"
     });
+    udpreceiver->start();
     //    QObject::connect(udpreceiver, &UdpReceiver::destroyed,[](){qDebug()<<"UdpReceiver::destroyed";});
     //    QObject::connect(&msgHandler, &MessageHandler::destroyed,[](){qDebug()<<"MessageHandler::destroyed";});
     //    QObject::connect(&singleApp, &SingleAppRun::destroyed,[](){qDebug()<<"SingleAppRun::destroyed";});
@@ -701,5 +698,10 @@ int main(int argc, char *argv[])
         }
         //            ServerFound(ServerAddress);
     });
+    /*****************************************
+     * Start Watchdog
+     *****************************************/
+    qDebug()<<"Start Watchdog";
+    watchdog->startRpcServer(JSONRPC_CLIENT_WATCHDOG_PORT);
     return a.exec();
 }

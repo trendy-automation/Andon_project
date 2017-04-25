@@ -46,8 +46,8 @@ DEFINES += DB_CASH_CLAEN_INTERVAL=30000 #clean result for 10 MINUTES
 DEFINES += DB_QUERIES_LIMIT=30 #limit of differient queries in cash
 
 #_______________ webui _______________
-DEFINES += WUI_PATH='\\"./WebUI\\"'
-DEFINES += WUI_BUILD_PATH='\\"$$PWD/WebUI\\"'
+DEFINES += WUI_PATH='\\"./webui2\\"'
+DEFINES += WUI_BUILD_PATH='\\"./webui2\\"' #'\\"$$PWD/WebUI\\"'
 DEFINES += WUI_PORT=8081
 DEFINES += WUI_CLAEN_INTERVAL=900000 #each 15 minutes
 DEFINES += WUI_UPDATE_INTERVAL=15000 #each 15 SECONDS

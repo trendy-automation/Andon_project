@@ -4,7 +4,7 @@ DBWrapper::DBWrapper(QObject *parent) : QObject(parent)
 {
     packFunctionsMap.insert("",[this](QSqlQuery*sqlQuery){return QString();});
     packFunctionsMap.insert("json",[this](QSqlQuery*sqlQuery){
-        qDebug() << "packFunctionsMap json sqlQuery" << sqlQuery;
+        //qDebug() << "packFunctionsMap json sqlQuery" << sqlQuery;
         QJsonArray jatmp;
         while(sqlQuery->next()) {
             QJsonObject jotmp;
@@ -15,7 +15,7 @@ DBWrapper::DBWrapper(QObject *parent) : QObject(parent)
         sqlQuery->finish();
         DB.commit();
         QJsonDocument json(jatmp);
-        qDebug() << "packFunctionsMap json toJson" << json.toJson(QJsonDocument::Compact);
+//        qDebug() << "packFunctionsMap json toJson" << json.toJson(QJsonDocument::Compact);
         return json.toJson(QJsonDocument::Compact);
     });
     packFunctionsMap.insert("fulljson",[this](QSqlQuery*sqlQuery){
@@ -196,8 +196,10 @@ bool DBWrapper::queryExecute (queryStruct &queryItem)
                 queryItem.i_cashTime=+60000;
     }
     errorCounter=+dbOK;
-    if(errorCounter>signalErrorCount)
-        dbError(queryItem.s_error);
+    if(errorCounter>signalErrorCount){
+        qDebug() << "errorCounter>signalErrorCount emit dbError" << queryItem.s_error;
+        emit dbError(queryItem.s_error);
+    }
     return false;
 }
 
@@ -341,7 +343,7 @@ bool DBWrapper::executeProc(const QString & queryText)
 }
 */
 
-QString DBWrapper::query2jsonstrlist(const QString & queryText, int cashTime)
+/*QString DBWrapper::query2jsonstrlist(const QString & queryText, int cashTime)
 {
     return query2method(queryText,"jsonstrlist",cashTime);
 }
@@ -349,23 +351,38 @@ QString DBWrapper::query2jsonstrlist(const QString & queryText, int cashTime)
 QString DBWrapper::query2fulljson(const QString &queryText, int cashTime)
 {
     return query2method(queryText,"fulljson",cashTime);
-}
+}*/
 
-QString DBWrapper::query2json(const QString & queryText, int cashTime)
+QString DBWrapper::cashedQuery(const QString & queryText, int cashTime)
 {
     return query2method(queryText,"json",cashTime);
 }
 
+QString DBWrapper::query2jsonstrlist(const QString & queryText)
+{
+    return query2method(queryText,"jsonstrlist",0);
+}
+
+QString DBWrapper::query2fulljson(const QString &queryText)
+{
+    return query2method(queryText,"fulljson",0);
+}
+
+QString DBWrapper::query2json(const QString & queryText)
+{
+    return query2method(queryText,"json",0);
+}
+
 QString DBWrapper::query2method(const QString & queryText, const QString &queryMethod, int cashTime)
 {
-    qDebug() << queryText << queryMethod << cashTime;
+    //qDebug() << queryText << queryMethod << cashTime;
     queryStruct queryItem = appendQuery(queryText,queryMethod,cashTime);
     if(queryIsCashed(queryItem)){
         qDebug() << "queryIsCashed";
         return queryItem.s_result;
     }
     if(queryExecute(queryItem)){
-        qDebug() << "queryExecute OK";
+        //qDebug() << "queryExecute OK";
         if(!packFunctionsMap.contains(queryItem.s_method))
              queryItem.s_error=QString("Undefined query method(%1)!").arg(queryItem.s_method);
         else{

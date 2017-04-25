@@ -44,7 +44,7 @@ Ext.define ('Ext.ux.SqlSocket', {
                             callback(key, val);
                         }
                 },
-                sql : function(proc,input,fields,result){
+                sql : function(proc,input,fields,result,cashTime){
                     var me = this;
                     proc=proc.toUpperCase();
                     var errors = [];
@@ -134,7 +134,9 @@ Ext.define ('Ext.ux.SqlSocket', {
                     }
 
                     if(errors.length===0){
-                        this.db.query2json(query, function(resp){
+                        if(typeof cashTime == 'undefined')
+                            cashTime=0;
+                        this.db.cashedQuery(query, cashTime, function(resp){
                             var rows = JSON.parse(resp);
                             var res={};
                             if(rows.length===1)

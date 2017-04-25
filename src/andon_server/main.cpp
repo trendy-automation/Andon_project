@@ -23,8 +23,10 @@
 #include <functional>
 #include <QJSEngine>
 #include "main.h"
+
 #include "watchdog.h"
-#include "watchdog_rpcservice.h"
+
+#include <QMessageBox>
 
 int main(int argc, char *argv[])
 {
@@ -33,9 +35,10 @@ int main(int argc, char *argv[])
      * Start Watchdog
      *****************************************/
     QStringList args = a.arguments();
-    Watchdog watchdog;
+    Watchdog *watchdog = new Watchdog(&a);
+    watchdog->setObjectName("watchdog");
     if(args.contains(APP_OPTION_WATHCDOG)){
-        if(!watchdog.listen(JSONRPC_SERVER_WATCHDOG_PORT,QString(JSONRPC_WATCHDOG_SERVICENAME).append(".isAlive")))
+        if(!watchdog->listen(JSONRPC_SERVER_WATCHDOG_PORT,QString(JSONRPC_WATCHDOG_SERVICENAME).append(".isAlive")))
             //appClientDisconnected();
             qDebug() << "Watchdog application cannot run!";
         return a.exec();
@@ -67,10 +70,11 @@ int main(int argc, char *argv[])
     andonDb->setObjectName("andonDb");
     if(!andonDb->ConnectDB(qApp->applicationDirPath(),DB_DATABASE_FILE)){
         //qDebug()<<"ConnectDB failed";
+        QMessageBox::information(new QWidget,"Andon server failed","Can not connect to DB");
         a.quit();
         return 0;
     }
-    QObject::connect(andonDb,&DBWrapper::dbError,&watchdog,&Watchdog::rebootPC);
+    QObject::connect(andonDb,&DBWrapper::dbError,watchdog,&Watchdog::rebootPC);
     /*****************************************
      * Start QtTelnet
      *****************************************/
@@ -86,21 +90,18 @@ int main(int argc, char *argv[])
     andonRpcService->setObjectName("andonRpcService");
     QJsonRpcTcpServer * rpcServer = new QJsonRpcTcpServer(&a);
     rpcServer->setObjectName("rpcServer");
-    QObject::connect(rpcServer, &QJsonRpcTcpServer::clientConnected, appClientConnected);
-    QObject::connect(rpcServer, &QJsonRpcTcpServer::clientDisconnected, appClientDisconnected);
+//    QObject::connect(andonRpcService, &ServerRpcService::notifyConnectedClients,
+//                     [](){//const QString &method, const QJsonArray &params = QJsonArray()
+//                                qDebug()<<"ServerRpcService::notifyConnectedClients";
+//    });
+    QObject::connect(rpcServer, &QJsonRpcTcpServer::newConnection, [](){qDebug()<<"QJsonRpcTcpServer::newConnection";});
+    QObject::connect(rpcServer, &QJsonRpcTcpServer::clientConnected, [](){qDebug()<<"QJsonRpcTcpServer::clientConnected";});
+    QObject::connect(rpcServer, &QJsonRpcTcpServer::clientDisconnected, [](){qDebug()<<"QJsonRpcTcpServer::clientDisconnected";});
+    //QObject::connect(rpcServer, &QJsonRpcTcpServer::clientConnected, appClientConnected);
+    //QObject::connect(rpcServer, &QJsonRpcTcpServer::clientDisconnected, appClientDisconnected);
     rpcServer->addService(andonRpcService);
     andonRpcService->setDB(andonDb);
     listenPort<QJsonRpcTcpServer>(rpcServer,JSONRPC_SERVER_PORT,3000,700);
-    /*****************************************
-     * Start Watchdog
-     *****************************************/
-    qDebug()<<"Start Watchdog";
-    WatchdogRpcService * watchdogRpcService = new WatchdogRpcService(&a);
-    watchdogRpcService->setObjectName("andonRpcService");
-    QJsonRpcTcpServer * watchdogRpcServer = new QJsonRpcTcpServer(&a);
-    watchdogRpcServer->setObjectName("watchdogRpcServer");
-    watchdogRpcServer->addService(watchdogRpcService);
-    listenPort<QJsonRpcTcpServer>(watchdogRpcServer,JSONRPC_SERVER_WATCHDOG_PORT,3000,700,&watchdog.start);
     /*****************************************
      * Start Unicast UDP Sender
      *****************************************/
@@ -115,8 +116,8 @@ int main(int argc, char *argv[])
     QObject::connect(iotheard, &ioStreamThread::started, bcSender, &BCSender::run);
     QTimer::singleShot(2000,iotheard,&ioStreamThread::startThread);
     /*****************************************
- * Start WebUI
- *****************************************/
+     * Start WebUI
+     *****************************************/
     qDebug()<<"Start WebUI";
     QWebSocketServer webSocketServer(QStringLiteral("QWebChannel Server"), QWebSocketServer::NonSecureMode,&a);
     webSocketServer.setObjectName("webSocketServer");
@@ -253,7 +254,7 @@ int main(int argc, char *argv[])
     });
     QString sqlqueryres = andonDb->query2json("SELECT AUX_PROPERTIES_LIST "
                                               "FROM TBL_TCPDEVICES "
-                                              "WHERE DEVICE_TYPE='SMS Server' AND DEVICE_TYPE='SMS Server'",0);
+                                              "WHERE DEVICE_TYPE='SMS Server' AND DEVICE_TYPE='SMS Server'");
     QJsonDocument jdocURL;
     if (!sqlqueryres.isEmpty()){
         jdocURL= QJsonDocument::fromJson(sqlqueryres.toUtf8());
@@ -405,6 +406,12 @@ int main(int argc, char *argv[])
     }
 
     //    WThread->snedReport("Daily_PDP", QStringList()<<"ilya.kolesnik@faurecia.com");
+    /*****************************************
+     * Start Watchdog
+     *****************************************/
+    qDebug()<<"Start Watchdog";
+    watchdog->startRpcServer(JSONRPC_SERVER_WATCHDOG_PORT);
+    //appStartWatchdog(JSONRPC_SERVER_WATCHDOG_PORT);
     qDebug()<<"main finish";
     return a.exec();
 }

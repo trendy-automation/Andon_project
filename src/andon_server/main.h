@@ -23,6 +23,7 @@ QTXLSX_USE_NAMESPACE
 #include "common_functions.h"
 
 
+
 static void appClientConnected(const QHostAddress &clientIP)
 {
     qDebug()<<"appClientConnected()";
@@ -32,11 +33,12 @@ static void appClientConnected(const QHostAddress &clientIP)
     joClient.insert("EVENT_ID", QTime::currentTime().toString("HH:mm:ss.zzz"));
     joClient.insert("STATUS", "CONNECTED");
     QJsonDocument jdClient(joClient);
-    ServerRpcService*andonRpcService=qApp->findChild<ServerRpcService*>("andonRpcService");
+    ServerRpcService*andonRpcService=getObject<ServerRpcService>("andonRpcService");
+    //qApp->findChild<ServerRpcService*>("andonRpcService");
     if(andonRpcService)
         andonRpcService->StartSms(jdClient.toJson(QJsonDocument::Compact));
-    else
-        qDebug()<<"object andonRpcService not found in App";
+    //else
+    //    qDebug()<<"object andonRpcService not found in App";
 }
 
 static void appClientDisconnected(const QHostAddress &clientIP=QHostAddress::LocalHost)
@@ -48,20 +50,23 @@ static void appClientDisconnected(const QHostAddress &clientIP=QHostAddress::Loc
     joClient.insert("STATUS", "DISCONNECTED");
     joClient.insert("USER_COMMENT", clientIP.toString());
     QJsonDocument jdClient(joClient);
-    ServerRpcService*andonRpcService=qApp->findChild<ServerRpcService*>("andonRpcService");
+
+    ServerRpcService*andonRpcService=getObject<ServerRpcService>("andonRpcService");
+            //qApp->findChild<ServerRpcService*>("andonRpcService");
 
     if(andonRpcService)
         andonRpcService->StartSms(jdClient.toJson(QJsonDocument::Compact));
-    else
-        qDebug()<<"object andonRpcService not found in App";
+    //else
+    //    qDebug()<<"object andonRpcService not found in App";
 }
 
 static void appParseInput(const QString &text)
 {
     qDebug()<<"recived text:" << text;
-    BCSender*bcSender=qApp->findChild<BCSender*>("bcSender");
+    BCSender*bcSender=getObject<BCSender>("bcSender");
+    //qApp->findChild<BCSender*>("bcSender");
     if(!bcSender){
-        qDebug()<<"object bcSender not found in App";
+        //qDebug()<<"object bcSender not found in App";
         return;
     }
     if((text.left(5).compare("RENEW",Qt::CaseInsensitive)==0) && text.length()>7){
@@ -108,9 +113,10 @@ bool appCreateReport(QSqlQuery *query, const QString &sheetName,const QString &f
 
 void appExecuteReport(const QString &queryText, const QString &sheetName,const QString &fileName,const QString &ariaName="")
 {
-    DBWrapper *andonDb =qApp->findChild<DBWrapper*>("andonDb");
+    DBWrapper *andonDb =getObject<DBWrapper>("andonDb");
+    //qApp->findChild<DBWrapper*>("andonDb");
     if(!andonDb){
-        qDebug()<<"object andonDb not found in App";
+        //qDebug()<<"object andonDb not found in App";
         return;
     }
     std::function<bool(QSqlQuery*, const QString&, const QString&, const QString&)> appCreateReport2 = *appCreateReport;
@@ -121,13 +127,15 @@ void appExecuteReport(const QString &queryText, const QString &sheetName,const Q
 
 static void appAddbcClients(QSqlQuery *query)
 {
-    BCSender*bcSender=qApp->findChild<BCSender*>("bcSender");
+    BCSender*bcSender=getObject<BCSender>("bcSender");
+    //qApp->findChild<BCSender*>("bcSender");
     if(!bcSender){
-        qDebug()<<"object bcSender not found in App";
+        //qDebug()<<"object bcSender not found in App";
         return;
     }
     while(query->next())
         bcSender->addClient(query->value(0).toString());
 }
+
 
 #endif // MAIN_H

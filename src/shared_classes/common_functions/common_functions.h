@@ -3,8 +3,11 @@
 
 #include <QTimer>
 #include <QMetaObject>
+#include <QMetaProperty>
 #include <QJsonDocument>
 #include <functional>
+//#include "qjsonrpctcpserver.h"
+//#include "watchdog.h"
 
 template<class T>
 QVariantMap getProperties(T * obj,const QStringList &requested)
@@ -27,7 +30,7 @@ void setProperties(T * obj,const QVariantMap &objProperties)
 }
 
 template<class T>
-bool listenPort(T * obj, int port, int interval, int delay,const std::function<void()>& functor=0) {
+void listenPort(T * obj, int port, int interval, int delay,const std::function<void()>& functor=0) {
     QTimer *listenPortTimer = new QTimer(qApp);
     QObject::connect(listenPortTimer,&QTimer::timeout,[obj,port,listenPortTimer,interval,functor](){
             if (obj->listen(QHostAddress::AnyIPv4, port)) {
@@ -43,5 +46,35 @@ bool listenPort(T * obj, int port, int interval, int delay,const std::function<v
     });
     listenPortTimer->start(delay);
 }
+
+template<class T>
+T* getObject(const QString &objectName)
+{
+    T *obj =qApp->findChild<T*>(objectName);
+    if(obj)
+        return obj;
+    qDebug()<<QString("Object %1 not found in App!").arg(objectName);
+    return 0;
+}
+
+//static void appStartWatchdog(int port)
+//{
+//    qDebug()<<"Start Watchdog";
+//    Watchdog* watchdog = getObject<Watchdog>("watchdog");
+////    watchdog = qApp->findChild<Watchdog*>("watchdog");
+////    if(!watchdog){
+////        qDebug()<<"Object watchdog not found in App!";
+////        return;
+////    }
+//    if(!watchdog)
+//        return;
+////    WatchdogRpcService * watchdogRpcService = new WatchdogRpcService(qApp);
+////    watchdogRpcService->setObjectName("andonRpcService");
+//    QJsonRpcTcpServer * watchdogRpcServer = new QJsonRpcTcpServer(qApp);
+////    watchdogRpcServer->setObjectName("watchdogRpcServer");
+////    watchdogRpcServer->addService(watchdogRpcService);
+//    watchdogRpcServer->addService(watchdog);
+//    listenPort<QJsonRpcTcpServer>(watchdogRpcServer,port,3000,700,&watchdog->startProcess);
+//}
 
 #endif // COMMON_FUNCTIONS_H

@@ -14,7 +14,8 @@
 //#define STR(X) _STR(x)
 
 
-UdpReceiver::UdpReceiver()
+UdpReceiver::UdpReceiver(QObject *parent) :
+    QObject(parent)
 {
     isserverfound = false;
     udpSocket = new QUdpSocket(this);

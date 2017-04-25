@@ -14,7 +14,7 @@ class UdpReceiver : public QObject
 {
 Q_OBJECT
 public:
-    UdpReceiver();
+    UdpReceiver(QObject *parent=0);
     void start();
     void stop();
 

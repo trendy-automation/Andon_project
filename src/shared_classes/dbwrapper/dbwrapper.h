@@ -38,10 +38,14 @@ signals:
     void dbError(const QString &lastError);
 
 public slots:
-    QString query2method(const QString & queryText, const QString &queryMethod, int cashTime=DB_CASH_INTERVAL);
-    QString query2fulljson(const QString & queryText, int cashTime=DB_CASH_INTERVAL);
-    QString query2jsonstrlist(const QString & queryText, int cashTime=DB_CASH_INTERVAL);
-    QString query2json(const QString & queryText, int cashTime=DB_CASH_INTERVAL);
+    QString query2method(const QString & queryText, const QString &queryMethod, int cashTime);
+//    QString query2fulljson(const QString & queryText, int cashTime);
+//    QString query2jsonstrlist(const QString & queryText, int cashTime);
+    QString cashedQuery(const QString & queryText, int cashTime);
+    QString query2fulljson(const QString & queryText);
+    QString query2jsonstrlist(const QString & queryText);
+    QString query2json(const QString & queryText);
+    //QString query2map(const QString & queryText);
     bool ConnectDB(const QString &DB_Path,const QString &DB_Name);
     void executeQuery(const QString & queryText, const QString &query_method,
                       std::function<void(QString)> functor=[] (QString jsontext) {});

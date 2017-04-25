@@ -39,7 +39,6 @@ QJsonRpcServiceReply *ClientRpcUtility::ServerExecute(const QString &RemoteMetho
     QVariant arg[10];
     for (int i=0;i<9;++i)
         arg[i]=i<InParameterList.count()?InParameterList.at(i):QVariant();
-
     QJsonRpcServiceReply *reply = m_client->invokeRemoteMethod(QString(JSONRPC_SERVER_SERVICENAME).append(".").append(RemoteMethodName),
                                                                arg[0],arg[1],arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],arg[9]);
     if(functor)

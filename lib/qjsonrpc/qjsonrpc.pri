@@ -43,8 +43,8 @@ isEmpty(LIBDIR) {
     LIBDIR = lib
 }
 
-win32:CONFIG(release, debug|release): BUILD_TYPE=release
-else:win32:CONFIG(debug, debug|release): BUILD_TYPE=debug
+CONFIG(release, debug|release){BUILD_TYPE=release}
+CONFIG(debug, debug|release){BUILD_TYPE=debug}
 
 copydata.commands = $(COPY_FILE)  \"$$shell_path($$clean_path($$OUT_PWD/../../lib/qjsonrpc/$$BUILD_TYPE/qjsonrpc.dll))\" \"$$shell_path($$OUT_PWD/$$BUILD_TYPE)\"
 first.depends = $(first) copydata

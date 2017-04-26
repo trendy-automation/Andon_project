@@ -40,11 +40,14 @@ RESOURCES += clientjs.qrc
 
 
 ############       qextserialport.pri      #################
-win32:CONFIG(release, debug|release): BUILD_TYPE=release
-else:win32:CONFIG(debug, debug|release): BUILD_TYPE=debug
-
-win32:CONFIG(release, debug|release): LIB_NAME=Qt5ExtSerialPort1.dll
-else:win32:CONFIG(debug, debug|release): LIB_NAME=Qt5ExtSerialPortd1.dll
+CONFIG(release, debug|release){
+    BUILD_TYPE=release
+    LIB_NAME=Qt5ExtSerialPort1.dll
+}
+CONFIG(debug, debug|release){
+    BUILD_TYPE=debug
+    LIB_NAME=Qt5ExtSerialPortd1.dll
+}
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../lib/qextserialport-1.2rc/release/ -lQt5ExtSerialPort1
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../lib/qextserialport-1.2rc/debug/ -lQt5ExtSerialPortd1

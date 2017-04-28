@@ -1,8 +1,5 @@
 QJSONRPC_VERSION = 1.1.0
 
-#include(http-parser/http-parser.pri)
-#DEFINES +=QJSONRPC_ALIVE_TIMEOUT=60000
-
 isEmpty(QJSONRPC_LIBRARY_TYPE) {
     QJSONRPC_LIBRARY_TYPE = shared
 }
@@ -17,14 +14,9 @@ win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../lib/qjsonrpc/rel
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../lib/qjsonrpc/debug/ -lqjsonrpc
 else:unix: LIBS += -L$$OUT_PWD/../../lib/qjsonrpc/ -lqjsonrpc
 
-#DEFINES += QJSONRPC_LIB_PATH='\\"{$$OUT_PWD/../../lib/qjsonrpc/release/}qjsonrpc.dll\\"'
-
 INCLUDEPATH += $$PWD #/../../lib/qjsonrpc
 DEPENDPATH += $$PWD #/../../lib/qjsonrpc
 
-#QJSONRPCDESTDIR= $$OUT_PWD/../../lib/qjsonrpc/release/
-QJSONRPC_INCLUDEPATH = $${PWD}
-QJSONRPC_LIBS = -lqjsonrpc
 contains(QJSONRPC_LIBRARY_TYPE, staticlib) {
     DEFINES += QJSONRPC_STATIC
 } else {

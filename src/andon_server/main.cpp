@@ -88,20 +88,20 @@ int main(int argc, char *argv[])
     qDebug()<<"Start andonRpcService";
     ServerRpcService * andonRpcService = new ServerRpcService(&a);
     andonRpcService->setObjectName("andonRpcService");
-    QJsonRpcTcpServer * rpcServer = new QJsonRpcTcpServer(&a);
-    rpcServer->setObjectName("rpcServer");
+    QJsonRpcTcpServer rpcServer /*= new QJsonRpcTcpServer*/(&a);
+    rpcServer.setObjectName("&rpcServer");
 //    QObject::connect(andonRpcService, &ServerRpcService::notifyConnectedClients,
 //                     [](){//const QString &method, const QJsonArray &params = QJsonArray()
 //                                qDebug()<<"ServerRpcService::notifyConnectedClients";
 //    });
-    QObject::connect(rpcServer, &QJsonRpcTcpServer::newConnection, [](){qDebug()<<"QJsonRpcTcpServer::newConnection";});
-    QObject::connect(rpcServer, &QJsonRpcTcpServer::clientConnected, [](){qDebug()<<"QJsonRpcTcpServer::clientConnected";});
-    QObject::connect(rpcServer, &QJsonRpcTcpServer::clientDisconnected, [](){qDebug()<<"QJsonRpcTcpServer::clientDisconnected";});
-    //QObject::connect(rpcServer, &QJsonRpcTcpServer::clientConnected, appClientConnected);
-    //QObject::connect(rpcServer, &QJsonRpcTcpServer::clientDisconnected, appClientDisconnected);
-    rpcServer->addService(andonRpcService);
+    QObject::connect(&rpcServer, &QJsonRpcTcpServer::newConnection, [](){qDebug()<<"QJsonRpcTcpServer::newConnection";});
+    QObject::connect(&rpcServer, &QJsonRpcTcpServer::clientConnected, [](){qDebug()<<"QJsonRpcTcpServer::clientConnected";});
+    QObject::connect(&rpcServer, &QJsonRpcTcpServer::clientDisconnected, [](){qDebug()<<"QJsonRpcTcpServer::clientDisconnected";});
+    //QObject::connect(&rpcServer, &QJsonRpcTcpServer::clientConnected, appClientConnected);
+    //QObject::connect(&rpcServer, &QJsonRpcTcpServer::clientDisconnected, appClientDisconnected);
+    rpcServer.addService(andonRpcService);
     andonRpcService->setDB(andonDb);
-    listenPort<QJsonRpcTcpServer>(rpcServer,JSONRPC_SERVER_PORT,3000,700);
+    listenPort<QJsonRpcTcpServer>(&rpcServer,JSONRPC_SERVER_PORT,3000,700);
     /*****************************************
      * Start Unicast UDP Sender
      *****************************************/
@@ -162,11 +162,15 @@ int main(int argc, char *argv[])
     QTimer * reportTimer = new QTimer(QAbstractEventDispatcher::instance());
     reportTimer->setTimerType(Qt::VeryCoarseTimer);
     reportTimer->start(qMax(msecsPerDay-QTime::fromString("23:50:00").elapsed(),msecsPerDay));
+    appExecuteReport("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
+                     QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_%1")
+                     .arg(QDate::currentDate().toString("MMMM_yyyy")),"AutoDecl_aria");
     qDebug()<<"reportTimer start"<<reportTimer->interval()/3600000.0<<"hours";
     QObject::connect(reportTimer,&QTimer::timeout, [WThread,reportTimer,msecsPerDay,andonDb](){
         //qDebug()<<"reportTimer timeout"<<"dayOfWeek"<<QDate::currentDate().dayOfWeek();
-        appExecuteReport("SELECT * FROM REPORT_DECLARATION_HISTORY", "AutoDecl",
-                         "P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_export","AutoDecl_aria");
+        appExecuteReport("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
+                         QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_%1")
+                         .arg(QDate::currentDate().toString("MMMM_yyyy")),"AutoDecl_aria");
         if(QDate::currentDate().daysInMonth()==QDate::currentDate().day())
             appExecuteReport(QString("SELECT * FROM REPORT_BREAKDOWNS('%1', '%2')")
                              .arg(QDate(QDate::currentDate().year(),QDate::currentDate().month(),1).toString("dd.MM.yyyy"))

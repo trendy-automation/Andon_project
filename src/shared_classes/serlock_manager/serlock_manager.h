@@ -18,8 +18,6 @@
 class SherlockManager: public QObject
 {
     Q_OBJECT
-
-
 public:
     SherlockManager(const QString &tcpServerIp="", quint16 tcpServerPort=0,
                     QObject * parent=0, bool keepConnect=true, bool connectNow=true);

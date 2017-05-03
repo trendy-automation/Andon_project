@@ -9,7 +9,6 @@
 #include "clientwebinterface.h"
 #include "qjsonrpctcpserver.h"
 #include "qftp.h"
-#include "serlock_manager.h"
 
 
 #include <QMetaObject>
@@ -106,19 +105,7 @@ void TelnetKanbanDeclare(ClientRpcUtility *serverRpc, QtTelnet *telnetClient, QB
 }
 
 
-static void appCreateObjects(QVariant resp)
-{
-    QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
-    for (auto row = array.begin(); row != array.end(); row++) {
-        QJsonObject jsonRow=row->toObject();
-        if (jsonRow.contains("DEVICE_TYPE")) {
-            if (jsonRow["DEVICE_TYPE"].toString()=="SHERLOCK") {
-                SherlockManager * sm = new SherlockManager;
-                setProperties(sm,jsonRow.toVariantMap());
-            }
-        }
-    }
-}
+
 
 
 static void appClientDisconnected(const QHostAddress &clientIP=QHostAddress::LocalHost)
@@ -130,11 +117,11 @@ static void appClientDisconnected(const QHostAddress &clientIP=QHostAddress::Loc
     joClient.insert("STATUS", "DISCONNECTED");
     QJsonDocument jdClient(joClient);
 
-    ClientRpcUtility *serverRpc =qApp->findChild<ClientRpcUtility*>("serverRpc");
+    ClientRpcUtility *serverRpc = getObject<ClientRpcUtility>("serverRpc");//qApp->findChild<ClientRpcUtility*>("serverRpc");
     if(serverRpc)
         serverRpc->ServerExecute("StartSms",QVariantList()<<jdClient.toJson(QJsonDocument::Compact));
-    else
-        qDebug()<<"object andonRpcService not found in App";
+    //else
+    //    qDebug()<<"object andonRpcService not found in App";
 }
 
 

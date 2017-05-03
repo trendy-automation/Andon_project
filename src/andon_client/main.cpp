@@ -174,15 +174,10 @@ void ServerFound(QHostAddress ServerAddress)
 
     //########### Step 1.2 TCP DEVICES ############
     loadKeObjects(serverRpc,qApp);
-//    serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
-//                          "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
-//                          " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",
-//                          static_cast
-//                          appCreateObjects);
     serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
                           "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
-                          " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",
-                                [=](QVariant resp){appCreateObjects(resp);});
+                          " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",//mcbCreateObjects);
+                                [=](QVariant resp){mcbCreateObjects(resp);});
     serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
                           "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
                           " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",
@@ -654,6 +649,8 @@ int main(int argc, char *argv[])
     //    int qtype2 = qRegisterMetaType<QAbstractSocket::SocketState>("SocketState" );
     //    Q_DECLARE_METATYPE (std::function<void(QVariant)>);
     qRegisterMetaType<std::function<void(QVariant)>>("std::function<void(QVariant)>");
+    qRegisterMetaType<SherlockManager>("SherlockManager");
+    qRegisterMetaType<KeTcpObject>("KeTcpObject");
 
     SingleAppRun singleApp(args.contains(APP_OPTION_FORCE),&a);
     if(singleApp.isToQuit()){

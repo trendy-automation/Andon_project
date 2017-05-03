@@ -1,6 +1,10 @@
 ﻿#include "client_rpcutility.h"
 #include "ketcp_object.h"
+#include "serlock_manager.h"
 
+#include "common_functions.h"
+
+#include <QMetaType>
 
 #ifndef MAIN_CALLBACKS_H
 #define MAIN_CALLBACKS_H
@@ -65,4 +69,43 @@ namespace ML{
         });
     }
 }
+
+static void appCreateObjects(QVariant resp)
+{
+    QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
+    for (auto row = array.begin(); row != array.end(); row++) {
+        QJsonObject jsonRow=row->toObject();
+        if (jsonRow.contains("DEVICE_TYPE")) {
+            if (jsonRow["DEVICE_TYPE"].toString()=="SHERLOCK") {
+                SherlockManager * sm = new SherlockManager;
+                setProperties(sm,jsonRow.toVariantMap());
+            }
+        }
+    }
+}
+
+static void mcbCreateObjects(QVariant resp)
+{
+    QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
+    for (auto row = array.begin(); row != array.end(); row++) {
+//    for (auto &row:array) { // not work
+        QJsonObject jsonRow=row->toObject();
+        if (jsonRow.contains("DEVICE_TYPE")) {
+            int id = QMetaType::type(jsonRow["DEVICE_TYPE"].toString().toLatin1());
+            if (id != 0) {
+            void *myClassPtr = QMetaType::create(id);
+            ((QObject*)myClassPtr)->setParent(qApp);
+            setProperties(((QObject*)myClassPtr),jsonRow.toVariantMap());
+            //...
+            //QMetaType::destroy(id, myClassPtr);
+            //myClassPtr = 0;
+            }
+            //if (jsonRow["DEVICE_TYPE"].toString()=="SHERLOCK") {
+            //    SherlockManager * sm = new SherlockManager;
+            //    setProperties(sm,jsonRow.toVariantMap());
+            //}
+        }
+    }
+}
+
 #endif // MAIN_CALLBACKS_H

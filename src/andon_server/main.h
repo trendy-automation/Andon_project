@@ -33,7 +33,7 @@ static void appClientConnected(const QHostAddress &clientIP)
     joClient.insert("EVENT_ID", QTime::currentTime().toString("HH:mm:ss.zzz"));
     joClient.insert("STATUS", "CONNECTED");
     QJsonDocument jdClient(joClient);
-    ServerRpcService*andonRpcService=getObject<ServerRpcService>("andonRpcService");
+    ServerRpcService*andonRpcService=cfGetObject<ServerRpcService>("andonRpcService");
     //qApp->findChild<ServerRpcService*>("andonRpcService");
     if(andonRpcService)
         andonRpcService->StartSms(jdClient.toJson(QJsonDocument::Compact));
@@ -51,7 +51,7 @@ static void appClientDisconnected(const QHostAddress &clientIP=QHostAddress::Loc
     joClient.insert("USER_COMMENT", clientIP.toString());
     QJsonDocument jdClient(joClient);
 
-    ServerRpcService*andonRpcService=getObject<ServerRpcService>("andonRpcService");
+    ServerRpcService*andonRpcService=cfGetObject<ServerRpcService>("andonRpcService");
             //qApp->findChild<ServerRpcService*>("andonRpcService");
 
     if(andonRpcService)
@@ -63,7 +63,7 @@ static void appClientDisconnected(const QHostAddress &clientIP=QHostAddress::Loc
 static void appParseInput(const QString &text)
 {
     qDebug()<<"recived text:" << text;
-    BCSender*bcSender=getObject<BCSender>("bcSender");
+    BCSender*bcSender=cfGetObject<BCSender>("bcSender");
     //qApp->findChild<BCSender*>("bcSender");
     if(!bcSender){
         //qDebug()<<"object bcSender not found in App";
@@ -113,7 +113,7 @@ bool appCreateReport(QSqlQuery *query, const QString &sheetName,const QString &f
 
 void appExecuteReport(const QString &queryText, const QString &sheetName,const QString &fileName,const QString &ariaName="")
 {
-    DBWrapper *andonDb =getObject<DBWrapper>("andonDb");
+    DBWrapper *andonDb =cfGetObject<DBWrapper>("andonDb");
     //qApp->findChild<DBWrapper*>("andonDb");
     if(!andonDb){
         //qDebug()<<"object andonDb not found in App";
@@ -127,7 +127,7 @@ void appExecuteReport(const QString &queryText, const QString &sheetName,const Q
 
 static void appAddbcClients(QSqlQuery *query)
 {
-    BCSender*bcSender=getObject<BCSender>("bcSender");
+    BCSender*bcSender=cfGetObject<BCSender>("bcSender");
     //qApp->findChild<BCSender*>("bcSender");
     if(!bcSender){
         //qDebug()<<"object bcSender not found in App";

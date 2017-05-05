@@ -18,17 +18,32 @@
 class SherlockManager: public QObject
 {
     Q_OBJECT
+
+    Q_PROPERTY(QString DEVICE_NAME READ getDeviceName WRITE setDeviceName)
+    Q_PROPERTY(quint16 ID_TCPDEVICE MEMBER idDevice WRITE setIdDevice)
+    Q_PROPERTY(QString TCPDEVICE_IP MEMBER deviceIp WRITE setDeviceIp)
+    Q_PROPERTY(quint16 PORT MEMBER port WRITE setPort)
+    Q_PROPERTY(QString PASS MEMBER pass WRITE setPass)
+    Q_PROPERTY(QString AUX_PROPERTIES_LIST WRITE setAuxProperties)
+    Q_PROPERTY(bool isSocketConnected READ isSocketConnected)
+
+
 public:
-    SherlockManager(const QString &tcpServerIp="", quint16 tcpServerPort=0,
-                    QObject * parent=0, bool keepConnect=true, bool connectNow=true);
+    SherlockManager(QObject * parent=0);
     ~SherlockManager();
-    void setClientIp(const QString &tcpServerIp){if (!isSocketConnected()) {serverIp=tcpServerIp; startConnecting();}}
-    void setPort(quint16 tcpServerPort){if (!isSocketConnected()) {serverPort=tcpServerPort; startConnecting();}}
+
+    void setDeviceName(const QString &devName) {this->setObjectName(devName);}
+    QString getDeviceName() {return this->objectName();}
+
+    void setIdDevice(quint16 tcpIdDevice) {idDevice=tcpIdDevice;}
+    void setDeviceIp(const QString &tcpDevIp){if (!isSocketConnected()) {deviceIp=tcpDevIp; startConnecting();}}
+    void setPort(quint16 tcpServerPort){if (!isSocketConnected()) {port=tcpServerPort; startConnecting();}}
+    void setPass(const QString &devPass)     {if (!isSocketConnected()) {pass=devPass;      startConnecting();}}
+    void setAuxProperties(const QString &auxPropertiesList);
+
     bool isSocketConnected() {return tcpSocket->state() == QAbstractSocket::ConnectedState;}
     void setAutoReconnect(bool connectNow=true){autoReconnect=connectNow;}
     void setAutoConnect(bool keepConnect=true){autoConnect=keepConnect;}
-    QVariantMap getProperties(const QStringList &requested);
-    void setProperties(const QVariantMap &smProperties);
 
 public slots:
     void doReceive(const QString &response);
@@ -52,8 +67,12 @@ signals:
     void sendFailed(QString Data);
 
 private:
-    QString                             serverIp;
-    quint16                             serverPort;
+    quint16                             idDevice;
+    QString                             deviceIp;
+    quint16                             port;
+    QString                             login;
+    QString                             pass;
+
 //    QMap<QByteArray,functor> protocolMap;
     bool								autoConnect;
     bool								autoStart;

@@ -14,15 +14,13 @@
 #include <QJSEngine>
 using namespace std;
 #include <functional>
-#include <QThread>
 
-//#include <thread>
 
 
 
 class QJsonRpcSocket;
 //class QString;
-class ServerRpcUtility : public QThread
+class ServerRpcUtility : public QObject
 {
     Q_OBJECT
 public:

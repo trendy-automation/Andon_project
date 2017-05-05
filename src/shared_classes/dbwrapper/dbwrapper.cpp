@@ -400,9 +400,9 @@ void DBWrapper::executeQuery(const QString &queryText, const QString &query_meth
                              std::function<void(QString jsontext)> functor)
 {
     if(query_method.compare("query2json")==0)
-        return functor(query2json(queryText));
+        functor(query2json(queryText));
     if(query_method.compare("query2fulljson")==0)
-        return functor(query2fulljson(queryText));
+        functor(query2fulljson(queryText));
 }
 
 void DBWrapper::executeQuery(const QString & queryText,

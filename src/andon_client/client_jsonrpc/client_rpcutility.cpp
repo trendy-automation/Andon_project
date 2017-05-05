@@ -89,7 +89,7 @@ void ClientRpcUtility::ServerExecute(const QString &RemoteMethodName, QVariantLi
 //    ServerExecute("SQLQuery2Json", QVariantList()<<queryText, functor);
 //}
 
-void ClientRpcUtility::Query2Json(const QString &queryText, const std::function<void(QVariant)>& functor)
+void ClientRpcUtility::Query2Json(const QString &queryText, std::function<void(QVariant)> functor)
 {
     ServerExecute("SQLQuery2Json", QVariantList()<<queryText, [functor](QVariant resp){
         if(functor)

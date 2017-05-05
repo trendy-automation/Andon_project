@@ -5,12 +5,15 @@
 #include <QMetaObject>
 #include <QMetaProperty>
 #include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
 #include <functional>
+#include <QApplication>
 //#include "qjsonrpctcpserver.h"
 //#include "watchdog.h"
 
 template<class T>
-QVariantMap getProperties(T * obj,const QStringList &requested)
+QVariantMap cfGetProperties(T * obj,const QStringList &requested)
 {
     QVariantMap objProperties;
     const QMetaObject *metaObj = T::metaObject();
@@ -21,7 +24,7 @@ QVariantMap getProperties(T * obj,const QStringList &requested)
 }
 
 template<class T>
-void setProperties(T * obj,const QVariantMap &objProperties)
+void cfSetProperties(T * obj,const QVariantMap &objProperties)
 {
     const QMetaObject *metaObj = obj->metaObject();
     for (int i = metaObj->propertyOffset(); i < metaObj->propertyCount(); ++i)
@@ -30,7 +33,7 @@ void setProperties(T * obj,const QVariantMap &objProperties)
 }
 
 template<class T>
-void listenPort(T * obj, int port, int interval, int delay,const std::function<void()>& functor=0) {
+void cfListenPort(T * obj, int port, int interval, int delay,const std::function<void()>& functor=0) {
     QTimer *listenPortTimer = new QTimer(qApp);
     QObject::connect(listenPortTimer,&QTimer::timeout,[obj,port,listenPortTimer,interval,functor](){
             if (obj->listen(QHostAddress::AnyIPv4, port)) {
@@ -48,7 +51,7 @@ void listenPort(T * obj, int port, int interval, int delay,const std::function<v
 }
 
 template<class T>
-T* getObject(const QString &objectName)
+T* cfGetObject(const QString &objectName)
 {
     T *obj =qApp->findChild<T*>(objectName);
     if(obj)
@@ -56,6 +59,20 @@ T* getObject(const QString &objectName)
     qDebug()<<QString("Object %1 not found in App!").arg(objectName);
     return 0;
 }
+
+static void printResp(QVariant resp){
+    for(auto i:QJsonDocument::fromJson(resp.toString().toUtf8()).array()){
+        if(!i.isObject()){
+            qDebug() << i.toVariant() << "is not an json object";
+            continue;
+        }
+        QStringList printList;
+        for (auto o:QJsonObject(i.toObject()))
+            printList << o.toString();
+        qDebug() << printList.join(" ");
+    }
+}
+
 
 //static void appStartWatchdog(int port)
 //{

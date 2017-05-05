@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     /*****************************************
      * Start DataBase
      *****************************************/
-    DBWrapper *andonDb = new DBWrapper;
+    DBWrapper *andonDb = new DBWrapper(&a);
     andonDb->setObjectName("andonDb");
     if(!andonDb->ConnectDB(qApp->applicationDirPath(),DB_DATABASE_FILE)){
         //qDebug()<<"ConnectDB failed";
@@ -89,19 +89,12 @@ int main(int argc, char *argv[])
     ServerRpcService * andonRpcService = new ServerRpcService(&a);
     andonRpcService->setObjectName("andonRpcService");
     QJsonRpcTcpServer rpcServer /*= new QJsonRpcTcpServer*/(&a);
-    rpcServer.setObjectName("&rpcServer");
-//    QObject::connect(andonRpcService, &ServerRpcService::notifyConnectedClients,
-//                     [](){//const QString &method, const QJsonArray &params = QJsonArray()
-//                                qDebug()<<"ServerRpcService::notifyConnectedClients";
-//    });
-    QObject::connect(&rpcServer, &QJsonRpcTcpServer::newConnection, [](){qDebug()<<"QJsonRpcTcpServer::newConnection";});
-    QObject::connect(&rpcServer, &QJsonRpcTcpServer::clientConnected, [](){qDebug()<<"QJsonRpcTcpServer::clientConnected";});
-    QObject::connect(&rpcServer, &QJsonRpcTcpServer::clientDisconnected, [](){qDebug()<<"QJsonRpcTcpServer::clientDisconnected";});
-    //QObject::connect(&rpcServer, &QJsonRpcTcpServer::clientConnected, appClientConnected);
-    //QObject::connect(&rpcServer, &QJsonRpcTcpServer::clientDisconnected, appClientDisconnected);
+    rpcServer.setObjectName("rpcServer");
     rpcServer.addService(andonRpcService);
     andonRpcService->setDB(andonDb);
-    listenPort<QJsonRpcTcpServer>(&rpcServer,JSONRPC_SERVER_PORT,3000,700);
+    QObject::connect(&rpcServer, &QJsonRpcTcpServer::clientConnected, appClientConnected);
+    QObject::connect(&rpcServer, &QJsonRpcTcpServer::clientDisconnected, appClientDisconnected);
+    cfListenPort<QJsonRpcTcpServer>(&rpcServer,JSONRPC_SERVER_PORT,3000,700);
     /*****************************************
      * Start Unicast UDP Sender
      *****************************************/
@@ -121,13 +114,13 @@ int main(int argc, char *argv[])
     qDebug()<<"Start WebUI";
     QWebSocketServer webSocketServer(QStringLiteral("QWebChannel Server"), QWebSocketServer::NonSecureMode,&a);
     webSocketServer.setObjectName("webSocketServer");
-    listenPort<QWebSocketServer>(&webSocketServer,WEBCHANNEL_PORT,3000,500);
+    cfListenPort<QWebSocketServer>(&webSocketServer,WEBCHANNEL_PORT,3000,500);
 
     WebSocketClientWrapper clientWrapper(&webSocketServer);
     WebuiThread *WThread = new WebuiThread;
     WThread->setObjectName("WebuiThread");
     WThread->start();
-    listenPort<WebuiThread>(WThread,WUI_PORT,3000,1000);
+    cfListenPort<WebuiThread>(WThread,WUI_PORT,3000,1000);
 
     //    qDebug()<<"Start setup the channel";
     QWebChannel channel(&a);
@@ -409,13 +402,11 @@ int main(int argc, char *argv[])
         engine->evaluate(ScriptsList.at(i));
     }
 
-    //    WThread->snedReport("Daily_PDP", QStringList()<<"ilya.kolesnik@faurecia.com");
     /*****************************************
      * Start Watchdog
      *****************************************/
     qDebug()<<"Start Watchdog";
     watchdog->startRpcServer(JSONRPC_SERVER_WATCHDOG_PORT);
-    //appStartWatchdog(JSONRPC_SERVER_WATCHDOG_PORT);
     qDebug()<<"main finish";
     return a.exec();
 }

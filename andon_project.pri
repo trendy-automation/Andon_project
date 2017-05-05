@@ -69,3 +69,6 @@ DISTFILES += \
     $$PWD/lib/snap7/snap7.lib \
     $$PWD/lib/snap7/snap7.dll \
     $$PWD/.gitignore
+
+#_______ DB_FIELDS ________________
+#DEFINES += DB_FIELDS='\\"{\\"fldClassName\\":\\"CLASS_NAME\\"}\\"'

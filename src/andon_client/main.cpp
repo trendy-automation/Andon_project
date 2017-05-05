@@ -8,7 +8,7 @@
 #include "qftp.h"
 #include "main_callbacks.h"
 #include "main.h"
-#include "serlock_manager.h"
+//#include "serlock_manager.h"
 #include "watchdog.h"
 
 //#include "opcua_client.h"
@@ -173,11 +173,13 @@ void ServerFound(QHostAddress ServerAddress)
 
 
     //########### Step 1.2 TCP DEVICES ############
-    loadKeObjects(serverRpc,qApp);
+//    loadKeObjects(serverRpc,qApp);
     serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
                           "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
-                          " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",//mcbCreateObjects);
-                                [=](QVariant resp){mcbCreateObjects(resp);});
+                          " FROM CLIENT_SELECT_TCPDEVICES('127.0.0.1')", //:CLIENT_IP
+                                static_cast<std::function<void(QVariant)>>(mcbLoadTcpDevices));
+                                //[=](QVariant resp){mcbLoadTcpDevices(resp);});
+/*
     serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
                           "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
                           " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",
@@ -508,10 +510,10 @@ void ServerFound(QHostAddress ServerAddress)
                 }
             }
         }
-*/
+* /
         qDebug()<<"lambda TCPDEVICES fineshed";
     });
-
+*/
 
     //########### Step 1.3 ############
     serverRpc->Query2Json("SELECT WEBSOCKET_PORT FROM TBL_STATIONS "
@@ -649,8 +651,8 @@ int main(int argc, char *argv[])
     //    int qtype2 = qRegisterMetaType<QAbstractSocket::SocketState>("SocketState" );
     //    Q_DECLARE_METATYPE (std::function<void(QVariant)>);
     qRegisterMetaType<std::function<void(QVariant)>>("std::function<void(QVariant)>");
-    qRegisterMetaType<SherlockManager>("SherlockManager");
-    qRegisterMetaType<KeTcpObject>("KeTcpObject");
+    qRegisterMetaType<SherlockManager*>("SherlockManager");
+    qRegisterMetaType<KeTcpObject*>("KeTcpObject");
 
     SingleAppRun singleApp(args.contains(APP_OPTION_FORCE),&a);
     if(singleApp.isToQuit()){

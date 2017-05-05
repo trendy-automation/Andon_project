@@ -1,13 +1,13 @@
-﻿#include "client_rpcutility.h"
+﻿#ifndef MAIN_CALLBACKS_H
+#define MAIN_CALLBACKS_H
+
+#include "client_rpcutility.h"
 #include "ketcp_object.h"
 #include "serlock_manager.h"
 
 #include "common_functions.h"
 
 #include <QMetaType>
-
-#ifndef MAIN_CALLBACKS_H
-#define MAIN_CALLBACKS_H
 
 // main_lambdas name space
 namespace ML{
@@ -32,19 +32,15 @@ namespace ML{
         return list;
     }
 
-    void printResp(QVariant resp){
-        for(auto i:QJsonDocument::fromJson(resp.toString().toUtf8()).array()){
-            if(!i.isObject()){
-                qDebug() << i.toVariant() << "is not an json object";
-                continue;
-            }
-            QStringList printList;
-            for (auto o:QJsonObject(i.toObject()))
-                printList << o.toString();
-            qDebug() << printList.join(" ");
-        }
+    static void mcbPartProdused(int partCode, int idDevice)
+    {
+        ClientRpcUtility*serverRpc=cfGetObject<ClientRpcUtility>("serverRpc");
+        if(serverRpc)
+            serverRpc->Query2Json(QString("SELECT DISTINCT DEVICE_NAME, "
+                                          "MOLD_NAME FROM PRODUCTION_PART_PRODUSED (%1,%2)")
+                                                 .arg(partCode).arg(idDevice),
+                                             /*(std::function<void(QVariant)>)*/printResp);
     }
-
     void productionProdused(ClientRpcUtility *MLserverRpc, KeTcpObject* keObject, const QString &ioName, const QVariant &value){
         if ((ioName.compare("inputCode")==0) && ((value.toInt()!=0))){
             MLserverRpc->Query2Json(QString(
@@ -78,32 +74,29 @@ static void appCreateObjects(QVariant resp)
         if (jsonRow.contains("DEVICE_TYPE")) {
             if (jsonRow["DEVICE_TYPE"].toString()=="SHERLOCK") {
                 SherlockManager * sm = new SherlockManager;
-                setProperties(sm,jsonRow.toVariantMap());
+                cfSetProperties(sm,jsonRow.toVariantMap());
             }
         }
     }
 }
 
-static void mcbCreateObjects(QVariant resp)
+static void mcbLoadTcpDevices(QVariant resp)
 {
-    QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
-    for (auto row = array.begin(); row != array.end(); row++) {
-//    for (auto &row:array) { // not work
-        QJsonObject jsonRow=row->toObject();
-        if (jsonRow.contains("DEVICE_TYPE")) {
-            int id = QMetaType::type(jsonRow["DEVICE_TYPE"].toString().toLatin1());
+    static const QByteArray fldClsName("CLASS_NAME");
+    QJsonArray jsonArray = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
+//    for (auto value = jsonArray.begin(); value != jsonArray.end(); value++) {
+//    for (auto &value:jsonArray) { // not work
+    foreach (const QJsonValue &value, jsonArray) {
+        QJsonObject jsonObject=value.toObject();
+        if (jsonObject.contains(fldClsName)) {
+            int id = QMetaType::type(jsonObject[fldClsName].toString().toLatin1());
             if (id != 0) {
-            void *myClassPtr = QMetaType::create(id);
-            ((QObject*)myClassPtr)->setParent(qApp);
-            setProperties(((QObject*)myClassPtr),jsonRow.toVariantMap());
-            //...
-            //QMetaType::destroy(id, myClassPtr);
-            //myClassPtr = 0;
-            }
-            //if (jsonRow["DEVICE_TYPE"].toString()=="SHERLOCK") {
-            //    SherlockManager * sm = new SherlockManager;
-            //    setProperties(sm,jsonRow.toVariantMap());
-            //}
+                const QMetaObject *meta_object = QMetaType::metaObjectForType(id); // returns NOT NULL
+                QObject* tcpDevice= meta_object->newInstance(Q_ARG(QObject*, qApp));
+                qDebug() << QString("Object \"%1\" created").arg(tcpDevice->objectName());
+                cfSetProperties(tcpDevice,jsonObject.toVariantMap());
+            } else
+                qDebug() << QString("Type \"%1\" not found").arg(jsonObject[fldClsName].toString());
         }
     }
 }

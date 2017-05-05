@@ -74,7 +74,7 @@ void WebsocketInit(int websocketPort, ClientRpcUtility *serverRpc)
 {
     QWebSocketServer *webSocketServer = new QWebSocketServer(QStringLiteral("QWebChannel server of client"), QWebSocketServer::NonSecureMode,qApp);
     webSocketServer->setObjectName("webSocketServer");
-    listenPort<QWebSocketServer>(webSocketServer,websocketPort,3000,2000);
+    cfListenPort<QWebSocketServer>(webSocketServer,websocketPort,3000,2000);
     WebSocketClientWrapper *clientWrapper = new WebSocketClientWrapper(webSocketServer,qApp);
     QWebChannel *channel = new QWebChannel(qApp);
     QObject::connect(clientWrapper, &WebSocketClientWrapper::clientConnected,
@@ -117,7 +117,7 @@ static void appClientDisconnected(const QHostAddress &clientIP=QHostAddress::Loc
     joClient.insert("STATUS", "DISCONNECTED");
     QJsonDocument jdClient(joClient);
 
-    ClientRpcUtility *serverRpc = getObject<ClientRpcUtility>("serverRpc");//qApp->findChild<ClientRpcUtility*>("serverRpc");
+    ClientRpcUtility *serverRpc = cfGetObject<ClientRpcUtility>("serverRpc");//qApp->findChild<ClientRpcUtility*>("serverRpc");
     if(serverRpc)
         serverRpc->ServerExecute("StartSms",QVariantList()<<jdClient.toJson(QJsonDocument::Compact));
     //else

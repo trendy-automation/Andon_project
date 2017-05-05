@@ -39,6 +39,7 @@ public:
 
     bool respond(const QJsonRpcMessage &response);
     bool respond(QVariant returnValue);
+//    void createNew(const QJsonRpcMessage &request, QJsonRpcAbstractSocket *socket);
 
 private:
     QSharedDataPointer<QJsonRpcServiceRequestPrivate> d;

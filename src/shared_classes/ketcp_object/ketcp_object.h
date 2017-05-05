@@ -13,7 +13,6 @@
 #include <QHostAddress>
 #include <functional>
 
-
 //*******************************************************************************
 //struct ConnectionParams
 //{
@@ -66,6 +65,8 @@ class KeTcpObject: public QObject
     Q_PROPERTY(QString PASS MEMBER pass WRITE setPass)
     Q_PROPERTY(int poewrOnSec READ getPoewrOnSecs)
     Q_PROPERTY(int poewrOnDays READ getPoewrOnDays)
+    Q_PROPERTY(QString AUX_PROPERTIES_LIST WRITE setAuxProperties)
+
     //Q_PROPERTY(bool CONNECT_AFTER_CONFIG MEMBER connectOnConfig) //TODO to avoid "Ke.startConnecting"
     //Q_PROPERTY(QBitArray outputs READ getOutputs WRITE setOutputs)
     //Q_PROPERTY(QBitArray relays READ getRelays WRITE setRelays)
@@ -81,19 +82,21 @@ class KeTcpObject: public QObject
 
 
 public:
-    KeTcpObject(QObject * parent=0);
+    Q_INVOKABLE KeTcpObject(QObject * parent=0);
     ~KeTcpObject();
 
     void setDeviceName(const QString &devName) {this->setObjectName(devName);}
+    QString getDeviceName() {return this->objectName();}
+
     void setIdDevice(quint16 tcpIdDevice) {idDevice=tcpIdDevice;}
     void setDeviceIp(const QString &tcpDevIp){if (!isSocketConnected()) {deviceIp=tcpDevIp; startConnecting();}}
     void setPort(quint16 devPort)            {if (!isSocketConnected()) {port=devPort;      startConnecting();}}
 //    void setLogin(const QString &devLogin)   {if (!isSocketConnected()) {login=devLogin;    startConnecting();}}
     void setPass(const QString &devPass)     {if (!isSocketConnected()) {pass=devPass;      startConnecting();}}
+    void setAuxProperties(const QString &auxPropertiesList);
 
     int getPoewrOnSecs(){if (isSocketConnected()) return KeSysStart.secsTo(QDateTime::currentDateTime()); else return -1;}
     int getPoewrOnDays(){if (isSocketConnected()) return KeSysStart.daysTo(QDateTime::currentDateTime()); else return -1;}
-    QString getDeviceName() {return this->objectName();}
 
 //    void setParams(QVariantMap params);
 //    void setConnectionParams(QString sHost, quint16 uiPort,QString pass);
@@ -126,7 +129,7 @@ public:
     bool getInput_12(){return inputs.testBit(12);}
 public slots:
 //    void addIntInputMask(const QString &maskName,const QByteArray &mask);
-    QVariantMap getProperties(const QStringList &requested=QStringList());
+//    QVariantMap getProperties(const QStringList &requested=QStringList());
     void actResps(QString response);
     bool keSend(QString replay);
 

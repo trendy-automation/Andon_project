@@ -44,7 +44,7 @@ QJsonRpcServiceRequest::QJsonRpcServiceRequest(const QJsonRpcMessage &request,
 
 QJsonRpcServiceRequest &QJsonRpcServiceRequest::operator=(const QJsonRpcServiceRequest &other)
 {
-    d = other.d;
+    //d = other.d;
     return *this;
 }
 
@@ -168,6 +168,20 @@ QJsonRpcServiceRequest QJsonRpcService::currentRequest() const
     Q_D(const QJsonRpcService);
     return d->currentRequest;
 }
+
+//void QJsonRpcServiceRequest::createNew(const QJsonRpcMessage &request, QJsonRpcAbstractSocket *socket)
+//{
+//    qDebug()<<"createNew 0";
+//    QSharedDataPointer<QJsonRpcServiceRequestPrivate> dd(new QJsonRpcServiceRequestPrivate);
+////    QJsonRpcServiceRequestPrivate* req  = new QJsonRpcServiceRequestPrivate;
+//    qDebug()<<"createNew 1";
+//    d.swap(dd);
+//    qDebug()<<"createNew 2";
+//    d->request = request;
+//    qDebug()<<"createNew 3";
+//    d->socket = socket;
+//    qDebug()<<"createNew 3";
+//}
 
 void QJsonRpcService::beginDelayedResponse()
 {
@@ -473,3 +487,4 @@ QJsonRpcMessage QJsonRpcService::dispatch(const QJsonRpcMessage &request)
 
     return request.createResponse(QJsonRpcServicePrivate::convertReturnValue(returnValue));
 }
+

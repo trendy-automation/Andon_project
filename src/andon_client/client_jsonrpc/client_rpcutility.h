@@ -40,8 +40,8 @@ public slots:
                         std::function<void(QVariant)> functor=0);
     void ServerExecute(const QString &RemoteMethodName, QVariantList InParameterList,
                         QJSValue scriptFunctor);
-    //void Query2Json(const QString &queryText, std::function<void(QVariant)> functor=0);
-    void Query2Json(const QString &queryText, const std::function<void(QVariant)>& functor=0);
+    /*template <> */void Query2Json(const QString &queryText, std::function<void(QVariant)> functor=0);
+    //void Query2Json(const QString &queryText, const std::function<void(QVariant)>& functor=0);
     void Query2Json(const QString &queryText, QJSValue scriptFunctor);
     QVariant query(const QString &queryText);
     QVariant evaluate(const QString &scriptText);

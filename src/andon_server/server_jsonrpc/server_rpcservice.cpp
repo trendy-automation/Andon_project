@@ -275,7 +275,7 @@ QString ServerRpcService::StartSms(const QString &sms_params)
 
 QString ServerRpcService::SQLQuery2Json(const QString & sqlquery)
 {
-     qDebug() << sqlquery;
+    // qDebug() << sqlquery;
     if (sqlquery.isEmpty()) {
         qDebug() << "SQL query empty in SQLQuery2Json";
         return QString();
@@ -285,7 +285,7 @@ QString ServerRpcService::SQLQuery2Json(const QString & sqlquery)
 
 QString ServerRpcService::SQLQueryExec(const QString & sqlquery)
 {
-    qDebug() << sqlquery;
+    //qDebug() << sqlquery;
     if (sqlquery.isEmpty()) {
         qDebug() << "SQL query empty in SQLQueryExec";
         return QString();

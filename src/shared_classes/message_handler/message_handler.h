@@ -78,7 +78,7 @@ public:
     ~MessageHandler(){
         logFile->close();
         logFile->deleteLater();
-        timerFN->deleteLater();
+        //timerFN->deleteLater();
     }
 
     void myMessageHandler(QtMsgType Type,const QMessageLogContext &Context,const QString &Message)

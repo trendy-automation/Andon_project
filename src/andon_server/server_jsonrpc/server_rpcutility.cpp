@@ -6,7 +6,7 @@
 
 
 ServerRpcUtility::ServerRpcUtility(QObject *parent)
-    : QThread(parent),
+    : QObject(parent),
       m_Server(0)
 {
 }

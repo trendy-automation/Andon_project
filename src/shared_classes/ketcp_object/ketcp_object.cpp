@@ -1,10 +1,10 @@
-
-
 #include "ketcp_object.h"
+#include "common_functions.h"
+#include "client_rpcutility.h"
+
 #include <QtCore/QDebug>
-//#include <QDataStream>
-//#include <QMetaObject>
-#include <QMetaProperty>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 
 //________KEEPALIVE______
@@ -113,6 +113,16 @@ KeTcpObject::KeTcpObject(QObject *parent) :
         emit IOEvent("inputCode", inputCode);
     });
 
+    QObject::connect(this,&KeTcpObject::IOEvent,[=](const QString &ioName,const QVariant &val){
+        if(ioName=="inputCode" && val!=0){
+            ClientRpcUtility*serverRpc=cfGetObject<ClientRpcUtility>("serverRpc");
+            if(serverRpc)
+                serverRpc->Query2Json(QString("SELECT DISTINCT DEVICE_NAME, "
+                                              "MOLD_NAME FROM PRODUCTION_PART_PRODUSED (%1,%2)")
+                                                     .arg(val.toInt().arg(idDevice),
+                                                 /*(std::function<void(QVariant)>)*/printResp);
+        }
+    });
 
     responseProcessingMap.insert("RD",[this](QStringList responseList){
         if (responseList.at(1)=="ALL") {
@@ -439,13 +449,8 @@ void KeTcpObject::watchCodesStart()
     });
 }
 
-QVariantMap KeTcpObject::getProperties(const QStringList &requested)
+void KeTcpObject::setAuxProperties(const QString &auxPropertiesList)
 {
-//    qDebug()<<"getProperties";
-    QVariantMap keStatus;
-    const QMetaObject *metaObj = KeTcpObject::metaObject();
-    for (int i = metaObj->propertyOffset(); i < metaObj->propertyCount(); ++i)
-        if (requested.contains(metaObj->property(i).name()) || requested.isEmpty())
-            keStatus.insert(QString(metaObj->property(i).name()), metaObj->property(i).read(this));
-    return keStatus;
+    QJsonObject jsonObject = QJsonDocument::fromJson(auxPropertiesList.toUtf8()).object();
+    cfSetProperties(this,jsonObject.toVariantMap());
 }

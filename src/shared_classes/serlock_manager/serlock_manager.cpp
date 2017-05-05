@@ -1,13 +1,9 @@
-
-
 #include "serlock_manager.h"
+#include "common_functions.h"
 #include <QtCore/QDebug>
 #include <QTextStream>
 #include <QTimer>
-#include <QMetaObject>
-//#include <QString>
-//#include <QByteArray>
-#include <QMetaObject>
+#include <QJsonObject>
 
 
 //________KEEPALIVE______
@@ -19,14 +15,12 @@
 
 
 //*******************************************************************************
-SherlockManager::SherlockManager(const QString &tcpServerIp, quint16 tcpServerPort, QObject * parent, bool keepConnect, bool connectNow) :
+SherlockManager::SherlockManager(QObject * parent) :
     QObject(parent),
     tcpSocket (new QTcpSocket(this)),
     connectTimer (new QTimer(this)),
-    autoConnect(connectNow),
-    autoReconnect(keepConnect),
-    serverIp(tcpServerIp),
-    serverPort(tcpServerPort)
+    autoConnect(true),
+    autoReconnect(true)
 {
     qDebug() << "new Sherlock TcpClient";
 
@@ -65,7 +59,7 @@ SherlockManager::SherlockManager(const QString &tcpServerIp, quint16 tcpServerPo
         NULL, NULL) != 0)
         {dwError = WSAGetLastError() ;
         qWarning((char*)dwError); }
-        qDebug()<< QString("Sherlock TcpClient connected to %1:%2").arg(serverIp).arg(serverPort);
+        qDebug()<< QString("Sherlock TcpClient connected to %1:%2").arg(deviceIp).arg(port);
         emit this->socketConnected();
     });
 
@@ -73,8 +67,8 @@ SherlockManager::SherlockManager(const QString &tcpServerIp, quint16 tcpServerPo
 //    });
     //if(autoStart)
     QObject::connect(this,&SherlockManager::socketConnected, this, &SherlockManager::VisuonRun);
-    if(autoConnect)
-        startConnecting();
+//    if(autoConnect)
+//        startConnecting();
 }
 
 void SherlockManager::VisuonRun()
@@ -99,7 +93,7 @@ void SherlockManager::VisuonRun()
 // qDebug()<<"INIT"<<INIT
 //         <<"INITOK"<<INITOK
 //         <<"INSPECTING"<<INSPECTING
-////         <<"RESULT_NOK"<<RESULT_NOK
+// //         <<"RESULT_NOK"<<RESULT_NOK
 //         <<"FINISH"<<FINISH;
 
     /*QTimer **/initTimer = new QTimer(vision);
@@ -205,10 +199,10 @@ SherlockManager::~SherlockManager()
 
 void SherlockManager::startConnecting()
 {
-    if(!serverIp.isEmpty() && (serverPort!=0)
+    if(!deviceIp.isEmpty() && (port!=0)
             && tcpSocket->state()!=QAbstractSocket::ConnectingState
             ) {
-        tcpSocket->connectToHost(serverIp,serverPort);
+        tcpSocket->connectToHost(deviceIp,port);
         if (autoReconnect) {
             qDebug()<<"startTimer Sherlock TcpClient";
             connectTimer->start(TC_RECONNECT_TIMEOUT);
@@ -250,22 +244,8 @@ void SherlockManager::VisionStop()
 
 }
 
-QVariantMap SherlockManager::getProperties(const QStringList &requested)
+void SherlockManager::setAuxProperties(const QString &auxPropertiesList)
 {
-//    qDebug()<<"getProperties";
-    QVariantMap smProperties;
-    const QMetaObject *metaObj = SherlockManager::metaObject();
-    for (int i = metaObj->propertyOffset(); i < metaObj->propertyCount(); ++i)
-        if (requested.contains(metaObj->property(i).name()) || requested.isEmpty())
-            smProperties.insert(QString(metaObj->property(i).name()), metaObj->property(i).read(this));
-    return smProperties;
-}
-
-void SherlockManager::setProperties(const QVariantMap &smProperties)
-{
-//    qDebug()<<"setProperties";
-    const QMetaObject *metaObj = this->metaObject();
-    for (int i = metaObj->propertyOffset(); i < metaObj->propertyCount(); ++i)
-        if (smProperties.contains(metaObj->property(i).name()))
-            metaObj->property(i).write(this,smProperties.value(metaObj->property(i).name()));
+    QJsonObject jsonObject = QJsonDocument::fromJson(auxPropertiesList.toUtf8()).object();
+    cfSetProperties(this,jsonObject.toVariantMap());
 }

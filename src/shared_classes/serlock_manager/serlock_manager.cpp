@@ -1,9 +1,10 @@
 #include "serlock_manager.h"
-#include "common_functions.h"
 #include <QtCore/QDebug>
 #include <QTextStream>
 #include <QTimer>
+#include <QJsonDocument>
 #include <QJsonObject>
+#include "main_callbacks.h"
 
 
 //________KEEPALIVE______

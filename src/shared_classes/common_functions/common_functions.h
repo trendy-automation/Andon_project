@@ -60,18 +60,7 @@ T* cfGetObject(const QString &objectName)
     return 0;
 }
 
-static void printResp(QVariant resp){
-    for(auto i:QJsonDocument::fromJson(resp.toString().toUtf8()).array()){
-        if(!i.isObject()){
-            qDebug() << i.toVariant() << "is not an json object";
-            continue;
-        }
-        QStringList printList;
-        for (auto o:QJsonObject(i.toObject()))
-            printList << o.toString();
-        qDebug() << printList.join(" ");
-    }
-}
+
 
 
 //static void appStartWatchdog(int port)

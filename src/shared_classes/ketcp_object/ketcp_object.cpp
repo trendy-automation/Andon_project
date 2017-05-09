@@ -1,5 +1,5 @@
 #include "ketcp_object.h"
-#include "common_functions.h"
+#include "main_callbacks.h"
 #include "client_rpcutility.h"
 
 #include <QtCore/QDebug>
@@ -119,8 +119,7 @@ KeTcpObject::KeTcpObject(QObject *parent) :
             if(serverRpc)
                 serverRpc->Query2Json(QString("SELECT DISTINCT DEVICE_NAME, "
                                               "MOLD_NAME FROM PRODUCTION_PART_PRODUSED (%1,%2)")
-                                                     .arg(val.toInt().arg(idDevice),
-                                                 /*(std::function<void(QVariant)>)*/printResp);
+                                                     .arg(val.toInt()).arg(idDevice), printResp);
         }
     });
 

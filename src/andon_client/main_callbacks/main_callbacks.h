@@ -7,9 +7,26 @@
 
 #include "common_functions.h"
 
-#include <QMetaType>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonValue>
 
 // main_lambdas name space
+
+
+std::function<void(QVariant)> printResp = [](QVariant resp){
+    for(auto i:QJsonDocument::fromJson(resp.toString().toUtf8()).array()){
+        if(!i.isObject()){
+            qDebug() << QJsonValue(i).toVariant() << "is not an json object";
+            continue;
+        }
+        QStringList printList;
+        for (auto o:QJsonObject(i.toObject()))
+            printList << o.toString();
+        qDebug() << printList.join(" ");
+    }
+};
+
 namespace ML{
 
     /*extern*/ ClientRpcUtility *MLserverRpc;
@@ -20,7 +37,7 @@ namespace ML{
         QList<T*> list;
         for(auto i:QJsonDocument::fromJson(resp.toString().toUtf8()).array()){
             if(!i.isObject()){
-                qDebug() << i.toVariant() << "is not an json object";
+                qDebug() << QJsonValue(i).toVariant() << "is not an json object";
                 continue;
             }
             T * obj=new T(parent);
@@ -38,15 +55,13 @@ namespace ML{
         if(serverRpc)
             serverRpc->Query2Json(QString("SELECT DISTINCT DEVICE_NAME, "
                                           "MOLD_NAME FROM PRODUCTION_PART_PRODUSED (%1,%2)")
-                                                 .arg(partCode).arg(idDevice),
-                                             /*(std::function<void(QVariant)>)*/printResp);
+                                                 .arg(partCode).arg(idDevice),printResp);
     }
     void productionProdused(ClientRpcUtility *MLserverRpc, KeTcpObject* keObject, const QString &ioName, const QVariant &value){
         if ((ioName.compare("inputCode")==0) && ((value.toInt()!=0))){
             MLserverRpc->Query2Json(QString(
                                  "SELECT DISTINCT DEVICE_NAME, MOLD_NAME FROM PRODUCTION_PART_PRODUSED (%1,%2)")
-                                     .arg(value.toInt()).arg(keObject->property("ID_TCPDEVICE").toInt()),
-                                 (std::function<void(QVariant)>)printResp);
+                                     .arg(value.toInt()).arg(keObject->property("ID_TCPDEVICE").toInt()),printResp);
         }
     }
 
@@ -100,5 +115,6 @@ static void mcbLoadTcpDevices(QVariant resp)
         }
     }
 }
+
 
 #endif // MAIN_CALLBACKS_H

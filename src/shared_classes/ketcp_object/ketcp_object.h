@@ -4,7 +4,6 @@
 #define KETCP_OBJECT_H
 
 #include <QObject>
-
 #include <QTcpSocket>
 #include <QDateTime>
 #include <QBitArray>
@@ -12,6 +11,7 @@
 #include <QDateTime>
 #include <QHostAddress>
 #include <functional>
+
 
 //*******************************************************************************
 //struct ConnectionParams

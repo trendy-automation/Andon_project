@@ -169,20 +169,6 @@ QJsonRpcServiceRequest QJsonRpcService::currentRequest() const
     return d->currentRequest;
 }
 
-//void QJsonRpcServiceRequest::createNew(const QJsonRpcMessage &request, QJsonRpcAbstractSocket *socket)
-//{
-//    qDebug()<<"createNew 0";
-//    QSharedDataPointer<QJsonRpcServiceRequestPrivate> dd(new QJsonRpcServiceRequestPrivate);
-////    QJsonRpcServiceRequestPrivate* req  = new QJsonRpcServiceRequestPrivate;
-//    qDebug()<<"createNew 1";
-//    d.swap(dd);
-//    qDebug()<<"createNew 2";
-//    d->request = request;
-//    qDebug()<<"createNew 3";
-//    d->socket = socket;
-//    qDebug()<<"createNew 3";
-//}
-
 void QJsonRpcService::beginDelayedResponse()
 {
     Q_D(QJsonRpcService);

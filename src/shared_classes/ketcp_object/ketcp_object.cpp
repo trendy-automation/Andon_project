@@ -1,10 +1,15 @@
 #include "ketcp_object.h"
-#include "main_callbacks.h"
-#include "client_rpcutility.h"
 
 #include <QtCore/QDebug>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
+#include <QMetaObject>
+#include <QMetaProperty>
+
+#include <QApplication>
+
+#include "client_rpcutility.h"
 
 
 //________KEEPALIVE______
@@ -17,6 +22,19 @@
 #include <math.h>
 #define SIO_KEEPALIVE_VALS _WSAIOW(IOC_VENDOR,4)
 
+
+const std::function<void(QVariant)> printResp = [](QVariant resp){
+    for(auto i:QJsonDocument::fromJson(resp.toString().toUtf8()).array()){
+        if(!i.isObject()){
+            qDebug() << QJsonValue(i).toVariant() << "is not an json object";
+            continue;
+        }
+        QStringList printList;
+        for (auto o:QJsonObject(i.toObject()))
+            printList << o.toString();
+        qDebug() << printList.join(" ");
+    }
+};
 
 //*******************************************************************************
 KeTcpObject::KeTcpObject(QObject *parent) :
@@ -64,7 +82,7 @@ KeTcpObject::KeTcpObject(QObject *parent) :
 
         if (AutoReconnect)
             startConnecting();
-        });
+    });
 
     sysTimeTimer.setInterval(2000);
 
@@ -115,7 +133,7 @@ KeTcpObject::KeTcpObject(QObject *parent) :
 
     QObject::connect(this,&KeTcpObject::IOEvent,[=](const QString &ioName,const QVariant &val){
         if(ioName=="inputCode" && val!=0){
-            ClientRpcUtility*serverRpc=cfGetObject<ClientRpcUtility>("serverRpc");
+            ClientRpcUtility*serverRpc=qApp->findChild<ClientRpcUtility*>("serverRpc");
             if(serverRpc)
                 serverRpc->Query2Json(QString("SELECT DISTINCT DEVICE_NAME, "
                                               "MOLD_NAME FROM PRODUCTION_PART_PRODUSED (%1,%2)")
@@ -450,6 +468,9 @@ void KeTcpObject::watchCodesStart()
 
 void KeTcpObject::setAuxProperties(const QString &auxPropertiesList)
 {
-    QJsonObject jsonObject = QJsonDocument::fromJson(auxPropertiesList.toUtf8()).object();
-    cfSetProperties(this,jsonObject.toVariantMap());
+    QVariantMap objProperties = QJsonDocument::fromJson(auxPropertiesList.toUtf8()).object().toVariantMap();
+    const QMetaObject *metaObj = this->metaObject();
+    for (int i = metaObj->propertyOffset(); i < metaObj->propertyCount(); ++i)
+        if (objProperties.contains(metaObj->property(i).name()))
+            metaObj->property(i).write(this,objProperties.value(metaObj->property(i).name()));
 }

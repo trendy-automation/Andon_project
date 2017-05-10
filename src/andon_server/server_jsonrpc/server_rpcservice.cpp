@@ -20,20 +20,27 @@ ServerRpcService::~ServerRpcService()
 {
 }
 
-QString ServerRpcService::curClientIP()
+QString ServerRpcService::curClientIp()
 {
-    QJsonRpcAbstractSocket *socket = this->currentRequest().socket();
-    if (socket)
-        return socket->property("address").toString();
-    else
+    //QJsonRpcAbstractSocket *socket = this->currentRequest().socket();
+    //qDebug()<<"curClientIp";
+    QString address(this->property("address").toString());
+    if (!address.isEmpty()){
+        //return socket->property("address").toString();
+        //return socket->objectName();
+        return address;
+    }
+    else{
+        qDebug()<<"address is empty";
         return "";
+    }
 }
 
 
 
 void ServerRpcService::StopSms(const QString &EVENT_ID)
 {         
-    QString ClientIP = curClientIP();
+    QString ClientIP = curClientIp();
     QStringList SmsKeys;
     if (ThreadsMap.contains(ClientIP)) {
         if (EVENT_ID=="ALL")
@@ -58,7 +65,7 @@ void ServerRpcService::StopSms(const QString &EVENT_ID)
 
 void ServerRpcService::PauseSms(const QString &EVENT_ID)
 {
-    QString ClientIP = curClientIP();
+    QString ClientIP = curClientIp();
     if (ThreadsMap.contains(ClientIP))
         if (ThreadsMap[ClientIP].contains(EVENT_ID))
             ThreadsMap[ClientIP][EVENT_ID]->exit();
@@ -66,7 +73,7 @@ void ServerRpcService::PauseSms(const QString &EVENT_ID)
 
 void ServerRpcService::ResumeSms(const QString &EVENT_ID)
 {
-    QString ClientIP = curClientIP();
+    QString ClientIP = curClientIp();
     if (ThreadsMap.contains(ClientIP))
         if (ThreadsMap[ClientIP].contains(EVENT_ID))
             ThreadsMap[ClientIP][EVENT_ID]->start();
@@ -74,7 +81,7 @@ void ServerRpcService::ResumeSms(const QString &EVENT_ID)
 
 void ServerRpcService::CancelSms(const QString &EVENT_ID)
 {
-    QString ClientIP = curClientIP();
+    QString ClientIP = curClientIp();
     QStringList SmsKeys;
     if (ThreadsMap.contains(ClientIP)) {
         if (EVENT_ID=="ALL")
@@ -95,7 +102,7 @@ void ServerRpcService::CancelSms(const QString &EVENT_ID)
 //QString ServerRpcService::StartSms(const QString &sms_params)
 QString ServerRpcService::StartSms(const QString &sms_params)
 {
-    QString ClientIP = curClientIP();
+    QString ClientIP = curClientIp();
     qDebug()<<QString(sms_params).replace(":CLIENT_IP",ClientIP);
     QString result;
     //qDebug()<<"SMS_params"<<sms_params;
@@ -279,8 +286,11 @@ QString ServerRpcService::SQLQuery2Json(const QString & sqlquery)
     if (sqlquery.isEmpty()) {
         qDebug() << "SQL query empty in SQLQuery2Json";
         return QString();
-    } else
-        return andondb->query2json(QString(sqlquery).replace(":CLIENT_IP",curClientIP().append("\'").prepend("\'")));
+    } else{
+        QString sqlQueryText = QString(sqlquery).replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'"));
+        qDebug() << sqlQueryText;
+        return andondb->query2json(sqlQueryText);
+    }
 }
 
 QString ServerRpcService::SQLQueryExec(const QString & sqlquery)
@@ -290,7 +300,7 @@ QString ServerRpcService::SQLQueryExec(const QString & sqlquery)
         qDebug() << "SQL query empty in SQLQueryExec";
         return QString();
     } else
-        return andondb->query2json(QString(sqlquery).replace(":CLIENT_IP",curClientIP().append("\'").prepend("\'")));
+        return andondb->query2json(QString(sqlquery).replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'")));
         //return andondb->query2jsonstrlist(QString(sqlquery).replace(":CLIENT_IP",curClientIP().append("\'").prepend("\'")));
 }
 
@@ -301,7 +311,7 @@ void ServerRpcService::executeProc(const QString & sqlquery)
         qDebug() << "SQL query empty in executeProc";
         return;
     } else
-        andondb->executeProc(QString(sqlquery).replace(":CLIENT_IP",curClientIP().append("\'").prepend("\'")));
+        andondb->executeProc(QString(sqlquery).replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'")));
 }
 
 

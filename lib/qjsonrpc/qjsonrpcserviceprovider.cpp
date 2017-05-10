@@ -88,6 +88,7 @@ void QJsonRpcServiceProvider::processMessage(QJsonRpcAbstractSocket *socket, con
             } else {
                 QJsonRpcService *service = d->services.value(serviceName);
                 service->d_func()->currentRequest = QJsonRpcServiceRequest(message, socket);
+                service->setProperty("address",socket->property("address").toString());  //my hack 10.05.17
                 if (message.type() == QJsonRpcMessage::Request)
                     QObject::connect(service, SIGNAL(result(QJsonRpcMessage)),
                                       socket, SLOT(notify(QJsonRpcMessage)), Qt::UniqueConnection);

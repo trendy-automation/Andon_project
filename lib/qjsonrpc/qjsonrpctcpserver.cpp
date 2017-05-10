@@ -87,8 +87,6 @@ void QJsonRpcTcpServer::incomingConnection(int socketDescriptor)
         return;
     }
 
-
-
     struct tcp_keepalive {
         u_long onoff;
         u_long keepalivetime;
@@ -106,13 +104,14 @@ void QJsonRpcTcpServer::incomingConnection(int socketDescriptor)
     if (WSAIoctl(socketDescriptor, SIO_KEEPALIVE_VALS, &pClSock_tcpKeepalive,
                  sizeof(pClSock_tcpKeepalive), &sReturned, sizeof(sReturned), &dwBytes,
                  NULL, NULL) != 0)
-    {dwError = WSAGetLastError() ;
-        qWarning((char*)dwError); }
-
+    {dwError = WSAGetLastError();
+        qWarning((char*)dwError);}
 
     QIODevice *device = qobject_cast<QIODevice*>(tcpSocket);
     QJsonRpcSocket *socket = new QJsonRpcSocket(device, this);
     socket->setProperty("address",tcpSocket->peerAddress().toString()); //my hack 170615
+    socket->setObjectName(tcpSocket->peerAddress().toString());
+    //qDebug()<<"incomingConnection"<<socket->property("address").toString();
     connect(socket, SIGNAL(messageReceived(QJsonRpcMessage)),
             this, SLOT(_q_processMessage(QJsonRpcMessage)));
     d->clients.append(socket);

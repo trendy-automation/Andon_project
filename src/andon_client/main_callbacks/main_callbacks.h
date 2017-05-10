@@ -14,7 +14,7 @@
 // main_lambdas name space
 
 
-std::function<void(QVariant)> printResp = [](QVariant resp){
+const std::function<void(QVariant)> printResp = [](QVariant resp){
     for(auto i:QJsonDocument::fromJson(resp.toString().toUtf8()).array()){
         if(!i.isObject()){
             qDebug() << QJsonValue(i).toVariant() << "is not an json object";
@@ -95,23 +95,25 @@ static void appCreateObjects(QVariant resp)
     }
 }
 
-static void mcbLoadTcpDevices(QVariant resp)
+static void mcbLoadTcpDevices(const QVariant &resp)
 {
-    static const QByteArray fldClsName("CLASS_NAME");
+    qDebug()<<resp;
     QJsonArray jsonArray = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
 //    for (auto value = jsonArray.begin(); value != jsonArray.end(); value++) {
 //    for (auto &value:jsonArray) { // not work
     foreach (const QJsonValue &value, jsonArray) {
         QJsonObject jsonObject=value.toObject();
+        static const QByteArray fldClsName("CLASS_NAME");
         if (jsonObject.contains(fldClsName)) {
-            int id = QMetaType::type(jsonObject[fldClsName].toString().toLatin1());
+            QString className(jsonObject[fldClsName].toString());
+            int id = QMetaType::type(className.toLatin1());
             if (id != 0) {
                 const QMetaObject *meta_object = QMetaType::metaObjectForType(id); // returns NOT NULL
                 QObject* tcpDevice= meta_object->newInstance(Q_ARG(QObject*, qApp));
-                qDebug() << QString("Object \"%1\" created").arg(tcpDevice->objectName());
                 cfSetProperties(tcpDevice,jsonObject.toVariantMap());
+                qDebug() << QString("Object \"%1\", type \"%2\" created ").arg(tcpDevice->objectName()).arg(className).toLatin1();
             } else
-                qDebug() << QString("Type \"%1\" not found").arg(jsonObject[fldClsName].toString());
+                qDebug() << QString("Type \"%1\" not found").arg(className).toLatin1();
         }
     }
 }

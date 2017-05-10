@@ -18,7 +18,7 @@ public:
     ServerRpcService(QObject *parent = 0);
     ~ServerRpcService();
 private:
-    QString curClientIP();
+    QString curClientIp();
 
 signals:
     void SendSMS(const QString &PhoneNumber, const QString &Sms_text, const QString &Lang_name, const int &SmsLogId,  const int &att);

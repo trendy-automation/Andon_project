@@ -4,7 +4,10 @@
 #include <QTimer>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include "main_callbacks.h"
+#include <QJsonArray>
+
+#include <QMetaObject>
+#include <QMetaProperty>
 
 
 //________KEEPALIVE______
@@ -247,6 +250,9 @@ void SherlockManager::VisionStop()
 
 void SherlockManager::setAuxProperties(const QString &auxPropertiesList)
 {
-    QJsonObject jsonObject = QJsonDocument::fromJson(auxPropertiesList.toUtf8()).object();
-    cfSetProperties(this,jsonObject.toVariantMap());
+    QVariantMap objProperties = QJsonDocument::fromJson(auxPropertiesList.toUtf8()).object().toVariantMap();
+    const QMetaObject *metaObj = this->metaObject();
+    for (int i = metaObj->propertyOffset(); i < metaObj->propertyCount(); ++i)
+        if (objProperties.contains(metaObj->property(i).name()))
+            metaObj->property(i).write(this,objProperties.value(metaObj->property(i).name()));
 }

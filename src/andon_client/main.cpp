@@ -175,10 +175,9 @@ void ServerFound(QHostAddress ServerAddress)
     //########### Step 1.2 TCP DEVICES ############
 //    loadKeObjects(serverRpc,qApp);
     serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
-                          "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
-                          " FROM CLIENT_SELECT_TCPDEVICES('127.0.0.1')", //:CLIENT_IP
-                                static_cast<std::function<void(QVariant)>>(mcbLoadTcpDevices));
-                                //[=](QVariant resp){mcbLoadTcpDevices(resp);});
+                          "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST, CLASS_NAME"
+                          " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",// mcbLoadTcpDevices);
+                                [=](QVariant resp){mcbLoadTcpDevices(resp);});
 /*
     serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
                           "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "

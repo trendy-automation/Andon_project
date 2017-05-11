@@ -9,6 +9,9 @@
 #include <QMetaObject>
 #include <QMetaProperty>
 
+#include <QApplication>
+#include "client_rpcutility.h"
+
 
 //________KEEPALIVE______
 #include <winsock2.h>
@@ -17,6 +20,20 @@
 #include <math.h>
 #define SIO_KEEPALIVE_VALS _WSAIOW(IOC_VENDOR,4)
 
+
+
+const std::function<void(QVariant)> printResp = [](QVariant resp){
+    for(auto i:QJsonDocument::fromJson(resp.toString().toUtf8()).array()){
+        if(!i.isObject()){
+            qDebug() << QJsonValue(i).toVariant() << "is not an json object";
+            continue;
+        }
+        QStringList printList;
+        for (auto o:QJsonObject(i.toObject()))
+            printList << o.toString();
+        qDebug() << printList.join(" ");
+    }
+};
 
 //*******************************************************************************
 SherlockManager::SherlockManager(QObject * parent) :
@@ -71,8 +88,18 @@ SherlockManager::SherlockManager(QObject * parent) :
 //    });
     //if(autoStart)
     QObject::connect(this,&SherlockManager::socketConnected, this, &SherlockManager::VisuonRun);
-//    if(autoConnect)
-//        startConnecting();
+    if(autoConnect)
+        startConnecting();
+
+    QObject::connect(this,&SherlockManager::visionResult,[=](const QString &result){
+
+            ClientRpcUtility*serverRpc=qApp->findChild<ClientRpcUtility*>("serverRpc");
+            if(serverRpc)
+                serverRpc->Query2Json(QString("SELECT PART_NAME, DEVICE_NAME, ERROR "
+                                              "FROM PRODUCTION_VERSION_PRODUSED(%1)")
+                                                     .arg(result), printResp);
+    });
+
 }
 
 void SherlockManager::VisuonRun()
@@ -208,7 +235,7 @@ void SherlockManager::startConnecting()
             ) {
         tcpSocket->connectToHost(deviceIp,port);
         if (autoReconnect) {
-            qDebug()<<"startTimer Sherlock TcpClient";
+            //qDebug()<<"startTimer Sherlock TcpClient";
             connectTimer->start(TC_RECONNECT_TIMEOUT);
         }
     }
@@ -248,9 +275,9 @@ void SherlockManager::VisionStop()
 
 }
 
-void SherlockManager::setAuxProperties(const QString &auxPropertiesList)
+void SherlockManager::setAuxProperties(const QString &auxProperties)
 {
-    QVariantMap objProperties = QJsonDocument::fromJson(auxPropertiesList.toUtf8()).object().toVariantMap();
+    QVariantMap objProperties = QJsonDocument::fromJson(auxProperties.toUtf8()).object().toVariantMap();
     const QMetaObject *metaObj = this->metaObject();
     for (int i = metaObj->propertyOffset(); i < metaObj->propertyCount(); ++i)
         if (objProperties.contains(metaObj->property(i).name()))

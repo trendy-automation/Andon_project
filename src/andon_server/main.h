@@ -100,11 +100,11 @@ bool appCreateReport(QSqlQuery *query, const QString &sheetName,const QString &f
            qDebug()<<"Can not define aria name"<<ariaName;
 //    if(i>1){
         if(xlsx->save()){
-            qDebug()<<fileName<<"save OK";
+            qDebug()<<fileName.append(".xlsx")<<"save OK";
             return true;
         }
         else
-            qDebug()<<fileName<<"not saved";
+            qDebug()<<fileName.append(".xlsx")<<"not saved";
 //    }
 //    else
 //        xlsx->deleteLater(); //Is need?

@@ -29,7 +29,7 @@ class SherlockManager: public QObject
 
 
 public:
-    SherlockManager(QObject * parent=0);
+    Q_INVOKABLE SherlockManager(QObject * parent=0);
     ~SherlockManager();
 
     void setDeviceName(const QString &devName) {this->setObjectName(devName);}
@@ -39,7 +39,7 @@ public:
     void setDeviceIp(const QString &tcpDevIp){if (!isSocketConnected()) {deviceIp=tcpDevIp; startConnecting();}}
     void setPort(quint16 tcpServerPort){if (!isSocketConnected()) {port=tcpServerPort; startConnecting();}}
     void setPass(const QString &devPass)     {if (!isSocketConnected()) {pass=devPass;      startConnecting();}}
-    void setAuxProperties(const QString &auxPropertiesList);
+    void setAuxProperties(const QString &auxProperties);
 
     bool isSocketConnected() {return tcpSocket->state() == QAbstractSocket::ConnectedState;}
     void setAutoReconnect(bool connectNow=true){autoReconnect=connectNow;}

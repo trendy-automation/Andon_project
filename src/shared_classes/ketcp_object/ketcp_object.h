@@ -93,7 +93,7 @@ public:
     void setPort(quint16 devPort)            {if (!isSocketConnected()) {port=devPort;      startConnecting();}}
 //    void setLogin(const QString &devLogin)   {if (!isSocketConnected()) {login=devLogin;    startConnecting();}}
     void setPass(const QString &devPass)     {if (!isSocketConnected()) {pass=devPass;      startConnecting();}}
-    void setAuxProperties(const QString &auxPropertiesList);
+    void setAuxProperties(const QString &auxProperties);
 
     int getPoewrOnSecs(){if (isSocketConnected()) return KeSysStart.secsTo(QDateTime::currentDateTime()); else return -1;}
     int getPoewrOnDays(){if (isSocketConnected()) return KeSysStart.daysTo(QDateTime::currentDateTime()); else return -1;}

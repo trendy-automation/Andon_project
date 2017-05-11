@@ -97,7 +97,7 @@ static void appCreateObjects(QVariant resp)
 
 static void mcbLoadTcpDevices(const QVariant &resp)
 {
-    qDebug()<<resp;
+//    qDebug()<<resp;
     QJsonArray jsonArray = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
 //    for (auto value = jsonArray.begin(); value != jsonArray.end(); value++) {
 //    for (auto &value:jsonArray) { // not work
@@ -111,9 +111,10 @@ static void mcbLoadTcpDevices(const QVariant &resp)
                 const QMetaObject *meta_object = QMetaType::metaObjectForType(id); // returns NOT NULL
                 QObject* tcpDevice= meta_object->newInstance(Q_ARG(QObject*, qApp));
                 cfSetProperties(tcpDevice,jsonObject.toVariantMap());
-                qDebug() << QString("Object \"%1\", type \"%2\" created ").arg(tcpDevice->objectName()).arg(className).toLatin1();
+                qDebug() << QString("%1 %2 created")
+                            .arg(tcpDevice->objectName()).arg(className).toLatin1(); //"Object \"%1\", type \"%2\" created"
             } else
-                qDebug() << QString("Type \"%1\" not found").arg(className).toLatin1();
+                qDebug() << QString("Type ""%1"" not found").arg(className).toLatin1();
         }
     }
 }

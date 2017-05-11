@@ -466,9 +466,9 @@ void KeTcpObject::watchCodesStart()
     });
 }
 
-void KeTcpObject::setAuxProperties(const QString &auxPropertiesList)
+void KeTcpObject::setAuxProperties(const QString &auxProperties)
 {
-    QVariantMap objProperties = QJsonDocument::fromJson(auxPropertiesList.toUtf8()).object().toVariantMap();
+    QVariantMap objProperties = QJsonDocument::fromJson(auxProperties.toUtf8()).object().toVariantMap();
     const QMetaObject *metaObj = this->metaObject();
     for (int i = metaObj->propertyOffset(); i < metaObj->propertyCount(); ++i)
         if (objProperties.contains(metaObj->property(i).name()))

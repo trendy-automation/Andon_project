@@ -158,12 +158,16 @@ int main(int argc, char *argv[])
     appExecuteReport("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
                      QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_%1")
                      .arg(QDate::currentDate().toString("MMMM_yyyy")),"AutoDecl_aria");
+    appExecuteReport("SELECT * FROM MNT_MOLD_REPORT", "Andon_cycle_counter",
+                     "P:\\!Common Documents\\MNT\\Andon_cycle_counter");
     qDebug()<<"reportTimer start"<<reportTimer->interval()/3600000.0<<"hours";
     QObject::connect(reportTimer,&QTimer::timeout, [WThread,reportTimer,msecsPerDay,andonDb](){
         //qDebug()<<"reportTimer timeout"<<"dayOfWeek"<<QDate::currentDate().dayOfWeek();
         appExecuteReport("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
                          QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_%1")
                          .arg(QDate::currentDate().toString("MMMM_yyyy")),"AutoDecl_aria");
+//        appExecuteReport("SELECT * FROM MNT_MOLD_REPORT", "Andon_cycle_counter",
+//                         "P:\\Maintenance\\Обслуживание пресс-форм\\Andon_cycle_counter");
         if(QDate::currentDate().daysInMonth()==QDate::currentDate().day())
             appExecuteReport(QString("SELECT * FROM REPORT_BREAKDOWNS('%1', '%2')")
                              .arg(QDate(QDate::currentDate().year(),QDate::currentDate().month(),1).toString("dd.MM.yyyy"))

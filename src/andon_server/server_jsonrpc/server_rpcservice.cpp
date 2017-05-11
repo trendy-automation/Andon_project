@@ -288,7 +288,7 @@ QString ServerRpcService::SQLQuery2Json(const QString & sqlquery)
         return QString();
     } else{
         QString sqlQueryText = QString(sqlquery).replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'"));
-        qDebug() << sqlQueryText;
+        //qDebug() << sqlQueryText;
         return andondb->query2json(sqlQueryText);
     }
 }

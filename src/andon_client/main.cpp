@@ -178,10 +178,11 @@ void ServerFound(QHostAddress ServerAddress)
                           "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST, CLASS_NAME"
                           " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",// mcbLoadTcpDevices);
                                 [=](QVariant resp){mcbLoadTcpDevices(resp);});
-/*
+
     serverRpc->Query2Json("SELECT ID_TCPDEVICE, TCPDEVICE_IP, PORT, LOGIN, PASS, "
                           "DEVICE_NAME, DEVICE_TYPE, AUX_PROPERTIES_LIST "
-                          " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)",
+                          " FROM CLIENT_SELECT_TCPDEVICES(:CLIENT_IP)"
+                          " WHERE DEVICE_TYPE = 'FTP'",
                           [=](QVariant resp){
         qDebug()<<"lambda TCPDEVICES start";
         QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
@@ -225,7 +226,10 @@ void ServerFound(QHostAddress ServerAddress)
                     });
                     QObject::connect(fileTimer,&QTimer::timeout,
                                      [serverRpc,ftp,buffer,fileTimer](){
-                        int interval = qMin(FTP_INTERVAL, abs(QTime::currentTime().msecsTo(QTime(QTime::currentTime().hour()+1,58))));
+                        QDateTime cdt = QDateTime::currentDateTime();
+                        //int interval = qMin(FTP_INTERVAL+120,qMax(FTP_INTERVAL-120, cdt.msecsTo(QDateTime(cdt.addDays(cdt.time().hour()==23?1:0), QTime(cdt.time().hour()+1,58)))));
+                        QDateTime ndt = QDateTime::currentDateTime().addSecs(3600);
+                        int interval = cdt.msecsTo(QDateTime(ndt.date(),QTime(ndt.time().hour(),58)));
                         //qDebug() << "fileTimer->start(" << interval << ");";
                         fileTimer->start(interval);
                         serverRpc->Query2Json("SELECT ID_TASK, PART_REFERENCE, PART_COUNT, MANUFACTURE_DATE "
@@ -264,8 +268,10 @@ void ServerFound(QHostAddress ServerAddress)
                             }
                         });
                     });
+                    QDateTime cdt = QDateTime::currentDateTime();
+                    int interval = qMax((qint64)10000, cdt.msecsTo(QDateTime(cdt.date(),QTime(cdt.time().hour(),58))));
 
-                    int interval = qMax(5000,QTime::currentTime().msecsTo(QTime(QTime::currentTime().hour(),58)));
+                    //int interval = qMax(5000,QTime::currentTime().msecsTo(QTime(QTime::currentTime().hour(),58)));
 
                     //qMin(FTP_INTERVAL, QTime::currentTime().msecsTo(QTime(QTime::currentTime().addMSecs(3600000).hour(),58)));
 
@@ -279,7 +285,7 @@ void ServerFound(QHostAddress ServerAddress)
             }
         }
 
-        /*
+/*
         QJsonDocument jdocKBX100(QJsonDocument::fromJson(resp.toString().toUtf8()));
         QJsonArray tableArray = jdocKBX100.array();
         QJsonObject recordObject;
@@ -509,10 +515,10 @@ void ServerFound(QHostAddress ServerAddress)
                 }
             }
         }
-* /
+*/
         qDebug()<<"lambda TCPDEVICES fineshed";
     });
-*/
+
 
     //########### Step 1.3 ############
     serverRpc->Query2Json("SELECT WEBSOCKET_PORT FROM TBL_STATIONS "

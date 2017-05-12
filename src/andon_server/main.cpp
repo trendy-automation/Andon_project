@@ -154,12 +154,8 @@ int main(int argc, char *argv[])
     const int msecsPerDay = 24 * 60 * 60 * 1000;
     QTimer * reportTimer = new QTimer(QAbstractEventDispatcher::instance());
     reportTimer->setTimerType(Qt::VeryCoarseTimer);
-    reportTimer->start(qMax(msecsPerDay-QTime::fromString("23:50:00").elapsed(),msecsPerDay));
-    appExecuteReport("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
-                     QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_%1")
-                     .arg(QDate::currentDate().toString("MMMM_yyyy")),"AutoDecl_aria");
-    appExecuteReport("SELECT * FROM MNT_MOLD_REPORT", "Andon_cycle_counter",
-                     "P:\\!Common Documents\\MNT\\Andon_cycle_counter");
+    QDateTime cdt = QDateTime::currentDateTime();
+    reportTimer->start(qMax((qint64)10000, cdt.msecsTo(QDateTime(cdt.date(),QTime(23,50)))));
     qDebug()<<"reportTimer start"<<reportTimer->interval()/3600000.0<<"hours";
     QObject::connect(reportTimer,&QTimer::timeout, [WThread,reportTimer,msecsPerDay,andonDb](){
         //qDebug()<<"reportTimer timeout"<<"dayOfWeek"<<QDate::currentDate().dayOfWeek();
@@ -184,9 +180,11 @@ int main(int argc, char *argv[])
                         WThread->snedReport("REPORT_BREAKDOWNS", rcpnts);
                 }
             });
-        reportTimer->stop();
-        reportTimer->start(msecsPerDay-qMax(QTime::fromString("23:50:00").elapsed(),
-                                           QTime::fromString("23:50:00").elapsed())+1000);
+        //reportTimer->stop();
+        QDateTime cdt = QDateTime::currentDateTime();
+        reportTimer->start(cdt.msecsTo(QDateTime(cdt.addDays(1).date(),QTime(23,50))));
+        //reportTimer->start(msecsPerDay-qMax(QTime(23,50).elapsed(),
+        //                                    QTime(23,50).elapsed())+1000);
         qDebug()<<"reportTimer start"<<reportTimer->interval()/3600000.0<<"hours";
     });
     //qDebug()<<"WThread->snedReport";
@@ -411,6 +409,11 @@ int main(int argc, char *argv[])
      *****************************************/
     qDebug()<<"Start Watchdog";
     watchdog->startRpcServer(JSONRPC_SERVER_WATCHDOG_PORT);
+    appExecuteReport("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
+                     QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_%1")
+                     .arg(QDate::currentDate().toString("MMMM_yyyy")),"AutoDecl_aria");
+    appExecuteReport("SELECT * FROM MNT_MOLD_REPORT", "Andon_cycle_counter",
+                     "P:\\!Common Documents\\MNT\\Andon_cycle_counter");
     qDebug()<<"main finish";
     return a.exec();
 }

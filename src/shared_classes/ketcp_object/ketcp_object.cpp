@@ -23,7 +23,7 @@
 #define SIO_KEEPALIVE_VALS _WSAIOW(IOC_VENDOR,4)
 
 
-const std::function<void(QVariant)> printResp = [](QVariant resp){
+static void printResp (QVariant resp){
     for(auto i:QJsonDocument::fromJson(resp.toString().toUtf8()).array()){
         if(!i.isObject()){
             qDebug() << QJsonValue(i).toVariant() << "is not an json object";
@@ -34,7 +34,7 @@ const std::function<void(QVariant)> printResp = [](QVariant resp){
             printList << o.toString();
         qDebug() << printList.join(" ");
     }
-};
+}
 
 //*******************************************************************************
 KeTcpObject::KeTcpObject(QObject *parent) :
@@ -137,7 +137,8 @@ KeTcpObject::KeTcpObject(QObject *parent) :
             if(serverRpc)
                 serverRpc->Query2Json(QString("SELECT DISTINCT DEVICE_NAME, "
                                               "MOLD_NAME FROM PRODUCTION_PART_PRODUSED (%1,%2)")
-                                                     .arg(val.toInt()).arg(idDevice), printResp);
+                                                     .arg(val.toInt()).arg(idDevice),
+                                                     static_cast<std::function<void(QVariant)>>(printResp));
         }
     });
 

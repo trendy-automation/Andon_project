@@ -30,8 +30,8 @@ QJsonRpcServiceReply *ClientRpcUtility::ServerExecute(const QString &RemoteMetho
     QTcpSocket *socket = new QTcpSocket;//(this);
     socket->connectToHost(serveraddress.toString(), JSONRPC_SERVER_PORT);
     if (!socket->waitForConnected()) {
-        qDebug() << "could not connect to server: " << socket->errorString();
-        emit error(socket->errorString());
+        //qDebug() << "could not connect to server: " << socket->errorString();
+        emit error(QString("Error ""%1"" trying execute %2").arg(socket->errorString()).arg(RemoteMethodName));
         functor(QVariant());
         return 0;
     }

@@ -79,9 +79,11 @@ static void appParseInput(const QString &text)
     }
 }
 
-bool appCreateReport(QSqlQuery *query, const QString &sheetName,const QString &fileName,const QString &ariaName="")
+bool appCreateReport(QSqlQuery *query, const QString &sheetName,QString fileName,const QString &ariaName="")
 {
-    Document * xlsx= new Document(QString(fileName).append(".xlsx"));
+    //if(!fileName.endsWith(".xlsx"))
+    Document * xlsx= new Document(fileName);
+    fileName = fileName.append(".xlsx");
     if(xlsx->selectSheet(sheetName))
         xlsx->deleteSheet(sheetName);
     xlsx->addSheet(sheetName);
@@ -100,11 +102,11 @@ bool appCreateReport(QSqlQuery *query, const QString &sheetName,const QString &f
            qDebug()<<"Can not define aria name"<<ariaName;
 //    if(i>1){
         if(xlsx->save()){
-            qDebug()<<fileName.append(".xlsx")<<"save OK";
+            qDebug()<<fileName<<"save OK";
             return true;
         }
         else
-            qDebug()<<fileName.append(".xlsx")<<"not saved";
+            qDebug()<<fileName<<"not saved";
 //    }
 //    else
 //        xlsx->deleteLater(); //Is need?

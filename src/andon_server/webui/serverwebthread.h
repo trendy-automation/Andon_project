@@ -13,7 +13,7 @@
 #include <QTextCodec>
 
 //_______Excel Lib_______________
-#include "xlsxdocument.h"
+//#include "xlsxdocument.h"
 #include <QIODevice>
 #include <QDataStream>
 #include <QBuffer>
@@ -183,27 +183,27 @@ public slots:
         qDebug()<<"getSqlQuery"<<report<<emails<<sql_query;
         getSqlQuery(sql_query, [this,&subject,&sheet,&template_file,&res_file,emails]
                         (QSqlQuery *query){
-                QXlsx::Document * xlsx;
-                if (template_file.isEmpty())
-                    xlsx = new QXlsx::Document();
-                else
-                    xlsx = new QXlsx::Document(template_file);
-                xlsx->addSheet(sheet);
-                int i=1;
-                QTextCodec *codec = QTextCodec::codecForName("iso8859-1");
-                for(int j=0; j < query->record().count(); j++)
-                    xlsx->write(i,j+1,QString(codec->fromUnicode(query->record().fieldName(j))));
-                while(query->next()) {
-                    i++;
-                    for(int j=0; j < query->record().count(); j++)
-                        xlsx->write(i,j+1,query->value(j));
-                }
-                if(i>1){
-                    QBuffer buffer(new QByteArray);
-                    xlsx->saveAs(&buffer);
-                    buffer.setProperty("FILE_NAME",res_file);
-                    emit sendReport2email(subject,"",emails,&(QList<QBuffer*>()<<&buffer));
-                }
+//                QXlsx::Document * xlsx;
+//                if (template_file.isEmpty())
+//                    xlsx = new QXlsx::Document();
+//                else
+//                    xlsx = new QXlsx::Document(template_file);
+//                xlsx->addSheet(sheet);
+//                int i=1;
+//                QTextCodec *codec = QTextCodec::codecForName("iso8859-1");
+//                for(int j=0; j < query->record().count(); j++)
+//                    xlsx->write(i,j+1,QString(codec->fromUnicode(query->record().fieldName(j))));
+//                while(query->next()) {
+//                    i++;
+//                    for(int j=0; j < query->record().count(); j++)
+//                        xlsx->write(i,j+1,query->value(j));
+//                }
+//                if(i>1){
+//                    QBuffer buffer(new QByteArray);
+//                    xlsx->saveAs(&buffer);
+//                    buffer.setProperty("FILE_NAME",res_file);
+//                    emit sendReport2email(subject,"",emails,&(QList<QBuffer*>()<<&buffer));
+//                }
             });
     }
 

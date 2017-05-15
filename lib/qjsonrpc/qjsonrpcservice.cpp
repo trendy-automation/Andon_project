@@ -44,7 +44,7 @@ QJsonRpcServiceRequest::QJsonRpcServiceRequest(const QJsonRpcMessage &request,
 
 QJsonRpcServiceRequest &QJsonRpcServiceRequest::operator=(const QJsonRpcServiceRequest &other)
 {
-    //d = other.d;
+    d = other.d; //my hack 15.05.17
     return *this;
 }
 

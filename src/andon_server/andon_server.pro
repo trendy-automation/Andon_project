@@ -7,12 +7,13 @@ include(../shared_classes/message_handler/message_handler.pri)
 include(../shared_classes/single_apprun/single_apprun.pri)
 include(../shared_classes/common_functions/common_functions.pri)
 include(../shared_classes/watchdog/watchdog.pri)
+include(../shared_classes/excel_report/excel_report.pri)
 include(main_callbacks/main_callbacks.pri)
 include(server_jsonrpc/server_jsonrpc.pri)
 include(webui/webui.pri)
 include(sms_service/sms_service.pri)
 include(broadcastsender/bcsender.pri)
-include(qtxlsx/qtxlsx.pri)
+#include(qtxlsx/qtxlsx.pri)
 include(sendemail/sendemail.pri)
 
 DEFINES += DEBUG_NAME='\\"Server\\"'
@@ -52,15 +53,10 @@ CONFIG -= app_bundle
 #CONFIG   += console
 #CONFIG   -= app_bundle
 
-
-
-
 TARGET = andon_server
 
 TEMPLATE = app
 
-SOURCES += main.cpp \
+SOURCES += main.cpp
 
-HEADERS += \
-    main.h
-
+HEADERS += main.h

@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
      * Start Watchdog
      *****************************************/
     QStringList args = a.arguments();
-    Watchdog *watchdog = new Watchdog(&a);
+    Watchdog *watchdog = new Watchdog(/*&a*/);
     watchdog->setObjectName("watchdog");
     if(args.contains(APP_OPTION_WATHCDOG)){
         if(!watchdog->listen(JSONRPC_SERVER_WATCHDOG_PORT,QString(JSONRPC_WATCHDOG_SERVICENAME).append(".isAlive")))
@@ -86,9 +86,9 @@ int main(int argc, char *argv[])
      * Start andonRpcService
      *****************************************/
     qDebug()<<"Start andonRpcService";
-    ServerRpcService * andonRpcService = new ServerRpcService(&a);
+    ServerRpcService * andonRpcService = new ServerRpcService;//(&a);
     andonRpcService->setObjectName("andonRpcService");
-    QJsonRpcTcpServer rpcServer /*= new QJsonRpcTcpServer*/(&a);
+    QJsonRpcTcpServer rpcServer /*= new QJsonRpcTcpServer*/;//(&a);
     rpcServer.setObjectName("rpcServer");
     rpcServer.addService(andonRpcService);
     andonRpcService->setDB(andonDb);

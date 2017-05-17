@@ -11,6 +11,7 @@
 #include "qjsonrpcservice.h"
 #include "qjsonrpcservicereply.h"
 #include "qjsonrpctcpserver.h"
+#include "common_functions.h"
 
 class Watchdog: public QJsonRpcService
 {
@@ -46,7 +47,7 @@ public slots:
     static void startProcess()
     {
         //qDebug() << "watchdog start";
-        QProcess *watchdogProcess = new QProcess(qApp);
+        QProcess *watchdogProcess = new QProcess/*(qApp)*/;
         watchdogProcess->setProcessChannelMode(QProcess::QProcess::ForwardedChannels);
         watchdogProcess->start(qApp->applicationFilePath(),QStringList(APP_OPTION_WATHCDOG));
     }
@@ -89,10 +90,10 @@ public slots:
     }
     void startRpcServer(int port)
     {
-        QJsonRpcTcpServer * watchdogRpcServer = new QJsonRpcTcpServer(qApp);
+        QJsonRpcTcpServer * watchdogRpcServer = new QJsonRpcTcpServer/*(qApp)*/;
         watchdogRpcServer->setObjectName("watchdogRpcServer");
         watchdogRpcServer->addService(this);
-        listenPort(watchdogRpcServer,port,3000,700);
+        cfListenPort(watchdogRpcServer,port,3000,700);
     }
 
 private:
@@ -109,21 +110,21 @@ private:
         watchTimer->start(10000);
     }
 
-    void listenPort(QJsonRpcTcpServer * obj, int port, int interval, int delay) {
-        QTimer *listenPortTimer = new QTimer(qApp);
-        QObject::connect(listenPortTimer,&QTimer::timeout,[obj,port,listenPortTimer,interval](){
-                if (obj->listen(QHostAddress::AnyIPv4, port)) {
-                    startProcess();
-                    qDebug()<<QString("%1: %2 port opened").arg(obj->objectName()).arg(port);
-                    listenPortTimer->stop();
-                    listenPortTimer->deleteLater();
-                } else {
-                    qDebug()<<QString("%1: Failed to open port %2").arg(obj->objectName()).arg(port);
-                    listenPortTimer->start(interval);
-                }
-        });
-        listenPortTimer->start(delay);
-    }
+//    void listenPort(QJsonRpcTcpServer * obj, int port, int interval, int delay) {
+//        QTimer *listenPortTimer = new QTimer/*(qApp)*/;
+//        QObject::connect(listenPortTimer,&QTimer::timeout,[obj,port,listenPortTimer,interval](){
+//                if (obj->listen(QHostAddress::AnyIPv4, port)) {
+//                    startProcess();
+//                    qDebug()<<QString("%1: %2 port opened").arg(obj->objectName()).arg(port);
+//                    listenPortTimer->stop();
+//                    listenPortTimer->deleteLater();
+//                } else {
+//                    qDebug()<<QString("%1: Failed to open port %2").arg(obj->objectName()).arg(port);
+//                    listenPortTimer->start(interval);
+//                }
+//        });
+//        listenPortTimer->start(delay);
+//    }
 
     QString shieldPath(const QString &anyPath)
     {

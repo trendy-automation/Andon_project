@@ -178,4 +178,9 @@ void QJsonRpcTcpServer::notifyConnectedClients(const QString &method, const QJso
     d->_q_notifyConnectedClients(method, params);
 }
 
+//bool QJsonRpcTcpServer::listen(QHostAddress address, quint16 port)
+//{
+//    this->listen(address, port);
+//}
+
 #include "moc_qjsonrpctcpserver.cpp"

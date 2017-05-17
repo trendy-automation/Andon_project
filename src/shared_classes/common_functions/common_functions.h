@@ -9,6 +9,8 @@
 #include <QJsonObject>
 #include <functional>
 #include <QApplication>
+#include <QThread>
+#include <QHostAddress>
 //#include "qjsonrpctcpserver.h"
 //#include "watchdog.h"
 
@@ -33,22 +35,49 @@ void cfSetProperties(T * obj,const QVariantMap &objProperties)
 }
 
 template<class T>
-void cfListenPort(T * obj, int port, int interval, int delay,const std::function<void()>& functor=0) {
-    QTimer *listenPortTimer = new QTimer;
-    QObject::connect(listenPortTimer,&QTimer::timeout,[obj,port,listenPortTimer,interval,functor](){
+void cfListenPort(T * obj, ushort port, int interval, int delay,const std::function<void()>& functor=0) {
+    QTimer *listenTimer = new QTimer(0);
+    //qDebug()<<0;
+//    qDebug()<<"obj->thread().isRunning()"<<obj->thread()->isRunning();
+//    QThread* thread = new QThread;
+//    if(!obj->parent()){
+//        qDebug()<<"thread";
+//        obj->moveToThread(thread);
+//        listenTimer->moveToThread(thread);
+//        listenTimer->setInterval(delay);
+//    } else{
+//        qDebug()<<"listenTimer";
+//        listenTimer->start(delay);
+//    }
+//    QObject::connect(thread,&QThread::started,listenTimer,static_cast<void (QTimer::*)()>(&QTimer::start));
+//    thread->start();
+
+    //listenTimer->moveToThread(obj->thread());
+    //QMetaObject::invokeMethod(listenTimer, "start", Qt::QueuedConnection, Q_ARG(int, delay));
+
+    QObject::connect(listenTimer,&QTimer::timeout,obj,[obj,port,listenTimer,interval,functor](){
+//        QTimer::singleShot(0,[obj,port,listenTimer,interval,functor](){
+//            qDebug()<<1;
+//            bool isPortOpen;
+//            QMetaObject::invokeMethod(obj, "listen", Qt::BlockingQueuedConnection, Q_RETURN_ARG(bool, isPortOpen),
+//                                      Q_ARG(QHostAddress, QHostAddress::AnyIPv4), Q_ARG(ushort, port));
             if (obj->listen(QHostAddress::AnyIPv4, port)) {
+//            if(isPortOpen){
+//                qDebug()<<2;
                 if(functor)
                     functor();
                 qDebug()<<QString("%1: %2 port opened").arg(obj->objectName()).arg(port);
-                listenPortTimer->stop();
-                listenPortTimer->deleteLater();
+                listenTimer->stop();
+                listenTimer->deleteLater();
             } else {
                 qDebug()<<QString("%1: Failed to open port %2").arg(obj->objectName()).arg(port);
-                listenPortTimer->start(interval);
+                listenTimer->start(interval);
             }
-    });
-    listenPortTimer->start(delay);
-    //QTimer::singleShot(0,[listenPortTimer](){listenPortTimer->start(delay);});
+//        });
+    }, Qt::QueuedConnection);
+    listenTimer->start(delay);
+    //QTimer::singleShot(0,Qt::CoarseTimer,obj,[](){qDebug()<<3;}/*, Qt::QueuedConnection*/);
+    //QTimer::singleShot(0,Qt::CoarseTimer,obj,[listenTimer,delay](){listenTimer->start(delay);}/*, Qt::QueuedConnection*/);
 }
 
 template<class T>

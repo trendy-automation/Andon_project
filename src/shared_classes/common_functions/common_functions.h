@@ -86,6 +86,9 @@ T* cfGetObject(const QString &objectName)
     T *obj =qApp->findChild<T*>(objectName);
     if(obj)
         return obj;
+//    T *obj = qApp->property(objectName).value<T *>();
+//    if(obj)
+//        return obj;
     qDebug()<<QString("Object %1 not found in App!").arg(objectName);
     return 0;
 }

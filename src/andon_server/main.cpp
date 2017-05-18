@@ -27,9 +27,13 @@
 #include "watchdog.h"
 
 #include <QMessageBox>
+#include <QVariant>
+
+Q_DECLARE_METATYPE( QJsonRpcTcpServer* )
 
 int main(int argc, char *argv[])
 {
+    //qRegisterMetaType<QJsonRpcTcpServer*>("QJsonRpcTcpServer");
     QApplication a(argc, argv);
     /*****************************************
      * Start Watchdog
@@ -88,13 +92,14 @@ int main(int argc, char *argv[])
     qDebug()<<"Start andonRpcService";
     ServerRpcService * andonRpcService = new ServerRpcService;//(&a);
     andonRpcService->setObjectName("andonRpcService");
-    QJsonRpcTcpServer rpcServer /*= new QJsonRpcTcpServer*/;//(&a);
-    rpcServer.setObjectName("rpcServer");
-    rpcServer.addService(andonRpcService);
+    QJsonRpcTcpServer * rpcServer = new QJsonRpcTcpServer;//(&a);
+    a.setProperty("rpcServer", QVariant::fromValue<QJsonRpcTcpServer *>(rpcServer));
+    rpcServer->setObjectName("rpcServer");
+    rpcServer->addService(andonRpcService);
     andonRpcService->setDB(andonDb);
-    QObject::connect(&rpcServer, &QJsonRpcTcpServer::clientConnected, appClientConnected);
-    QObject::connect(&rpcServer, &QJsonRpcTcpServer::clientDisconnected, appClientDisconnected);
-    cfListenPort<QJsonRpcTcpServer>(&rpcServer,JSONRPC_SERVER_PORT,3000,700);
+    QObject::connect(rpcServer, &QJsonRpcTcpServer::clientConnected, rpcServer, appClientConnected);
+    QObject::connect(rpcServer, &QJsonRpcTcpServer::clientDisconnected, rpcServer, appClientDisconnected);
+    cfListenPort<QJsonRpcTcpServer>(rpcServer,JSONRPC_SERVER_PORT,3000,700);
     /*****************************************
      * Start Unicast UDP Sender
      *****************************************/

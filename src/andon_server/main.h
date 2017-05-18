@@ -33,15 +33,12 @@ static void appClientConnected(const QHostAddress &clientIP)
     joClient.insert("EVENT_ID", QTime::currentTime().toString("HH:mm:ss.zzz"));
     joClient.insert("STATUS", "CONNECTED");
     QJsonDocument jdClient(joClient);
-    ServerRpcService*andonRpcService=cfGetObject<ServerRpcService>("andonRpcService");
-    //qApp->findChild<ServerRpcService*>("andonRpcService");
+    ServerRpcService*andonRpcService=cfGetObject<ServerRpcService>("rpcServer");
     if(andonRpcService)
         andonRpcService->StartSms(jdClient.toJson(QJsonDocument::Compact));
-    //else
-    //    qDebug()<<"object andonRpcService not found in App";
 }
 
-static void appClientDisconnected(const QHostAddress &clientIP=QHostAddress::LocalHost)
+static void appClientDisconnected(const QHostAddress &clientIP)
 {
     qDebug()<<"clientDisconnected"<<clientIP.toString();
     QJsonObject joClient;
@@ -50,14 +47,9 @@ static void appClientDisconnected(const QHostAddress &clientIP=QHostAddress::Loc
     joClient.insert("STATUS", "DISCONNECTED");
     joClient.insert("USER_COMMENT", clientIP.toString());
     QJsonDocument jdClient(joClient);
-
-    ServerRpcService*andonRpcService=cfGetObject<ServerRpcService>("andonRpcService");
-            //qApp->findChild<ServerRpcService*>("andonRpcService");
-
+    ServerRpcService*andonRpcService=cfGetObject<ServerRpcService>("rpcServer");
     if(andonRpcService)
         andonRpcService->StartSms(jdClient.toJson(QJsonDocument::Compact));
-    //else
-    //    qDebug()<<"object andonRpcService not found in App";
 }
 
 static void appParseInput(const QString &text)

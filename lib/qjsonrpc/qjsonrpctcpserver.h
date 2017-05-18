@@ -41,7 +41,6 @@ signals:
 public slots:
     void notifyConnectedClients(const QJsonRpcMessage &message);
     void notifyConnectedClients(const QString &method, const QJsonArray &params);
-//    bool listen(QHostAddress address, quint16 port);
 
 protected:
 #if QT_VERSION >= QT_VERSION_CHECK(5,0,0)

@@ -4,9 +4,9 @@ HEADERS += \
 SOURCES += \
     $$PWD/excel_report.cpp
 
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../lib/qtxlsx/release/ -lQtXlsx
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../lib/qtxlsx/debug/ -lQtXlsx
-else:unix: LIBS += -L$$OUT_PWD/../../lib/qtxlsx/ -lQtXlsx
+#win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../lib/qtxlsx/release/ -lQtXlsx
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../lib/qtxlsx/debug/ -lQtXlsx
+#else:unix: LIBS += -L$$OUT_PWD/../../lib/qtxlsx/ -lQtXlsx
 
 INCLUDEPATH += $$PWD/../../../lib/qtxlsx
 DEPENDPATH += $$PWD/../../../lib/qtxlsx

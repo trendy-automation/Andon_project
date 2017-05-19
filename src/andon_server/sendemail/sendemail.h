@@ -46,8 +46,8 @@ public:
 
 public slots:
 //    void sendEmail(const QString &subject, const QString &message, const QStringList &rcptStringList);
-    void sendEmail(const QString &subject, const QString &message, const QStringList &rcptStringList,
-                   QList<QBuffer*> *attachments=0);
+    bool sendEmail(const QString &subject, const QString &message, const QStringList &rcptStringList,
+                   const QList<QBuffer*> &attachments=QList<QBuffer*>());
 //    void addAttachment(const QByteArray &stream, const QString &fileName);
 //    void sendAttachment(const QString &subject, const QString &message,
 //                        const QStringList &rcptStringList, QList<QBuffer*> *attachments);

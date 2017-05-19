@@ -71,8 +71,8 @@ static void appParseInput(const QString &text)
     }
 }
 
-bool appCreateReport(QSqlQuery *query, const QString &sheetName,QString fileName,const QString &ariaName="")
-{
+//bool appCreateReport(QSqlQuery *query, const QString &sheetName,QString fileName,const QString &ariaName="")
+//{
 //    Document * xlsx= new Document(fileName);
 //    fileName = fileName.append(".xlsx");
 //    if(xlsx->selectSheet(sheetName))
@@ -97,22 +97,22 @@ bool appCreateReport(QSqlQuery *query, const QString &sheetName,QString fileName
 //        }
 //        else
 //            qDebug()<<fileName<<"not saved";
-    return false;
-}
+//    return false;
+//}
 
-void appExecuteReport(const QString &queryText, const QString &sheetName,const QString &fileName,const QString &ariaName="")
-{
-    DBWrapper *andonDb =cfGetObject<DBWrapper>("andonDb");
-    //qApp->findChild<DBWrapper*>("andonDb");
-    if(!andonDb){
-        //qDebug()<<"object andonDb not found in App";
-        return;
-    }
-    std::function<bool(QSqlQuery*, const QString&, const QString&, const QString&)> appCreateReport2 = *appCreateReport;
-    andonDb->executeQuery(queryText, [appCreateReport2,sheetName,fileName,ariaName](QSqlQuery *query){
-        appCreateReport2(query,sheetName,fileName,ariaName);
-    });
-}
+//void appExecuteReport(const QString &queryText, const QString &sheetName,const QString &fileName,const QString &ariaName="")
+//{
+//    DBWrapper *andonDb =cfGetObject<DBWrapper>("andonDb");
+//    //qApp->findChild<DBWrapper*>("andonDb");
+//    if(!andonDb){
+//        //qDebug()<<"object andonDb not found in App";
+//        return;
+//    }
+//    std::function<bool(QSqlQuery*, const QString&, const QString&, const QString&)> appCreateReport2 = *appCreateReport;
+//    andonDb->executeQuery(queryText, [appCreateReport2,sheetName,fileName,ariaName](QSqlQuery *query){
+//        appCreateReport2(query,sheetName,fileName,ariaName);
+//    });
+//}
 
 static void appAddbcClients(QSqlQuery *query)
 {

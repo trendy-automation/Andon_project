@@ -91,11 +91,12 @@ bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
             QMapIterator<QString,queryStruct> q(queryMap);
             while (q.hasNext()) {
                 q.next();
-                if(!q.value().i_cashTime==0){
+                //if(!q.value().i_cashTime==0){
                     int elapsed = q.value().t_time.msecsTo(QDateTime::currentDateTime());
-                    if(elapsed<cleanTimer->interval() || elapsed<q.value().i_cashTime)
-                        continue;
-                }
+                //    if(elapsed<cleanTimer->interval() || elapsed<q.value().i_cashTime)
+                //        continue;
+                //}
+                if(elapsed>cleanTimer->interval() && elapsed>q.value().i_cashTime)
                     queryMap.remove(q.key());
             }
             //qDebug() << "queryMap.count()" << queryMap.count();
@@ -417,6 +418,15 @@ void DBWrapper::executeQuery(const QString & queryText,
     }
     qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);
     return;
+}
+
+QSqlQuery *DBWrapper::sql2Query(const QString & queryText)
+{
+    queryStruct queryItem = appendQuery(queryText,"",0);
+    if(queryExecute(queryItem))
+        return queryItem.p_query;
+    qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);
+    return 0;
 }
 
 QString DBWrapper::str2Json(const QString & name, const QString & val)

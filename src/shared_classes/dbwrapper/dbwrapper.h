@@ -27,6 +27,9 @@ struct queryStruct{
 class DBWrapper : public QObject
 {
     Q_OBJECT
+
+    Q_PROPERTY(int queryCount READ getQueryCount)
+
 public:
     explicit DBWrapper(QObject *parent = 0);
     ~DBWrapper();
@@ -38,7 +41,7 @@ signals:
     void dbError(const QString &lastError);
 
 public slots:
-    QString query2method(const QString & queryText, const QString &queryMethod, int cashTime);
+    QString query2method(const QString & queryText, const QString &queryMethod, int cashTime=0);
 //    QString query2fulljson(const QString & queryText, int cashTime);
 //    QString query2jsonstrlist(const QString & queryText, int cashTime);
     QString cashedQuery(const QString & queryText, int cashTime);
@@ -52,7 +55,10 @@ public slots:
     void executeQuery(const QString & queryText,
                       std::function<void(QSqlQuery*)> functor=[] (QSqlQuery *query) {});
     bool executeProc(const QString & queryText);
+    QSqlQuery *sql2Query(const QString & queryText);
+
     bool getDbState();
+    int getQueryCount(){return queryMap.count();}
 
 private:
     queryStruct appendQuery(const QString &queryText, const QString &queryMethod, int cashTime);

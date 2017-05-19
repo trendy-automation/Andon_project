@@ -38,8 +38,8 @@ EmailAddress* SendEmail::stringToEmail(const QString &str)
 
 }
 
-void SendEmail::sendEmail(const QString &subject, const QString &message,
-                          const QStringList &rcptStringList, QList<QBuffer*> * attachments)
+bool SendEmail::sendEmail(const QString &subject, const QString &message,
+                          const QStringList &rcptStringList, const QList<QBuffer*> &attachments)
 {
     EmailMessage=new MimeMessage;
     EmailMessage->setSender(sender);
@@ -49,25 +49,26 @@ void SendEmail::sendEmail(const QString &subject, const QString &message,
     MimeHtml content;
     content.setHtml(message);
     EmailMessage->addPart(&content);
-    if (attachments)
-        for (auto buf = attachments->begin(); buf != attachments->end(); ++buf)
-            EmailMessage->addPart(new MimeAttachment(buf.operator *()->data(),
-                                                    buf.operator *()->property("FILE_NAME").toString()));
+    if (!attachments.isEmpty())
+        for (auto buf:attachments)
+            EmailMessage->addPart(new MimeAttachment(buf->data(),
+                                                    buf->property("FILE_NAME").toString()));
     if (!smtp.connectToHost()) {
         emit errorMessage(QString("Connection Failed to host %1:%2").arg(smtp.getHost()).arg(smtp.getPort()));
-        return;
+        return false;
     }
     if(EMAIL_AUTH)
         if (!smtp.login()) {
             emit errorMessage(QString("Authentification Failed by user %1 pass %2").arg(smtp.getUser()).arg(smtp.getPassword()));
-            return;
+            return false;
         }
     if (!smtp.sendMail(*EmailMessage)) {
         emit errorMessage("Mail sending failed");
-        return;
+        return false;
     } else {
         qDebug()<<"SendEmail::sendEmail"<<"The email was succesfully sent.";
     }
     smtp.quit();
+    return true;
 }
 

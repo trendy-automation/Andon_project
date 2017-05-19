@@ -23,7 +23,7 @@ void ClientRpcUtility::setEngine(QJSEngine* SharedEngine)
     engine=SharedEngine;
 }
 
-QJsonRpcServiceReply *ClientRpcUtility::ServerExecute(const QString &RemoteMethodName, QVariantList InParameterList,
+QJsonRpcServiceReply *ClientRpcUtility::ServerExecute(const QString &RemoteMethodName, const  QVariantList &inParameterList,
                                                       std::function<void(QVariant)> functor)
 {
 //    qDebug()<<RemoteMethodName<<InParameterList;
@@ -38,7 +38,7 @@ QJsonRpcServiceReply *ClientRpcUtility::ServerExecute(const QString &RemoteMetho
     m_client = new QJsonRpcSocket(socket);//(socket,this);
     QVariant arg[10];
     for (int i=0;i<9;++i)
-        arg[i]=i<InParameterList.count()?InParameterList.at(i):QVariant();
+        arg[i]=i<inParameterList.count()?inParameterList.at(i):QVariant();
     QJsonRpcServiceReply *reply = m_client->invokeRemoteMethod(QString(JSONRPC_SERVER_SERVICENAME).append(".").append(RemoteMethodName),
                                                                arg[0],arg[1],arg[2],arg[3],arg[4],arg[5],arg[6],arg[7],arg[8],arg[9]);
     if(functor)

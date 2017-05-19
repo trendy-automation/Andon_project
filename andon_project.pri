@@ -43,7 +43,7 @@ DEFINES += EMAIL_PASS='\\"And0n2016\\"'
 DEFINES += DB_DATABASE_FILE='\\"ANDON_DB.FDB\\"'
 DEFINES += DB_CASH_INTERVAL=20000 #keep result for 20 SECONDS
 DEFINES += DB_CASH_CLAEN_INTERVAL=30000 #clean result for 10 MINUTES
-DEFINES += DB_QUERIES_LIMIT=30 #limit of differient queries in cash
+DEFINES += DB_QUERIES_LIMIT=60 #limit of differient queries in cash
 
 #_______________ webui _______________
 DEFINES += WUI_PATH='\\"./webui2\\"'
@@ -64,6 +64,9 @@ DEFINES += FTP_INTERVAL=3600000
 DEFINES += OPCUA_IP='\\"localhost\\"'
 DEFINES += OPCUA_PORT=43344
 DEFINES += OPCUA_INTERVAL=3000
+
+#______________ REPORTS _______________
+DEFINES += DEF_REPORT_INTERVAL=24*3600*1000
 
 DISTFILES += \
     $$PWD/lib/snap7/snap7.lib \

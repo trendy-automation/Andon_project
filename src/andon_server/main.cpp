@@ -29,7 +29,9 @@
 #include <QMessageBox>
 #include <QVariant>
 
-Q_DECLARE_METATYPE( QJsonRpcTcpServer* )
+#include "excel_report.h"
+
+Q_DECLARE_METATYPE(QJsonRpcTcpServer*)
 
 int main(int argc, char *argv[])
 {
@@ -39,7 +41,7 @@ int main(int argc, char *argv[])
      * Start Watchdog
      *****************************************/
     QStringList args = a.arguments();
-    Watchdog *watchdog = new Watchdog(/*&a*/);
+    Watchdog *watchdog = new Watchdog/*(&a)*/;
     watchdog->setObjectName("watchdog");
     if(args.contains(APP_OPTION_WATHCDOG)){
         if(!watchdog->listen(JSONRPC_SERVER_WATCHDOG_PORT,QString(JSONRPC_WATCHDOG_SERVICENAME).append(".isAlive")))
@@ -156,21 +158,32 @@ int main(int argc, char *argv[])
     //        QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_export"),"AutoDecl_aria");
 
     qDebug()<<"Start reportTimer";
+
+    ExcelReport *excelReport=new ExcelReport(&a);
+//    excelReport->addEmailReport();
+//    excelReport->addFileReport();
+
+    excelReport->queryText2File("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
+                     QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_%1")
+                     .arg(QDate::currentDate().toString("MMMM_yyyy")),"AutoDecl_aria");
+    excelReport->queryText2File("SELECT * FROM MNT_MOLD_REPORT", "Andon_cycle_counter",
+                     "P:\\Maintenance\\Обслуживание пресс-форм\\Andon_cycle_counter");
+
     const int msecsPerDay = 24 * 60 * 60 * 1000;
     QTimer * reportTimer = new QTimer(QAbstractEventDispatcher::instance());
     reportTimer->setTimerType(Qt::VeryCoarseTimer);
     QDateTime cdt = QDateTime::currentDateTime();
     reportTimer->start(qMax((qint64)10000, cdt.msecsTo(QDateTime(cdt.date(),QTime(23,50)))));
     qDebug()<<"reportTimer start"<<reportTimer->interval()/3600000.0<<"hours";
-    QObject::connect(reportTimer,&QTimer::timeout, [WThread,reportTimer,msecsPerDay,andonDb](){
+    QObject::connect(reportTimer,&QTimer::timeout, [excelReport,reportTimer,msecsPerDay,andonDb](){
         //qDebug()<<"reportTimer timeout"<<"dayOfWeek"<<QDate::currentDate().dayOfWeek();
-        appExecuteReport("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
+        excelReport->queryText2File("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
                          QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_%1")
                          .arg(QDate::currentDate().toString("MMMM_yyyy")),"AutoDecl_aria");
-        appExecuteReport("SELECT * FROM MNT_MOLD_REPORT", "Andon_cycle_counter",
+        excelReport->queryText2File("SELECT * FROM MNT_MOLD_REPORT", "Andon_cycle_counter",
                          "P:\\Maintenance\\Обслуживание пресс-форм\\Andon_cycle_counter");
         if(QDate::currentDate().daysInMonth()==QDate::currentDate().day())
-            appExecuteReport(QString("SELECT * FROM REPORT_BREAKDOWNS('%1', '%2')")
+            excelReport->queryText2File(QString("SELECT * FROM REPORT_BREAKDOWNS('%1', '%2')")
                              .arg(QDate(QDate::currentDate().year(),QDate::currentDate().month(),1).toString("dd.MM.yyyy"))
                              .arg(QDate(QDate::currentDate().year(),(QDate::currentDate().month()+1)%12,1).toString("dd.MM.yyyy")),
                              QDate::currentDate().toString("Простои"),
@@ -178,11 +191,14 @@ int main(int argc, char *argv[])
                              "brakedowns");
         if(QDate::currentDate().dayOfWeek()<6)
             andonDb->executeQuery("SELECT LIST(EMAIL) FROM TBL_STAFF WHERE EMAIL_REPORTING=1",
-                                  [WThread](QSqlQuery *query){
+                                  [excelReport](QSqlQuery *query){
                 if(query->next()){
                     QStringList rcpnts=query->value(0).toString().split(',');
                     if(!rcpnts.isEmpty()) //??? newer heppend
-                        WThread->snedReport("REPORT_BREAKDOWNS", rcpnts);
+                        excelReport->queryText2Email("SELECT * REPORT_BREAKDOWNS",
+                                                     QString("Простои производства %1").arg(QDate::currentDate().toString("ddd d MMMM")),rcpnts,"",
+                                                     QString("Отчёт по простоям %1").arg(QDate::currentDate().toString("ddd d MMMM")),
+                                                     QString("REPORT_BREAKDOWNS_%1.xlsx").arg(QDate::currentDate().toString("dd_MM_yyyy")));
                 }
             });
         //reportTimer->stop();
@@ -286,11 +302,11 @@ int main(int argc, char *argv[])
     QObject::connect(emailClient,&SendEmail::errorMessage,[](const QString & message){
         qDebug()<<"Email errorMessage"<<message;
     });
-    QObject::connect(WThread,&WebuiThread::sendReport2email,[emailClient]
-                     (const QString &subject, const QString &message,
-                     const QStringList &rcptStringList, QList<QBuffer*> *attachments=0){
-        emailClient->sendEmail(subject, message, rcptStringList, attachments);
-    });
+//    QObject::connect(WThread,&WebuiThread::sendReport2email,[emailClient]
+//                     (const QString &subject, const QString &message,
+//                      const QStringList &rcptStringList, QList<QBuffer*> attachments=QList<QBuffer*>()){
+//        emailClient->sendEmail(subject, message, rcptStringList, attachments);
+//    });
 
 
     /*****************************************

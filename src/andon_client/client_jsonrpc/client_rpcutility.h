@@ -36,7 +36,7 @@ public:
 
 public slots:
     void setEngine(QJSEngine *SharedEngine);
-    QJsonRpcServiceReply *ServerExecute(const QString &RemoteMethodName, QVariantList InParameterList,
+    QJsonRpcServiceReply *ServerExecute(const QString &RemoteMethodName, const QVariantList &inParameterList,
                         std::function<void(QVariant)> functor=0);
     void ServerExecute(const QString &RemoteMethodName, QVariantList InParameterList,
                         QJSValue scriptFunctor);

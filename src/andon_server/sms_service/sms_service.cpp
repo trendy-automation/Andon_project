@@ -331,14 +331,16 @@ int Sms_service::SendSMS(const QString &PhoneNumber, const QString &Sms_text, co
         return 0; //sendSMSFECT(PhoneNumber, Sms_text, Lang_name, 0, 0);
     }
 }
-//TODO: make class fect sms server tcp sms sender
-//TODO: read https://www.multitech.com/manuals/s000461f.pdf
+
+//TODO: read https://shop.netways.de/wp-content/uploads/2016/07/iSMS_Handbuch.pdf
 
 
 void Sms_service::sendSMSFECT(const QString &PhoneNumber, const QString &Sms_text,
                               const QString &Lang_name, const int &SmsLogId, int attempt)
 {
-    if ((PhoneNumber[0] != '8') || (attempt>2)) { return; }
+    qDebug()<<PhoneNumber<<Sms_text;
+    if (!PhoneNumber.startsWith("8") || (attempt>2))
+        return;
     int enc;
     QString SMSText;
     if (Lang_name=="EN"){

@@ -164,10 +164,11 @@ int main(int argc, char *argv[])
 //    excelReport->addFileReport();
 
     excelReport->queryText2File("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
-                     QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_%1")
-                     .arg(QDate::currentDate().toString("MMMM_yyyy")),"AutoDecl_aria");
+                     QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_export.xlsx")
+                     //.arg(QDate::currentDate().toString("MMMM_yyyy"))
+                     ,"AutoDecl_aria");
     excelReport->queryText2File("SELECT * FROM MNT_MOLD_REPORT", "Andon_cycle_counter",
-                     "P:\\Maintenance\\Обслуживание пресс-форм\\Andon_cycle_counter");
+                     "P:\\Maintenance\\Обслуживание пресс-форм\\Andon_cycle_counter.xlsx");
 
     const int msecsPerDay = 24 * 60 * 60 * 1000;
     QTimer * reportTimer = new QTimer(QAbstractEventDispatcher::instance());
@@ -178,16 +179,16 @@ int main(int argc, char *argv[])
     QObject::connect(reportTimer,&QTimer::timeout, [excelReport,reportTimer,msecsPerDay,andonDb](){
         //qDebug()<<"reportTimer timeout"<<"dayOfWeek"<<QDate::currentDate().dayOfWeek();
         excelReport->queryText2File("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
-                         QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_%1")
+                         QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_%1.xlsx")
                          .arg(QDate::currentDate().toString("MMMM_yyyy")),"AutoDecl_aria");
         excelReport->queryText2File("SELECT * FROM MNT_MOLD_REPORT", "Andon_cycle_counter",
-                         "P:\\Maintenance\\Обслуживание пресс-форм\\Andon_cycle_counter");
+                         "P:\\Maintenance\\Обслуживание пресс-форм\\Andon_cycle_counter.xlsx");
         if(QDate::currentDate().daysInMonth()==QDate::currentDate().day())
             excelReport->queryText2File(QString("SELECT * FROM REPORT_BREAKDOWNS('%1', '%2')")
                              .arg(QDate(QDate::currentDate().year(),QDate::currentDate().month(),1).toString("dd.MM.yyyy"))
                              .arg(QDate(QDate::currentDate().year(),(QDate::currentDate().month()+1)%12,1).toString("dd.MM.yyyy")),
                              QDate::currentDate().toString("Простои"),
-                             QString("P:\\!Common Documents\\Andon_reports\\Простои за прошлый месяц"),
+                             QString("P:\\!Common Documents\\Andon_reports\\Простои за прошлый месяц.xlsx"),
                              "brakedowns");
         if(QDate::currentDate().dayOfWeek()<6)
             andonDb->executeQuery("SELECT LIST(EMAIL) FROM TBL_STAFF WHERE EMAIL_REPORTING=1",
@@ -430,11 +431,25 @@ int main(int argc, char *argv[])
      *****************************************/
     qDebug()<<"Start Watchdog";
     watchdog->startRpcServer(JSONRPC_SERVER_WATCHDOG_PORT);
-//    appExecuteReport("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
-//                     QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_%1")
-//                     .arg(QDate::currentDate().toString("MMMM_yyyy")),"AutoDecl_aria");
-//    appExecuteReport("SELECT * FROM MNT_MOLD_REPORT", "Andon_cycle_counter",
-//                     "P:\\!Common Documents\\MNT\\Andon_cycle_counter");
+    QObject::connect(watchdog,&Watchdog::processRestart,[andonRpcService](){
+        QJsonObject joClient;
+        joClient.insert("STATION_IP",QHostAddress(QHostAddress::LocalHost).toString());
+        joClient.insert("EVENT_ID",QTime::currentTime().toString("HH:mm:ss.zzz"));
+        joClient.insert("STATUS", "DISCONNECTED");
+        joClient.insert("USER_COMMENT", "Server restart!");
+        QJsonDocument jdClient(joClient);
+        andonRpcService->StartSms(jdClient.toJson(QJsonDocument::Compact));
+    });
+    if(QTime::currentTime().hour()==16){
+        QJsonObject joClient;
+        joClient.insert("STATION_IP",QHostAddress(QHostAddress::LocalHost).toString());
+        joClient.insert("EVENT_ID",QTime::currentTime().toString("HH:mm:ss.zzz"));
+        joClient.insert("STATUS", "DISCONNECTED");
+        joClient.insert("USER_COMMENT", "Server is running!");
+        QJsonDocument jdClient(joClient);
+        andonRpcService->StartSms(jdClient.toJson(QJsonDocument::Compact));
+        qDebug()<<"Server running SMS";
+    }
     qDebug()<<"main finish";
     return a.exec();
 }

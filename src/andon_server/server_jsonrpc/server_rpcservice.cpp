@@ -22,18 +22,10 @@ ServerRpcService::~ServerRpcService()
 
 QString ServerRpcService::curClientIp()
 {
-    //QJsonRpcAbstractSocket *socket = this->currentRequest().socket();
-    //qDebug()<<"curClientIp";
     QString address(this->property("address").toString());
-    if (!address.isEmpty()){
-        //return socket->property("address").toString();
-        //return socket->objectName();
-        return address;
-    }
-    else{
+    if (!address.isEmpty())
         qDebug()<<"address is empty";
-        return "";
-    }
+    return address;
 }
 
 
@@ -103,7 +95,7 @@ void ServerRpcService::CancelSms(const QString &EVENT_ID)
 QString ServerRpcService::StartSms(const QString &sms_params)
 {
     QString ClientIP = curClientIp();
-    qDebug()<<QString(sms_params).replace(":CLIENT_IP",ClientIP);
+    //qDebug()<<QString(sms_params).replace(":CLIENT_IP",ClientIP);
     QString result;
     //qDebug()<<"SMS_params"<<sms_params;
     QVariantMap ParamsMap = QJsonDocument::fromJson(sms_params.toUtf8()).object().toVariantMap();

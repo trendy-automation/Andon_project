@@ -10,6 +10,9 @@
 #include <QBuffer>
 #include <QTimer>
 
+#include "xlsxworkbook.h"
+#include "xlsxworksheet.h"
+
 ExcelReport::ExcelReport(QObject *parent) :
     QObject(parent)
 {
@@ -31,9 +34,9 @@ bool ExcelReport::queryText2Document(const QString & queryText, Document *xlsx,
     if(!query)
         return false;
     QTextCodec *codec = QTextCodec::codecForName("iso8859-1");
-    for(int j=0; j < query->record().count(); j++)
-        xlsx->write(1,j+1,QString(codec->fromUnicode(query->record().fieldName(j))));
     int i=1;
+    for(int j=0; j < query->record().count(); j++)
+        xlsx->write(i,j+1,QString(codec->fromUnicode(query->record().fieldName(j))));
     while(query->next()) {
         i++;
         for(int j=0; j < query->record().count(); j++)
@@ -54,7 +57,7 @@ bool ExcelReport::queryText2Email(const QString & queryText, const QString &subj
         sheetName=subject;
     if(fileName.isEmpty())
         fileName=subject;
-    Document * xlsx = newDocument(sheetName);
+    Document * xlsx; // = newDocument(sheetName);
     if(!queryText2Document(queryText,xlsx,sheetName))
         return false;
     QBuffer *buffer = new QBuffer(new QByteArray);
@@ -69,7 +72,10 @@ bool ExcelReport::queryText2Email(const QString & queryText, const QString &subj
 bool ExcelReport::queryText2File(const QString &queryText, const QString &sheetName,
                                  const QString &fileName,const QString &ariaName)
 {
-    Document * xlsx = newDocument(sheetName);
+    Document *xlsx= new Document;
+    if(xlsx->selectSheet(sheetName))
+        xlsx->deleteSheet(sheetName);
+    xlsx->addSheet(sheetName);
     if(!queryText2Document(queryText,xlsx,sheetName,ariaName))
         return false;
     if(xlsx->saveAs(fileName)){
@@ -79,14 +85,6 @@ bool ExcelReport::queryText2File(const QString &queryText, const QString &sheetN
     else
         qDebug()<<fileName<<".xlsx not saved";
     return false;
-}
-
-Document * ExcelReport::newDocument(const QString &sheetName)
-{
-    Document *xlsx= new Document;
-    if(xlsx->selectSheet(sheetName))
-        xlsx->deleteSheet(sheetName);
-    xlsx->addSheet(sheetName);
 }
 
 void ExcelReport::addEmailReport(QTime baseTime, char unit, int interval,

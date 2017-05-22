@@ -42,6 +42,8 @@ public:
         //qDebug() << "Watchdog listen return false";
         return false;
     }
+signals:
+    void processRestart();
 public slots:
     bool isAlive(){return true;}
     static void startProcess()
@@ -71,11 +73,12 @@ public slots:
             this->setProperty("restarted",true);
         });
         restartTimer->start(8000);
+        emit processRestart();
         restartApp->startDetached(appPath);
         //qDebug() << QString("%1 %2").arg(appPath).arg(APP_OPTION_FORCE);
         //restartApp->startDetached(QString("cmd.exe /C start \"\" \"%1\" -arg \"%2\"").arg(qApp->applicationFilePath()).arg(APP_OPTION_FORCE));
         //restartApp->startDetached(QString("cmd.exe /C start %1 %2").arg(appPath).arg(APP_OPTION_FORCE));
-        //restartApp->startDetached(QString("%1 %2").arg(appPath).arg(APP_OPTION_FORCE));
+        //restartApp->startDetached(QString("%1 %2").arg(appPath).arg(APP_OPTION_FORCE));    
         qApp->quit();
     }
     static void rebootPC(const QString &reason="")
@@ -85,12 +88,12 @@ public slots:
         QObject::connect(shutdownPC,&QProcess::errorOccurred,[](QProcess::ProcessError error){
             qDebug() << "rebootPC errorOccurred!"<<error;
         });
-        shutdownPC->startDetached("shutdown.exe",QStringList()<<"-r"<<"-f"<<"-t"<<"0");
+        shutdownPC->startDetached("shutdown.exe -r -f -t 0");
         qApp->quit();
     }
     void startRpcServer(int port)
     {
-        QJsonRpcTcpServer * watchdogRpcServer = new QJsonRpcTcpServer/*(qApp)*/;
+        QJsonRpcTcpServer * watchdogRpcServer = new QJsonRpcTcpServer;
         watchdogRpcServer->setObjectName("watchdogRpcServer");
         watchdogRpcServer->addService(this);
         cfListenPort(watchdogRpcServer,port,3000,700);

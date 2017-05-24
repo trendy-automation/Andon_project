@@ -13,7 +13,7 @@ DBWrapper::DBWrapper(QObject *parent) : QObject(parent)
             jatmp.append(QJsonValue::fromVariant(QJsonDocument(jotmp).toVariant()));
         }
         sqlQuery->finish();
-        DB.commit();
+        //DB.commit();
         QJsonDocument json(jatmp);
 //        qDebug() << "packFunctionsMap json toJson" << json.toJson(QJsonDocument::Compact);
         return json.toJson(QJsonDocument::Compact);
@@ -32,7 +32,7 @@ DBWrapper::DBWrapper(QObject *parent) : QObject(parent)
         for(int x=0; x < sqlQuery->record().count(); x++)
             FieldList << QJsonValue::fromVariant(codec2->fromUnicode(sqlQuery->record().fieldName(x)));
         sqlQuery->finish();
-        DB.commit();
+        //DB.commit();
         QJsonDocument FieldDoc(FieldList);
         jatmp.append(QJsonValue::fromVariant(FieldDoc.toVariant()));
         QJsonDocument json(jatmp);
@@ -57,7 +57,7 @@ DBWrapper::DBWrapper(QObject *parent) : QObject(parent)
         }
         //TODO tableObject to QJsonDocument
         sqlQuery->finish();
-        DB.commit();
+        //DB.commit();
         QJsonDocument json(jatmp);
         return json.toJson(QJsonDocument::Compact);
     });
@@ -96,7 +96,8 @@ bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
                 //    if(elapsed<cleanTimer->interval() || elapsed<q.value().i_cashTime)
                 //        continue;
                 //}
-                if(elapsed>cleanTimer->interval() && elapsed>q.value().i_cashTime)
+                //if(elapsed>cleanTimer->interval() && elapsed>q.value().i_cashTime)
+                if((elapsed>cleanTimer->interval() && elapsed>q.value().i_cashTime) || !q.value().p_query)
                     queryMap.remove(q.key());
             }
             //qDebug() << "queryMap.count()" << queryMap.count();
@@ -116,13 +117,13 @@ queryStruct DBWrapper::appendQuery(const QString &queryText, const QString &quer
 {
     QString key=QString(queryKeyMask).arg(queryText).arg(queryMethod);
     QString error;
-    if(queryMap.count()>DB_QUERIES_LIMIT)
+    if(queryMap.count()>DB_QUERIES_LIMIT && cashTime==0)
         error=QString("query`s limit(%1) exhausted").arg(DB_QUERIES_LIMIT);
     if(!packFunctionsMap.contains(queryMethod))
         error=QString("packFunctionsMap not contains method:%1!").arg(queryMethod);
     if(!error.isEmpty())
-        return {0, queryText, queryMethod, QString(), error, cashTime, QDateTime::currentDateTime()};
-    queryMap.insert(key,{0, queryText, queryMethod, QString(), QString(), cashTime, QDateTime::currentDateTime()});
+        return {0, key, queryText, queryMethod, QString(), error, cashTime, QDateTime::currentDateTime()};
+    queryMap.insert(key,{0, key, queryText, queryMethod, QString(), QString(), cashTime, QDateTime::currentDateTime()});
     return queryMap.value(key);
 }
 
@@ -174,7 +175,7 @@ bool DBWrapper::queryExecute (queryStruct &queryItem)
 */
     if(queryItem.s_error.isEmpty()){
         //    try{
-        DB.transaction();
+        //bool trOk = DB.transaction();
         queryItem.p_query = new QSqlQuery(DB);
         if(queryItem.p_query->exec(queryItem.s_sql_query))
             if(!queryItem.p_query->lastError().isValid())
@@ -192,9 +193,12 @@ bool DBWrapper::queryExecute (queryStruct &queryItem)
                 qDebug() << "IBPP::Exception" << e.ErrorMessage();
             }*/
             queryItem.s_error=queryItem.p_query->lastError().text();
-            DB.rollback();
-            if(queryItem.s_error.contains("Could not prepare statement")>0)
-                queryItem.i_cashTime=+60000;
+            //if(trOk)
+            //    DB.rollback();
+            if(queryItem.s_error.contains("Could not prepare statement")>0){
+                queryItem.i_cashTime=+DB_CASH_CLAEN_INTERVAL;
+                queryMap.insert(queryItem.s_key,queryItem);
+            }
     }
     errorCounter=+dbOK;
     if(errorCounter>signalErrorCount){
@@ -209,7 +213,8 @@ bool DBWrapper::executeProc(const QString & queryText)
     queryStruct queryItem = appendQuery(queryText,"",0);
     if(queryExecute(queryItem)){
         queryItem.p_query->finish();
-        DB.commit();
+        //DB.commit();
+        queryMap.remove(queryItem.s_key);
         return true;
     }
     qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);
@@ -239,7 +244,7 @@ bool DBWrapper::executeProc(const QString & queryText)
                     =QJsonValue::fromVariant(ValueList.join("|"));
         }
         queryItem.p_query->finish();
-        DB.commit();
+        //DB.commit();
 
         QJsonDocument json(tableObject);
         return json.toJson();
@@ -301,7 +306,7 @@ bool DBWrapper::executeProc(const QString & queryText)
         for(int x=0; x < queryItem.p_query->record().count(); x++)
             FieldList << QJsonValue::fromVariant(codec2->fromUnicode(queryItem.p_query->record().fieldName(x)));
         queryItem.p_query->finish();
-        DB.commit();
+        //DB.commit();
 
         QJsonDocument FieldDoc(FieldList);
         jatmp.append(QJsonValue::fromVariant(FieldDoc.toVariant()));
@@ -335,7 +340,7 @@ bool DBWrapper::executeProc(const QString & queryText)
             jatmp.append(QJsonValue::fromVariant(QJsonDocument(jotmp).toVariant()));
         }
         QJsonDocument json(jatmp);
-        DB.commit();
+        //DB.commit();
 
         return json.toJson(QJsonDocument::Compact);
     }
@@ -354,7 +359,7 @@ QString DBWrapper::query2fulljson(const QString &queryText, int cashTime)
     return query2method(queryText,"fulljson",cashTime);
 }*/
 
-QString DBWrapper::cashedQuery(const QString & queryText, int cashTime)
+QString DBWrapper::query2cash(const QString & queryText, int cashTime)
 {
     return query2method(queryText,"json",cashTime);
 }
@@ -376,6 +381,26 @@ QString DBWrapper::query2json(const QString & queryText)
 
 QString DBWrapper::query2method(const QString & queryText, const QString &queryMethod, int cashTime)
 {
+//    QEventLoop replyWaitLoop;
+//    QJsonRpcServiceReply * reply = ServerExecute("SQLQuery2Json", QVariantList()<<queryText);
+//    if (reply){
+//        QObject::connect(reply, &QJsonRpcServiceReply::finished, &replyWaitLoop, &QEventLoop::quit);
+//        QTimer::singleShot(JSONRPC_REPLY_TIMEOUT, &replyWaitLoop, &QEventLoop::quit);
+//        replyWaitLoop.exec();
+//        if (!reply->response().result().toVariant().isValid())
+//            qDebug() << "invalid response received!!!" << reply->response().errorMessage();
+//        else
+//            return reply->response().result().toVariant();
+//    }
+
+//    QFutureWatcher<int> watcher;
+//    QEventLoop loop;
+//    QObject::connect(&watcher,  &QFutureWatcher<int>::finished,
+//                     &loop, &QEventLoop::quit);
+//    watcher.setFuture (QtConcurrent::run([](){});
+//    loop.exec ();
+//    QFutureWatcher::resultReadyAt
+
     //qDebug() << queryText << queryMethod << cashTime;
     queryStruct queryItem = appendQuery(queryText,queryMethod,cashTime);
     if(queryIsCashed(queryItem)){
@@ -388,6 +413,7 @@ QString DBWrapper::query2method(const QString & queryText, const QString &queryM
              queryItem.s_error=QString("Undefined query method(%1)!").arg(queryItem.s_method);
         else{
             queryItem.s_result = packFunctionsMap.value(queryItem.s_method)(queryItem.p_query);
+            queryMap.remove(queryItem.s_key);
             return queryItem.s_result;
         }
     }
@@ -413,7 +439,8 @@ void DBWrapper::executeQuery(const QString & queryText,
     if(queryExecute(queryItem)){
         functor(queryItem.p_query);
         queryItem.p_query->finish();
-        DB.commit();
+        //DB.commit();
+        queryMap.remove(queryItem.s_key);
         return;
     }
     qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);

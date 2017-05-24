@@ -116,12 +116,11 @@ static void appClientDisconnected(const QHostAddress &clientIP=QHostAddress::Loc
     joClient.insert("EVENT_ID",QTime::currentTime().toString("HH:mm:ss.zzz"));
     joClient.insert("STATUS", "DISCONNECTED");
     QJsonDocument jdClient(joClient);
-
     ClientRpcUtility *serverRpc = cfGetObject<ClientRpcUtility>("serverRpc");//qApp->findChild<ClientRpcUtility*>("serverRpc");
     if(serverRpc)
         serverRpc->ServerExecute("StartSms",QVariantList()<<jdClient.toJson(QJsonDocument::Compact));
     //else
-    //    qDebug()<<"object andonRpcService not found in App";
+    //    qDebug()<<"object serverRpcService not found in App";
 }
 
 

@@ -22,8 +22,22 @@ ServerRpcService::~ServerRpcService()
 
 QString ServerRpcService::curClientIp()
 {
-    QString address(this->property("address").toString());
-    if (!address.isEmpty())
+    //qDebug()<<"currentThread()"<<QThread::currentThread();
+    //qDebug()<<"curClientIp()";
+    QString address;
+    QVariant adr(this->property("address"));
+    if(adr.isValid())
+        address==this->property("address").toString();
+    if (address.isEmpty())
+        qDebug()<<"this address is empty";
+    else
+        return address;
+    QJsonRpcAbstractSocket *socket = this->currentRequest().socket();
+    if(socket)
+        address=socket->property("address").toString();
+//    else
+//        qDebug()<<"socket is empty";
+    if (address.isEmpty())
         qDebug()<<"address is empty";
     return address;
 }
@@ -73,7 +87,7 @@ void ServerRpcService::ResumeSms(const QString &EVENT_ID)
 
 void ServerRpcService::CancelSms(const QString &EVENT_ID)
 {
-    QString ClientIP = curClientIp();
+    QString ClientIP = curClientIp();    
     QStringList SmsKeys;
     if (ThreadsMap.contains(ClientIP)) {
         if (EVENT_ID=="ALL")
@@ -113,14 +127,13 @@ QString ServerRpcService::StartSms(const QString &sms_params)
             newSms=false;
         }
     if (newSms) {
-
-        QString sqlquery=QString("SELECT * FROM SERVER_SELECT_SMS('%1')").arg(QString(sms_params)).replace(":CLIENT_IP",ClientIP);
-
+        QString sqlquery=QString("SELECT * FROM SERVER_SELECT_SMS('%1')").arg(sms_params);//).replace(":CLIENT_IP",ClientIP);
         //if (sqlquery.contains(":CLIENT_IP"))
         //    sqlquery.replace(":CLIENT_IP",ClientIP);
 
         qDebug() << "sqlquery" <<sqlquery;
-        QString sqlqueryres = andondb->query2json(sqlquery);
+        //QString sqlqueryres = andondb->query2json(sqlquery);
+        QString sqlqueryres = SQLQuery2Json(sqlquery);
         //qDebug()<<"SMS sqlqueryres" << sqlqueryres;
 
         QJsonDocument jdocSms;
@@ -269,31 +282,18 @@ QString ServerRpcService::StartSms(const QString &sms_params)
     return QString();
 }
 
-
-
-
-QString ServerRpcService::SQLQuery2Json(const QString & sqlquery)
+QString ServerRpcService::SQLQuery2Json(QString sqlquery)
 {
     // qDebug() << sqlquery;
     if (sqlquery.isEmpty()) {
         qDebug() << "SQL query empty in SQLQuery2Json";
         return QString();
     } else{
-        QString sqlQueryText = QString(sqlquery).replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'"));
-        //qDebug() << sqlQueryText;
-        return andondb->query2json(sqlQueryText);
+        if (sqlquery.contains(":CLIENT_IP"))
+            sqlquery.replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'"));
+        //qDebug() << sqlquery;
+        return andondb->query2json(sqlquery);
     }
-}
-
-QString ServerRpcService::SQLQueryExec(const QString & sqlquery)
-{
-    //qDebug() << sqlquery;
-    if (sqlquery.isEmpty()) {
-        qDebug() << "SQL query empty in SQLQueryExec";
-        return QString();
-    } else
-        return andondb->query2json(QString(sqlquery).replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'")));
-        //return andondb->query2jsonstrlist(QString(sqlquery).replace(":CLIENT_IP",curClientIP().append("\'").prepend("\'")));
 }
 
 void ServerRpcService::executeProc(const QString & sqlquery)
@@ -305,35 +305,6 @@ void ServerRpcService::executeProc(const QString & sqlquery)
     } else
         andondb->executeProc(QString(sqlquery).replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'")));
 }
-
-
-//QString ServerRpcService::SQLQueryVariant(const QString & sqlquery) {
-//    if (sqlquery.isEmpty()) {
-//        qDebug() << "SQL query empty in SQLQueryVariant";
-//        return QString();
-//    } else
-//        return andondb->query2jsonarrays(QString(sqlquery).replace(":CLIENT_IP",curClientIP().append("\'").prepend("\'")));
-//}
-
-//int ServerRpcService::telnetDeclareKanban(const QByteArray &kanbanNumber)
-//{
-//    if (telnetClient)
-//        return 1;
-//    else
-//        return 0;
-////connect to telnet server
-////logon by SAP user
-////recognize main menu pattern
-////send 2
-////recognize production menu pattern
-////send 3
-////recognize declare kanban pattern
-////send count for declare
-////recognize declare sucess pattern
-////return result
-//}
-
-
 
 void ServerRpcService::setDB(DBWrapper* db)
 {

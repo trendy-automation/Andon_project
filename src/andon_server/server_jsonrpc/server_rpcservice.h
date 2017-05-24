@@ -26,9 +26,7 @@ signals:
 
 public slots:
     bool isAlive(){return true;}
-    QString SQLQuery2Json(const QString & sqlquery);
-//    QString SQLQueryVariant(const QString & sqlquery);
-    QString SQLQueryExec(const QString & sqlquery);
+    QString SQLQuery2Json(QString sqlquery);
     void executeProc(const QString & sqlquery);
 
     void StopSms(const QString &Sms_id);

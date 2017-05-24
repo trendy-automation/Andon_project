@@ -79,11 +79,11 @@ bool ExcelReport::queryText2File(const QString &queryText, const QString &sheetN
     if(!queryText2Document(queryText,xlsx,sheetName,ariaName))
         return false;
     if(xlsx->saveAs(fileName)){
-        qDebug()<<fileName<<".xlsx save OK";
+        qDebug()<<fileName<<"save OK";
         return true;
     }
     else
-        qDebug()<<fileName<<".xlsx not saved";
+        qDebug()<<fileName<<"not saved";
     return false;
 }
 

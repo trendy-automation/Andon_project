@@ -2,6 +2,7 @@
 
 #include "qjsonrpctcpserver.h"
 #include "server_rpcservice.h"
+#include "server_rpcutility.h"
 #include "sms_service.h"
 #include "bcsender.h"
 #include "iostreamtheard.h"
@@ -30,8 +31,6 @@
 #include <QVariant>
 
 #include "excel_report.h"
-
-Q_DECLARE_METATYPE(QJsonRpcTcpServer*)
 
 int main(int argc, char *argv[])
 {
@@ -89,19 +88,32 @@ int main(int argc, char *argv[])
     //    telnetClient->setObjectName("telnetClient");
     //    telnetClient->start();
     /*****************************************
-     * Start andonRpcService
+     * Start serverRpcService
      *****************************************/
-    qDebug()<<"Start andonRpcService";
-    ServerRpcService * andonRpcService = new ServerRpcService;//(&a);
-    andonRpcService->setObjectName("andonRpcService");
-    QJsonRpcTcpServer * rpcServer = new QJsonRpcTcpServer;//(&a);
-    a.setProperty("rpcServer", QVariant::fromValue<QJsonRpcTcpServer *>(rpcServer));
-    rpcServer->setObjectName("rpcServer");
-    rpcServer->addService(andonRpcService);
-    andonRpcService->setDB(andonDb);
-    QObject::connect(rpcServer, &QJsonRpcTcpServer::clientConnected, rpcServer, appClientConnected);
-    QObject::connect(rpcServer, &QJsonRpcTcpServer::clientDisconnected, rpcServer, appClientDisconnected);
-    cfListenPort<QJsonRpcTcpServer>(rpcServer,JSONRPC_SERVER_PORT,3000,700);
+    qDebug()<<"Start serverRpcService";
+    ServerRpcService * serverRpcService = new ServerRpcService;
+    serverRpcService->setObjectName("serverRpcService");
+    a.setProperty("serverRpcService", qVariantFromValue((void *) serverRpcService));
+    QJsonRpcTcpServer /***/ rpcServer /*= new QJsonRpcTcpServer*/;
+//    QThread newThread;
+//    rpcServer->moveToThread(&newThread);
+//    newThread.start();
+//    qDebug()<<"rpcServer->thread()"<<rpcServer->thread();
+    rpcServer.setObjectName("rpcServer");
+    a.setProperty("rpcServer", qVariantFromValue((void *) &rpcServer));
+    rpcServer.addService(serverRpcService);
+    serverRpcService->setDB(andonDb);
+    QObject::connect(&rpcServer, &QJsonRpcTcpServer::clientConnected, &rpcServer, appClientConnected);
+    QObject::connect(&rpcServer, &QJsonRpcTcpServer::clientDisconnected, &rpcServer, appClientDisconnected);
+    QTimer::singleShot(0,&rpcServer,[&rpcServer](){
+        cfListenPort<QJsonRpcTcpServer>(&rpcServer,JSONRPC_SERVER_PORT,3000,700);
+    });
+//    /*****************************************
+//     * Start clientRpcService
+//     *****************************************/
+//    qDebug()<<"Start clientRpcService";
+//    ServerRpcUtility * clientRpcService = new ServerRpcUtility;
+//    clientRpcService->setObjectName("clientRpcService");
     /*****************************************
      * Start Unicast UDP Sender
      *****************************************/
@@ -163,12 +175,12 @@ int main(int argc, char *argv[])
 //    excelReport->addEmailReport();
 //    excelReport->addFileReport();
 
-    excelReport->queryText2File("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
-                     QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_export.xlsx")
-                     //.arg(QDate::currentDate().toString("MMMM_yyyy"))
-                     ,"AutoDecl_aria");
-    excelReport->queryText2File("SELECT * FROM MNT_MOLD_REPORT", "Andon_cycle_counter",
-                     "P:\\Maintenance\\Обслуживание пресс-форм\\Andon_cycle_counter.xlsx");
+//    excelReport->queryText2File("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
+//                     QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_export.xlsx")
+//                     //.arg(QDate::currentDate().toString("MMMM_yyyy"))
+//                     ,"AutoDecl_aria");
+//    excelReport->queryText2File("SELECT * FROM MNT_MOLD_REPORT", "Andon_cycle_counter",
+//                     "P:\\Maintenance\\Обслуживание пресс-форм\\Andon_cycle_counter.xlsx");
 
     const int msecsPerDay = 24 * 60 * 60 * 1000;
     QTimer * reportTimer = new QTimer(QAbstractEventDispatcher::instance());
@@ -266,7 +278,7 @@ int main(int argc, char *argv[])
      *****************************************/
     qDebug()<<"Start SMS Server";
     Sms_service * sms_sender = new Sms_service;
-    QObject::connect(andonRpcService,&ServerRpcService::SendSMS, sms_sender,
+    QObject::connect(serverRpcService,&ServerRpcService::SendSMS, sms_sender,
                      &Sms_service::sendSMSFECT,Qt::QueuedConnection);
     QObject::connect(sms_sender,&Sms_service::SmsStatusUpdate,[andonDb]
                      (int SmsLogId, int SmsId, int Status){
@@ -354,12 +366,14 @@ int main(int argc, char *argv[])
 
     QJSEngine *engine = new QJSEngine;
     engine->globalObject().setProperty("msgHandler",engine->newQObject(&msgHandler));
-    //    engine->globalObject().setProperty("telnetClient",engine->newQObject(telnetClient));
-    engine->globalObject().setProperty("andonRpcService",engine->newQObject(andonRpcService));
+    //engine->globalObject().setProperty("telnetClient",engine->newQObject(telnetClient));
+    engine->globalObject().setProperty("serverRpcService",engine->newQObject(serverRpcService));
     engine->globalObject().setProperty("sms_sender",engine->newQObject(sms_sender));
     engine->globalObject().setProperty("andonDb",engine->newQObject(andonDb));
+    engine->globalObject().setProperty("excelReport",engine->newQObject(excelReport));
     engine->globalObject().setProperty("emailClient",engine->newQObject(emailClient));
     engine->globalObject().setProperty("WThread",engine->newQObject(WThread));
+    engine->globalObject().setProperty("rpcServer",engine->newQObject(&rpcServer));
 
     WThread->setEngine(engine);
 
@@ -431,23 +445,23 @@ int main(int argc, char *argv[])
      *****************************************/
     qDebug()<<"Start Watchdog";
     watchdog->startRpcServer(JSONRPC_SERVER_WATCHDOG_PORT);
-    QObject::connect(watchdog,&Watchdog::processRestart,[andonRpcService](){
-        QJsonObject joClient;
+    QObject::connect(watchdog,&Watchdog::processRestart,[/*serverRpcService*/sms_sender](){
+        /*QJsonObject joClient;
         joClient.insert("STATION_IP",QHostAddress(QHostAddress::LocalHost).toString());
         joClient.insert("EVENT_ID",QTime::currentTime().toString("HH:mm:ss.zzz"));
         joClient.insert("STATUS", "DISCONNECTED");
         joClient.insert("USER_COMMENT", "Server restart!");
-        QJsonDocument jdClient(joClient);
-        andonRpcService->StartSms(jdClient.toJson(QJsonDocument::Compact));
+        QJsonDocument jdClient(joClient);*/
+        sms_sender->sendSMSFECT("89657009502", "Server restart!","RU",789);
     });
-    if(QTime::currentTime().hour()==16){
-        QJsonObject joClient;
+    if(QTime::currentTime().hour()==0){
+        /*QJsonObject joClient;
         joClient.insert("STATION_IP",QHostAddress(QHostAddress::LocalHost).toString());
         joClient.insert("EVENT_ID",QTime::currentTime().toString("HH:mm:ss.zzz"));
         joClient.insert("STATUS", "DISCONNECTED");
         joClient.insert("USER_COMMENT", "Server is running!");
-        QJsonDocument jdClient(joClient);
-        andonRpcService->StartSms(jdClient.toJson(QJsonDocument::Compact));
+        QJsonDocument jdClient(joClient);*/
+        sms_sender->sendSMSFECT("89657009502", "Server is running!","RU",987);
         qDebug()<<"Server running SMS";
     }
     qDebug()<<"main finish";

@@ -16,6 +16,7 @@
 #include <functional>
 struct queryStruct{
     QSqlQuery* p_query;
+    QString s_key;
     QString s_sql_query;
     QString s_method;
     QString s_result;
@@ -44,7 +45,7 @@ public slots:
     QString query2method(const QString & queryText, const QString &queryMethod, int cashTime=0);
 //    QString query2fulljson(const QString & queryText, int cashTime);
 //    QString query2jsonstrlist(const QString & queryText, int cashTime);
-    QString cashedQuery(const QString & queryText, int cashTime);
+    QString query2cash(const QString & queryText, int cashTime);
     QString query2fulljson(const QString & queryText);
     QString query2jsonstrlist(const QString & queryText);
     QString query2json(const QString & queryText);
@@ -65,9 +66,11 @@ private:
     bool queryIsCashed(queryStruct &queryItem);
     bool queryExecute(queryStruct &queryItem);
 
-    queryStruct emptyQuery = {0, QString(), QString(), QString(), QString(), 0, QDateTime()};
+    queryStruct emptyQuery = {0, QString(), QString(), QString(), QString(), QString(), 0, QDateTime()};
     QString errorStr;
     QJSEngine *engine;
+    //TODO pointers of queryStruct in queryMap
+    //QMap<QString,*queryStruct> queryMap;
     QMap<QString,queryStruct> queryMap;
     QMap<QString,std::function<QString(QSqlQuery*sqlQuery)>> packFunctionsMap;
     QString getQueryLastError(QSqlQuery *query);

@@ -36,34 +36,11 @@ void cfSetProperties(T * obj,const QVariantMap &objProperties)
 
 template<class T>
 void cfListenPort(T * obj, ushort port, int interval, int delay,const std::function<void()>& functor=0) {
-    QTimer *listenTimer = new QTimer(0);
-    //qDebug()<<0;
-//    qDebug()<<"obj->thread().isRunning()"<<obj->thread()->isRunning();
-//    QThread* thread = new QThread;
-//    if(!obj->parent()){
-//        qDebug()<<"thread";
-//        obj->moveToThread(thread);
-//        listenTimer->moveToThread(thread);
-//        listenTimer->setInterval(delay);
-//    } else{
-//        qDebug()<<"listenTimer";
-//        listenTimer->start(delay);
-//    }
-//    QObject::connect(thread,&QThread::started,listenTimer,static_cast<void (QTimer::*)()>(&QTimer::start));
-//    thread->start();
-
-    //listenTimer->moveToThread(obj->thread());
-    //QMetaObject::invokeMethod(listenTimer, "start", Qt::QueuedConnection, Q_ARG(int, delay));
-
-    QObject::connect(listenTimer,&QTimer::timeout,obj,[obj,port,listenTimer,interval,functor](){
-//        QTimer::singleShot(0,[obj,port,listenTimer,interval,functor](){
-//            qDebug()<<1;
-//            bool isPortOpen;
-//            QMetaObject::invokeMethod(obj, "listen", Qt::BlockingQueuedConnection, Q_RETURN_ARG(bool, isPortOpen),
-//                                      Q_ARG(QHostAddress, QHostAddress::AnyIPv4), Q_ARG(ushort, port));
+    QTimer *listenTimer = new QTimer;
+//    listenTimer->moveToThread(obj->thread());
+    QObject::connect(listenTimer,&QTimer::timeout,/*obj,*/[obj,port,listenTimer,interval,functor](){
+        //qDebug()<<"currentThread()"<<QThread::currentThread();
             if (obj->listen(QHostAddress::AnyIPv4, port)) {
-//            if(isPortOpen){
-//                qDebug()<<2;
                 if(functor)
                     functor();
                 qDebug()<<QString("%1: %2 port opened").arg(obj->objectName()).arg(port);
@@ -73,11 +50,9 @@ void cfListenPort(T * obj, ushort port, int interval, int delay,const std::funct
                 qDebug()<<QString("%1: Failed to open port %2").arg(obj->objectName()).arg(port);
                 listenTimer->start(interval);
             }
-//        });
-    }, Qt::QueuedConnection);
+    }/*, Qt::QueuedConnection*/);
+//    QTimer::singleShot(0,obj,[listenTimer,delay](){listenTimer->start(delay);});
     listenTimer->start(delay);
-    //QTimer::singleShot(0,Qt::CoarseTimer,obj,[](){qDebug()<<3;}/*, Qt::QueuedConnection*/);
-    //QTimer::singleShot(0,Qt::CoarseTimer,obj,[listenTimer,delay](){listenTimer->start(delay);}/*, Qt::QueuedConnection*/);
 }
 
 template<class T>
@@ -86,10 +61,13 @@ T* cfGetObject(const QString &objectName)
     T *obj =qApp->findChild<T*>(objectName);
     if(obj)
         return obj;
-//    T *obj = qApp->property(objectName).value<T *>();
-//    if(obj)
-//        return obj;
-    qDebug()<<QString("Object %1 not found in App!").arg(objectName);
+    //qDebug()<<QString("Object %1 not found in App!").arg(objectName);
+    QVariant pointer = qApp->property(objectName.toLatin1());
+    if(pointer.isValid())
+        obj = (T *)pointer.value<void *>();
+    if(obj)
+        return obj;
+    qDebug()<<QString("Object %1 not found in App properties!").arg(objectName);
     return 0;
 }
 
@@ -108,7 +86,7 @@ T* cfGetObject(const QString &objectName)
 //    if(!watchdog)
 //        return;
 ////    WatchdogRpcService * watchdogRpcService = new WatchdogRpcService(qApp);
-////    watchdogRpcService->setObjectName("andonRpcService");
+////    watchdogRpcService->setObjectName("serverRpcService");
 //    QJsonRpcTcpServer * watchdogRpcServer = new QJsonRpcTcpServer(qApp);
 ////    watchdogRpcServer->setObjectName("watchdogRpcServer");
 ////    watchdogRpcServer->addService(watchdogRpcService);

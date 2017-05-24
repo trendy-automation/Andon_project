@@ -35,7 +35,7 @@ public:
     bool removeService(QJsonRpcService *service);
 
 signals:
-    void clientConnected(const QHostAddress &clientIP); //my hack 170615
+    void clientConnected(const QHostAddress &clientIP);      //my hack 170615
     void clientDisconnected(const QHostAddress &clientIP);
 
 public slots:

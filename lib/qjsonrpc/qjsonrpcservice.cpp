@@ -19,6 +19,7 @@
 #include <QMetaMethod>
 #include <QEventLoop>
 #include <QDebug>
+#include <QThread>
 
 #include "qjsonrpcsocket.h"
 #include "qjsonrpcservice_p.h"
@@ -44,7 +45,8 @@ QJsonRpcServiceRequest::QJsonRpcServiceRequest(const QJsonRpcMessage &request,
 
 QJsonRpcServiceRequest &QJsonRpcServiceRequest::operator=(const QJsonRpcServiceRequest &other)
 {
-    d = other.d; //my hack 15.05.17
+    //qDebug()<<"currentThread()"<<QThread::currentThread();
+    d = other.d; //no my hack 15.05.17
     return *this;
 }
 

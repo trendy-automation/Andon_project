@@ -53,7 +53,7 @@ win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../lib/qextserialpo
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../lib/qextserialport-1.2rc/debug/ -lQt5ExtSerialPortd1
 else:unix:!macx: LIBS += -L$$OUT_PWD/../../lib/qextserialport-1.2rc/ -lQt5ExtSerialPort1
 
-copydata.commands = $(COPY_FILE)  \"$$shell_path($$clean_path($$OUT_PWD/../../lib/qextserialport-1.2rc/$$BUILD_TYPE/$$LIB_NAME))\" \"$$shell_path($$OUT_PWD/$$BUILD_TYPE)\"
+copydata.commands = $(COPY_FILE) \"$$shell_path($$clean_path($$OUT_PWD/../../lib/qextserialport-1.2rc/$$BUILD_TYPE/$$LIB_NAME))\" \"$$shell_path($$OUT_PWD/$$BUILD_TYPE)\"
 first.depends = $(first) copydata
 export(first.depends)
 export(copydata.commands)

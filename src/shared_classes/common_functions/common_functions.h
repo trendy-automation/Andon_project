@@ -37,7 +37,7 @@ void cfSetProperties(T * obj,const QVariantMap &objProperties)
 template<class T>
 void cfListenPort(T * obj, ushort port, int interval, int delay,const std::function<void()>& functor=0) {
     QTimer *listenTimer = new QTimer;
-//    listenTimer->moveToThread(obj->thread());
+    listenTimer->moveToThread(obj->thread());
     QObject::connect(listenTimer,&QTimer::timeout,/*obj,*/[obj,port,listenTimer,interval,functor](){
         //qDebug()<<"currentThread()"<<QThread::currentThread();
             if (obj->listen(QHostAddress::AnyIPv4, port)) {
@@ -51,8 +51,8 @@ void cfListenPort(T * obj, ushort port, int interval, int delay,const std::funct
                 listenTimer->start(interval);
             }
     }/*, Qt::QueuedConnection*/);
-//    QTimer::singleShot(0,obj,[listenTimer,delay](){listenTimer->start(delay);});
-    listenTimer->start(delay);
+    QTimer::singleShot(0,obj,[listenTimer,delay](){listenTimer->start(delay);});
+//    listenTimer->start(delay);
 }
 
 template<class T>

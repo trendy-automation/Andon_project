@@ -110,8 +110,8 @@ void QJsonRpcTcpServer::incomingConnection(int socketDescriptor)
     QIODevice *device = qobject_cast<QIODevice*>(tcpSocket);
     QJsonRpcSocket *socket = new QJsonRpcSocket(device, this);
     QHostAddress curClientIp=tcpSocket->peerAddress();                 //my hack 170615
-    //qDebug()<<"curClientIp.toString()" << curClientIp.toString();      //my hack 170615
     socket->setProperty("address",curClientIp.toString());             //my hack 170615
+    //qDebug()<<"socket address" << socket->property("address").toString();      //my hack 170615
     socket->setObjectName(curClientIp.toString());                     //my hack 170615
     bool firstSocket=true;                                             //my hack 170615
     for (auto tcpSocket_:d->socketLookup.keys())                       //my hack 170615
@@ -119,12 +119,12 @@ void QJsonRpcTcpServer::incomingConnection(int socketDescriptor)
             firstSocket=false;                                         //my hack 170615
             break;                                                     //my hack 170615
         }                                                              //my hack 170615
-    if (firstSocket)                                                   //my hack 170615
-        Q_EMIT clientConnected(curClientIp);                           //my hack 170615
     connect(socket, SIGNAL(messageReceived(QJsonRpcMessage)), this, SLOT(_q_processMessage(QJsonRpcMessage)));
     d->clients.append(socket);
     connect(tcpSocket, SIGNAL(disconnected()), this, SLOT(_q_clientDisconnected()));
     d->socketLookup.insert(tcpSocket, socket);
+    if (firstSocket)                                                   //my hack 170615
+        Q_EMIT clientConnected(curClientIp);                           //my hack 170615
 }
 
 void QJsonRpcTcpServer::_q_clientDisconnected()

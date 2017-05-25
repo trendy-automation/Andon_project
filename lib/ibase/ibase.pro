@@ -14,7 +14,7 @@ contains(QT_ARCH, i386){
 } else {
     FIREBIRD = 'C:\Program Files\Firebird\Firebird_2_5'
 }
-
+#Add in PATH $${FIREBIRD}\bin and $${FIREBIRD}\lib
 LIBS += -L$${FIREBIRD}\lib -lfbclient_ms
 
 INCLUDEPATH += $${FIREBIRD}\include

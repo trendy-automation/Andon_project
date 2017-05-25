@@ -94,19 +94,19 @@ int main(int argc, char *argv[])
     ServerRpcService * serverRpcService = new ServerRpcService;
     serverRpcService->setObjectName("serverRpcService");
     a.setProperty("serverRpcService", qVariantFromValue((void *) serverRpcService));
-    QJsonRpcTcpServer /***/ rpcServer /*= new QJsonRpcTcpServer*/;
+    QJsonRpcTcpServer * rpcServer = new QJsonRpcTcpServer;
 //    QThread newThread;
 //    rpcServer->moveToThread(&newThread);
 //    newThread.start();
 //    qDebug()<<"rpcServer->thread()"<<rpcServer->thread();
-    rpcServer.setObjectName("rpcServer");
-    a.setProperty("rpcServer", qVariantFromValue((void *) &rpcServer));
-    rpcServer.addService(serverRpcService);
+    rpcServer->setObjectName("rpcServer");
+    a.setProperty("rpcServer", qVariantFromValue((void *) rpcServer));
+    rpcServer->addService(serverRpcService);
     serverRpcService->setDB(andonDb);
-    QObject::connect(&rpcServer, &QJsonRpcTcpServer::clientConnected, &rpcServer, appClientConnected);
-    QObject::connect(&rpcServer, &QJsonRpcTcpServer::clientDisconnected, &rpcServer, appClientDisconnected);
-    QTimer::singleShot(0,&rpcServer,[&rpcServer](){
-        cfListenPort<QJsonRpcTcpServer>(&rpcServer,JSONRPC_SERVER_PORT,3000,700);
+    QObject::connect(rpcServer, &QJsonRpcTcpServer::clientConnected, rpcServer, appClientConnected);
+    QObject::connect(rpcServer, &QJsonRpcTcpServer::clientDisconnected, rpcServer, appClientDisconnected);
+    QTimer::singleShot(0,rpcServer,[rpcServer](){
+        cfListenPort<QJsonRpcTcpServer>(rpcServer,JSONRPC_SERVER_PORT,3000,700);
     });
 //    /*****************************************
 //     * Start clientRpcService
@@ -172,8 +172,6 @@ int main(int argc, char *argv[])
     qDebug()<<"Start reportTimer";
 
     ExcelReport *excelReport=new ExcelReport(&a);
-//    excelReport->addEmailReport();
-//    excelReport->addFileReport();
 
 //    excelReport->queryText2File("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
 //                     QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_export.xlsx")
@@ -214,14 +212,12 @@ int main(int argc, char *argv[])
                                                      QString("REPORT_BREAKDOWNS_%1.xlsx").arg(QDate::currentDate().toString("dd_MM_yyyy")));
                 }
             });
-        //reportTimer->stop();
         QDateTime cdt = QDateTime::currentDateTime();
         reportTimer->start(cdt.msecsTo(QDateTime(cdt.addDays(1).date(),QTime(23,50))));
         //reportTimer->start(msecsPerDay-qMax(QTime(23,50).elapsed(),
         //                                    QTime(23,50).elapsed())+1000);
         qDebug()<<"reportTimer start"<<reportTimer->interval()/3600000.0<<"hours";
     });
-    //qDebug()<<"WThread->snedReport";
 
     /*
     QObject::connect(schedulerTimer,&QTimer::timeout,[&schedulerList,schedulerTimer](){
@@ -259,20 +255,6 @@ int main(int argc, char *argv[])
     });
 */
 
-    /*
-    snedReport(const QString &report, const QStringList &emails)
-
-    QTimer WebuiUpdate;
-    WebuiUpdate.setInterval(10000);
-    WebuiUpdate.setSingleShot(false);
-    WebuiUpdate.start();
-    QObject::connect(&WebuiUpdate,&QTimer::timeout,[andonDb,WThread](){
-        WThread->updateCurStatuses("table",QJsonDocument::fromJson(
-            andonDb->query2fulljson("SELECT * FROM VIEW_CURRENT_STATUSES_RU").toUtf8()).toJson());
-        WThread->updateCurStatuses("graff",QJsonDocument::fromJson(
-            andonDb->query2json("SELECT * FROM VIEW_STATUS_LOG2GRAFF").toUtf8()).toJson());
-    });
-*/
     /*****************************************
      * Start SMS Server
      *****************************************/
@@ -315,49 +297,6 @@ int main(int argc, char *argv[])
     QObject::connect(emailClient,&SendEmail::errorMessage,[](const QString & message){
         qDebug()<<"Email errorMessage"<<message;
     });
-//    QObject::connect(WThread,&WebuiThread::sendReport2email,[emailClient]
-//                     (const QString &subject, const QString &message,
-//                      const QStringList &rcptStringList, QList<QBuffer*> attachments=QList<QBuffer*>()){
-//        emailClient->sendEmail(subject, message, rcptStringList, attachments);
-//    });
-
-
-    /*****************************************
-     * Start QXlsx::Document
-     *****************************************/
-    /*
-    qDebug()<<"Start QXlsx::Document";
-
-    QXlsx::Document * xlsx = new QXlsx::Document("PDP Injection CW 05 (2016) TST.xlsx");
-    qDebug()<<"xlsx setObjectName";
-    xlsx->setObjectName("xlsx");
-    */
-    /*
-     xlsx->selectSheet("Injection");
-    int val = xlsx->read(QString("BD193")).toInt();
-    qDebug()<<"xlsx val="<<val<<"variant"<<xlsx->read(QString("BD193"));
-    val=val+19;
-    xlsx->write(QString("BD193"),QVariant(val));
-    qDebug()<<"xlsx SR_1_CNT_1409806XCF="<<val;
-    //SR_1_CNT_1409806XCF
-    //xlsx->write(1,2, "val");
-    qDebug()<<"xlsx QBuffer";
-    */
-    /*
-    QByteArray ba;
-    QBuffer buffer(&ba);
-    buffer.open(QIODevice::WriteOnly);
-    qDebug()<<"xlsx saveAs(&buffer)";
-    xlsx->saveAs(&buffer);
-    //qDebug()<<"xlsx buffer.open";
-    buffer.open(QIODevice::ReadOnly);
-    qDebug()<<"emailClient->sendAttachment";
-    emailClient->sendAttachment(QString("new xlsx document"),
-                                QStringList()<<QString("ilya.kolesnik@faurecia.com"),
-                                //QStringList()<<QString("ilya-kolesnic@yandex.ru"),
-                                QString("find new xlsx document in attachments"),
-                                buffer.readAll(),QString("PDP Injection CW 05 (2016) TST").append(".xlsx"));
-    */
 
     /*****************************************
      * Start Script Engine
@@ -373,7 +312,7 @@ int main(int argc, char *argv[])
     engine->globalObject().setProperty("excelReport",engine->newQObject(excelReport));
     engine->globalObject().setProperty("emailClient",engine->newQObject(emailClient));
     engine->globalObject().setProperty("WThread",engine->newQObject(WThread));
-    engine->globalObject().setProperty("rpcServer",engine->newQObject(&rpcServer));
+    engine->globalObject().setProperty("rpcServer",engine->newQObject(rpcServer));
 
     WThread->setEngine(engine);
 
@@ -392,34 +331,6 @@ int main(int argc, char *argv[])
     if (!tableArray.isEmpty())
         recordObject=tableArray.at(0).toObject();
 
-
-    /*
-    if (recordObject.keys().contains("SCRIPT_ORDER") && recordObject.keys().contains("SCRIPT_TEXT")) {
-        QList<QJsonObject> scriptObjectList;
-        for (int i=0;i<tableArray.count();++i)
-            scriptObjectList.append(tableArray.at(i).toObject());
-        QByteArray sortfield = "SCRIPT_ORDER";
-        std::sort(scriptObjectList.begin(), scriptObjectList.end(),[sortfield](const QJsonObject a, const QJsonObject b ){
-            return a[sortfield].toInt() < b[sortfield].toInt();
-        });
-        for (int i=0;i<scriptObjectList.count();++i){
-            QString ScriptText = scriptObjectList.at(i)["SCRIPT_TEXT"].toString().replace("`","'");
-            QScriptSyntaxCheckResult result = engine->checkSyntax(ScriptText);
-            if (result.state()==QScriptSyntaxCheckResult::Valid) {
-                ScriptsList.append(ScriptText);
-            }
-            else {
-                qDebug()<<"Syntax error in script "<<"("<<result.errorLineNumber()<<
-                          ","<<result.errorColumnNumber()<<"):";
-                qDebug()<<ScriptText<<"\nMessage:"<<result.errorMessage();
-            }
-        }
-                for (int i = 0; i<ScriptsList.count(); ++i) {
-                    //qDebug()<<"server_start"<<ScriptsList.at(i);
-                    engine->evaluate(ScriptsList.at(i));
-                }
-    }
-*/
     QList<QJsonObject> scriptObjectList;
     for (int i=0;i<tableArray.count();++i)
         scriptObjectList.append(tableArray.at(i).toObject());

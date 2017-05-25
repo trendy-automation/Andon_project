@@ -2,6 +2,7 @@
 #include <QMetaObject>
 #include <QMetaClassInfo>
 #include <QDebug>
+//#include <QThread>
 
 #include "qjsonrpcservice.h"
 #include "qjsonrpcservice_p.h"
@@ -88,7 +89,8 @@ void QJsonRpcServiceProvider::processMessage(QJsonRpcAbstractSocket *socket, con
             } else {
                 QJsonRpcService *service = d->services.value(serviceName);
                 service->setProperty("address",socket->property("address").toString());  //my hack 10.05.17
-                //qDebug()<<"socket->property(\"address\").toString()"<<socket->property("address").toString();
+                //qDebug()<<"service address"<<service->property("address").toString();
+                //qDebug()<<"qjsonrpcserviceprovider thread"<<QThread::currentThread();
                 service->d_func()->currentRequest = QJsonRpcServiceRequest(message, socket);
                 if (message.type() == QJsonRpcMessage::Request)
                     QObject::connect(service, SIGNAL(result(QJsonRpcMessage)),

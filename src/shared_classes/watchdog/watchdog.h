@@ -88,7 +88,8 @@ public slots:
         QObject::connect(shutdownPC,&QProcess::errorOccurred,[](QProcess::ProcessError error){
             qDebug() << "rebootPC errorOccurred!"<<error;
         });
-        shutdownPC->startDetached("shutdown.exe -r -f -t 0");
+        qDebug() << "PC will be restarted in 300 seconds!\r\nTo abort run \"shutdown.exe /a\" in cmd";
+        shutdownPC->startDetached("shutdown.exe -r -f -t 300");
         qApp->quit();
     }
     void startRpcServer(int port)

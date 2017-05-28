@@ -1,7 +1,7 @@
 #include "server_rpcservice.h"
 #include "qjsonrpcsocket.h"
 //#include "qjsonrpcservice.h"
-
+#include "common_functions.h"
 
 QString AtIndexOf(QStringList ResList,QStringList IndexList, QString indexVal)
 {
@@ -13,7 +13,7 @@ QString AtIndexOf(QStringList ResList,QStringList IndexList, QString indexVal)
 ServerRpcService::ServerRpcService(QObject *parent)
     : QJsonRpcService(parent)
 {
-
+    andondb=cfGetObject<DBWrapper>("andonDb");
 }
 
 ServerRpcService::~ServerRpcService()
@@ -22,21 +22,17 @@ ServerRpcService::~ServerRpcService()
 
 QString ServerRpcService::curClientIp()
 {
-    //qDebug()<<"currentThread()"<<QThread::currentThread();
     //qDebug()<<"curClientIp()";
     QString address;
     QVariant adr(this->property("address"));
     if(adr.isValid())
-        address==this->property("address").toString();
-    if (address.isEmpty())
-        qDebug()<<"this address is empty";
-    else
-        return address;
-    QJsonRpcAbstractSocket *socket = this->currentRequest().socket();
-    if(socket)
-        address=socket->property("address").toString();
-//    else
-//        qDebug()<<"socket is empty";
+        address==adr.toString();
+    if (address.isEmpty()){
+        //qDebug()<<"this address is empty";
+        QJsonRpcAbstractSocket *socket = this->currentRequest().socket();
+        if(socket)
+            address=socket->property("address").toString();
+    }
     if (address.isEmpty())
         qDebug()<<"address is empty";
     return address;
@@ -282,18 +278,22 @@ QString ServerRpcService::StartSms(const QString &sms_params)
     return QString();
 }
 
-QString ServerRpcService::SQLQuery2Json(QString sqlquery)
+/*std::function<QString (QString)>*/ QString ServerRpcService::SQLQuery2Json(const QString &sqlquery)
 {
+    return [=](QString sqlquery)->QString{
     // qDebug() << sqlquery;
     if (sqlquery.isEmpty()) {
         qDebug() << "SQL query empty in SQLQuery2Json";
         return QString();
     } else{
+//        QString s;
         if (sqlquery.contains(":CLIENT_IP"))
-            sqlquery.replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'"));
+            /*s = QString(*/sqlquery/*)*/.replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'"));
         //qDebug() << sqlquery;
         return andondb->query2json(sqlquery);
+        //return andondb->query2json(/*sqlquery*/s);
     }
+    }(sqlquery);
 }
 
 void ServerRpcService::executeProc(const QString & sqlquery)
@@ -306,12 +306,3 @@ void ServerRpcService::executeProc(const QString & sqlquery)
         andondb->executeProc(QString(sqlquery).replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'")));
 }
 
-void ServerRpcService::setDB(DBWrapper* db)
-{
-    andondb=db;
-}
-
-//void ServerRpcService::setTelnet(QtTelnet* telnetClnt)
-//{
-//    telnetClient=telnetClnt;
-//}

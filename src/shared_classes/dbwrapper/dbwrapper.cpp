@@ -97,8 +97,10 @@ bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
                 //        continue;
                 //}
                 //if(elapsed>cleanTimer->interval() && elapsed>q.value().i_cashTime)
-                if((elapsed>cleanTimer->interval() && elapsed>q.value().i_cashTime) || !q.value().p_query)
+                if((elapsed>cleanTimer->interval() && elapsed>q.value().i_cashTime) || !q.value().p_query){
                     queryMap.remove(q.key());
+                    emit querysChanged();
+                }
             }
             //qDebug() << "queryMap.count()" << queryMap.count();
             if(queryMap.isEmpty()){
@@ -198,6 +200,7 @@ bool DBWrapper::queryExecute (queryStruct &queryItem)
             if(queryItem.s_error.contains("Could not prepare statement")>0){
                 queryItem.i_cashTime=+DB_CASH_CLAEN_INTERVAL;
                 queryMap.insert(queryItem.s_key,queryItem);
+                emit querysChanged();
             }
     }
     errorCounter=+dbOK;
@@ -215,6 +218,7 @@ bool DBWrapper::executeProc(const QString & queryText)
         queryItem.p_query->finish();
         //DB.commit();
         queryMap.remove(queryItem.s_key);
+        emit querysChanged();
         return true;
     }
     qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);
@@ -414,6 +418,7 @@ QString DBWrapper::query2method(const QString & queryText, const QString &queryM
         else{
             queryItem.s_result = packFunctionsMap.value(queryItem.s_method)(queryItem.p_query);
             queryMap.remove(queryItem.s_key);
+            emit querysChanged();
             return queryItem.s_result;
         }
     }
@@ -441,6 +446,7 @@ void DBWrapper::executeQuery(const QString & queryText,
         queryItem.p_query->finish();
         //DB.commit();
         queryMap.remove(queryItem.s_key);
+        emit querysChanged();
         return;
     }
     qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);

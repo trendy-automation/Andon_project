@@ -7,7 +7,8 @@ LIBS += -lws2_32
 
 INCLUDEPATH += .
 TEMPLATE = lib
-TARGET = qjsonrpc
+win32:CONFIG(debug, debug|release): TARGET = qjsonrpc1d
+else:TARGET = qjsonrpc1
 QT += core network
 #QT -= gui
 DEFINES += QJSONRPC_BUILD

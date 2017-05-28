@@ -6,6 +6,9 @@
 #include <QDebug>
 
 #include "dbwrapper.h"
+
+#include <functional>
+
 //_______QtTelnet class_______________
 //#include "qttelnet.h"
 
@@ -26,7 +29,7 @@ signals:
 
 public slots:
     bool isAlive(){return true;}
-    QString SQLQuery2Json(QString sqlquery);
+    QString SQLQuery2Json(const QString &sqlquery);
     void executeProc(const QString & sqlquery);
 
     void StopSms(const QString &Sms_id);
@@ -35,7 +38,6 @@ public slots:
     void CancelSms(const QString &Sms_id);
     QString StartSms(const QString &sms_param);
 //    int telnetDeclareKanban(const QByteArray &kanbanNumber);
-    void setDB(DBWrapper* db);
 //    void setTelnet(QtTelnet* telnetClnt);
 
 

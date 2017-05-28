@@ -71,8 +71,9 @@ int main(int argc, char *argv[])
     /*****************************************
      * Start DataBase
      *****************************************/
-    DBWrapper *andonDb = new DBWrapper(&a);
+    DBWrapper *andonDb = new DBWrapper;
     andonDb->setObjectName("andonDb");
+    a.setProperty("andonDb", qVariantFromValue((void *) andonDb));
     if(!andonDb->ConnectDB(qApp->applicationDirPath(),DB_DATABASE_FILE)){
         //qDebug()<<"ConnectDB failed";
         QMessageBox::information(new QWidget,"Andon server failed","Can not connect to DB");
@@ -80,6 +81,9 @@ int main(int argc, char *argv[])
         return 0;
     }
     QObject::connect(andonDb,&DBWrapper::dbError,watchdog,&Watchdog::rebootPC);
+//    QThread andonDbThread;
+//    andonDb->moveToThread(&andonDbThread);
+//    andonDbThread.start();
     /*****************************************
      * Start QtTelnet
      *****************************************/
@@ -95,14 +99,14 @@ int main(int argc, char *argv[])
     serverRpcService->setObjectName("serverRpcService");
     a.setProperty("serverRpcService", qVariantFromValue((void *) serverRpcService));
     QJsonRpcTcpServer * rpcServer = new QJsonRpcTcpServer;
-//    QThread newThread;
-//    rpcServer->moveToThread(&newThread);
-//    newThread.start();
 //    qDebug()<<"rpcServer->thread()"<<rpcServer->thread();
     rpcServer->setObjectName("rpcServer");
     a.setProperty("rpcServer", qVariantFromValue((void *) rpcServer));
     rpcServer->addService(serverRpcService);
-    serverRpcService->setDB(andonDb);
+    QThread rpcServerThread;
+    serverRpcService->moveToThread(&rpcServerThread);
+    rpcServer->moveToThread(&rpcServerThread);
+    rpcServerThread.start();
     QObject::connect(rpcServer, &QJsonRpcTcpServer::clientConnected, rpcServer, appClientConnected);
     QObject::connect(rpcServer, &QJsonRpcTcpServer::clientDisconnected, rpcServer, appClientDisconnected);
     QTimer::singleShot(0,rpcServer,[rpcServer](){
@@ -123,7 +127,9 @@ int main(int argc, char *argv[])
     iotheard->setObjectName("iotheard");
     BCSender * bcSender = new BCSender(UDP_INTERVAL,UDP_PORT,&a);
     bcSender->setObjectName("bcSender");
-    andonDb->executeQuery("SELECT IP_ADDRESS FROM TBL_STATIONS WHERE ENABLED='1'",appAddbcClients);
+//    QTimer::singleShot(0,andonDb,[&,andonDb](){
+        andonDb->executeQuery("SELECT IP_ADDRESS FROM TBL_STATIONS WHERE ENABLED='1'",appAddbcClients);
+//    });
     QObject::connect(iotheard, &ioStreamThread::inputReceived, appParseInput);
     QObject::connect(iotheard, &ioStreamThread::started, bcSender, &BCSender::run);
     QTimer::singleShot(2000,iotheard,&ioStreamThread::startThread);
@@ -171,22 +177,18 @@ int main(int argc, char *argv[])
 
     qDebug()<<"Start reportTimer";
 
-    ExcelReport *excelReport=new ExcelReport(&a);
-
-//    excelReport->queryText2File("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
-//                     QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_export.xlsx")
-//                     //.arg(QDate::currentDate().toString("MMMM_yyyy"))
-//                     ,"AutoDecl_aria");
-//    excelReport->queryText2File("SELECT * FROM MNT_MOLD_REPORT", "Andon_cycle_counter",
-//                     "P:\\Maintenance\\Обслуживание пресс-форм\\Andon_cycle_counter.xlsx");
-
+    ExcelReport *excelReport=new ExcelReport;
+    QThread excelReportThread;
+    excelReport->moveToThread(&excelReportThread);
+    excelReportThread.start();
+    a.setProperty("excelReport", qVariantFromValue((void *) excelReport));
     const int msecsPerDay = 24 * 60 * 60 * 1000;
     QTimer * reportTimer = new QTimer(QAbstractEventDispatcher::instance());
     reportTimer->setTimerType(Qt::VeryCoarseTimer);
     QDateTime cdt = QDateTime::currentDateTime();
     reportTimer->start(qMax((qint64)10000, cdt.msecsTo(QDateTime(cdt.date(),QTime(23,50)))));
     qDebug()<<"reportTimer start"<<reportTimer->interval()/3600000.0<<"hours";
-    QObject::connect(reportTimer,&QTimer::timeout, [excelReport,reportTimer,msecsPerDay,andonDb](){
+    QObject::connect(reportTimer,&QTimer::timeout, excelReport, [excelReport,reportTimer,msecsPerDay,andonDb](){
         //qDebug()<<"reportTimer timeout"<<"dayOfWeek"<<QDate::currentDate().dayOfWeek();
         excelReport->queryText2File("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
                          QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_%1.xlsx")
@@ -260,6 +262,9 @@ int main(int argc, char *argv[])
      *****************************************/
     qDebug()<<"Start SMS Server";
     Sms_service * sms_sender = new Sms_service;
+    QThread smsSenderThread;
+    sms_sender->moveToThread(&smsSenderThread);
+    smsSenderThread.start();
     QObject::connect(serverRpcService,&ServerRpcService::SendSMS, sms_sender,
                      &Sms_service::sendSMSFECT,Qt::QueuedConnection);
     QObject::connect(sms_sender,&Sms_service::SmsStatusUpdate,[andonDb]
@@ -282,9 +287,9 @@ int main(int argc, char *argv[])
         }
     } else
         sms_sender->setURL("http://10.208.98.101:81/sendmsg?user=SMS1&passwd=smssms1&cat=1&enc=%1&to=%2&text=%3");
-    QThread* smsThread = new QThread;
-    sms_sender->moveToThread(smsThread);
-    smsThread->start();
+//    QThread* smsThread = new QThread;
+//    sms_sender->moveToThread(smsThread);
+//    smsThread->start();
 
     /*****************************************
      * Start SendEmail
@@ -375,6 +380,14 @@ int main(int argc, char *argv[])
         sms_sender->sendSMSFECT("89657009502", "Server is running!","RU",987);
         qDebug()<<"Server running SMS";
     }
+//    QTimer::singleShot(10000,excelReport,[excelReport](){
+        excelReport->queryText2File("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
+                         QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_export.xlsx")
+                         //.arg(QDate::currentDate().toString("MMMM_yyyy"))
+                         ,"AutoDecl_aria");
+        excelReport->queryText2File("SELECT * FROM MNT_MOLD_REPORT", "Andon_cycle_counter",
+                         "P:\\Maintenance\\Обслуживание пресс-форм\\Andon_cycle_counter.xlsx");
+//    });
     qDebug()<<"main finish";
     return a.exec();
 }

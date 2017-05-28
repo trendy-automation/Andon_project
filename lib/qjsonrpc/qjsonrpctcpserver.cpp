@@ -110,11 +110,11 @@ void QJsonRpcTcpServer::incomingConnection(int socketDescriptor)
     QIODevice *device = qobject_cast<QIODevice*>(tcpSocket);
     QJsonRpcSocket *socket = new QJsonRpcSocket(device, this);
     QHostAddress curClientIp=tcpSocket->peerAddress();                 //my hack 170615
+    socket->setObjectName(curClientIp.toString());                     //my hack 170615
     socket->setProperty("address",curClientIp.toString());             //my hack 170615
     //qDebug()<<"socket address" << socket->property("address").toString();      //my hack 170615
-    socket->setObjectName(curClientIp.toString());                     //my hack 170615
     bool firstSocket=true;                                             //my hack 170615
-    for (auto tcpSocket_:d->socketLookup.keys())                       //my hack 170615
+    foreach(auto tcpSocket_,d->socketLookup.keys())                    //my hack 170615
         if (curClientIp==tcpSocket_->peerAddress()) {                  //my hack 170615
             firstSocket=false;                                         //my hack 170615
             break;                                                     //my hack 170615
@@ -143,15 +143,15 @@ void QJsonRpcTcpServer::_q_clientDisconnected()
     }
 
     tcpSocket->deleteLater();
-    QHostAddress curClientIp=tcpSocket->peerAddress(); //my hack 170615
-    bool lastSocket=true;
-    foreach (QTcpSocket *tcpSocket_, d->socketLookup.keys())
-        if (curClientIp==tcpSocket_->peerAddress()) {
-            lastSocket=false;
-            break;
-        }
-    if (lastSocket)
-        Q_EMIT clientDisconnected(curClientIp);
+    QHostAddress curClientIp=tcpSocket->peerAddress();                  //my hack 170615
+    bool lastSocket=true;                                               //my hack 170615
+    foreach(auto tcpSocket_, d->socketLookup.keys())                    //my hack 170615
+        if (curClientIp==tcpSocket_->peerAddress()) {                   //my hack 170615
+            lastSocket=false;                                           //my hack 170615
+            break;                                                      //my hack 170615
+        }                                                               //my hack 170615
+    if (lastSocket)                                                     //my hack 170615
+        Q_EMIT clientDisconnected(curClientIp);                         //my hack 170615
 }
 
 void QJsonRpcTcpServer::_q_processMessage(const QJsonRpcMessage &message)
@@ -161,7 +161,6 @@ void QJsonRpcTcpServer::_q_processMessage(const QJsonRpcMessage &message)
         qJsonRpcDebug() << Q_FUNC_INFO << "called without service socket";
         return;
     }
-
     processMessage(socket, message);
 }
 

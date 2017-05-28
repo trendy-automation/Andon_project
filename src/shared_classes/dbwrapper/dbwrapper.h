@@ -29,14 +29,16 @@ class DBWrapper : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(int queryCount READ getQueryCount)
+    Q_PROPERTY(int queryCount READ getQueryCount NOTIFY querysChanged)
 
 public:
     explicit DBWrapper(QObject *parent = 0);
     ~DBWrapper();
+    int getQueryCount(){return queryMap.count();}
 
 signals:
     void DBConnected();
+    void querysChanged();
     void resultQuery(const QString &sql_query, const QString &jsontext);
     void sendText(const QString &sql_query,const QString &query_method);
     void dbError(const QString &lastError);
@@ -59,7 +61,6 @@ public slots:
     QSqlQuery *sql2Query(const QString & queryText);
 
     bool getDbState();
-    int getQueryCount(){return queryMap.count();}
 
 private:
     queryStruct appendQuery(const QString &queryText, const QString &queryMethod, int cashTime);

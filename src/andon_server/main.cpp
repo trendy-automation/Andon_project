@@ -29,6 +29,7 @@
 
 #include <QMessageBox>
 #include <QVariant>
+#include <QtConcurrent>
 
 #include "excel_report.h"
 
@@ -74,16 +75,20 @@ int main(int argc, char *argv[])
     DBWrapper *andonDb = new DBWrapper;
     andonDb->setObjectName("andonDb");
     a.setProperty("andonDb", qVariantFromValue((void *) andonDb));
+//    QFuture<bool> futureDb = QtConcurrent::run(andonDb,&DBWrapper::ConnectDB,qApp->applicationDirPath(),QString(DB_DATABASE_FILE));
+//    if(!futureDb.result()){
+//    QTimer::singleShot(0,andonDb,[andonDb](){
     if(!andonDb->ConnectDB(qApp->applicationDirPath(),DB_DATABASE_FILE)){
         //qDebug()<<"ConnectDB failed";
         QMessageBox::information(new QWidget,"Andon server failed","Can not connect to DB");
-        a.quit();
+        qApp->quit();
         return 0;
     }
+//    });
     QObject::connect(andonDb,&DBWrapper::dbError,watchdog,&Watchdog::rebootPC);
-//    QThread andonDbThread;
-//    andonDb->moveToThread(&andonDbThread);
-//    andonDbThread.start();
+    QThread andonDbThread;
+    andonDb->moveToThread(&andonDbThread);
+    andonDbThread.start();
     /*****************************************
      * Start QtTelnet
      *****************************************/
@@ -109,6 +114,11 @@ int main(int argc, char *argv[])
     rpcServerThread.start();
     QObject::connect(rpcServer, &QJsonRpcTcpServer::clientConnected, rpcServer, appClientConnected);
     QObject::connect(rpcServer, &QJsonRpcTcpServer::clientDisconnected, rpcServer, appClientDisconnected);
+    QtConcurrent::run([rpcServer](){cfListenPort<QJsonRpcTcpServer>(rpcServer,JSONRPC_SERVER_PORT,3000,700);});
+//    QtConcurrent::run(/*std::bind(*/reinterpret_cast<void(QJsonRpcTcpServer*,int,int,int)>(cfListenPort)
+//                                ,rpcServer,JSONRPC_SERVER_PORT,3000,700/*)*/);
+//    QtConcurrent::run((std::function<void(QJsonRpcTcpServer*,int,int,int)>)cfListenPort
+//                                ,rpcServer,JSONRPC_SERVER_PORT,3000,700);
     QTimer::singleShot(0,rpcServer,[rpcServer](){
         cfListenPort<QJsonRpcTcpServer>(rpcServer,JSONRPC_SERVER_PORT,3000,700);
     });
@@ -127,9 +137,9 @@ int main(int argc, char *argv[])
     iotheard->setObjectName("iotheard");
     BCSender * bcSender = new BCSender(UDP_INTERVAL,UDP_PORT,&a);
     bcSender->setObjectName("bcSender");
-//    QTimer::singleShot(0,andonDb,[&,andonDb](){
-        andonDb->executeQuery("SELECT IP_ADDRESS FROM TBL_STATIONS WHERE ENABLED='1'",appAddbcClients);
-//    });
+    QFuture<QString> future3 = QtConcurrent::run(andonDb,&DBWrapper::query2json,
+                      QString("SELECT IP_ADDRESS FROM TBL_STATIONS WHERE ENABLED='1'"));
+    appAddbcClients(future3.result());
     QObject::connect(iotheard, &ioStreamThread::inputReceived, appParseInput);
     QObject::connect(iotheard, &ioStreamThread::started, bcSender, &BCSender::run);
     QTimer::singleShot(2000,iotheard,&ioStreamThread::startThread);
@@ -153,10 +163,10 @@ int main(int argc, char *argv[])
                      &channel, &QWebChannel::connectTo);
     channel.registerObject(QStringLiteral("serverWeb"), WThread);
     channel.registerObject(QStringLiteral("db"), andonDb);
-    QObject::connect(WThread,static_cast<void (WebuiThread::*)(const QString &sql_query,
-                                                               std::function<void(QSqlQuery *query)> functor)>(&WebuiThread::getSqlQuery),
-                     andonDb, static_cast<void (DBWrapper::*)(const QString &sql_query,
-                                                              std::function<void(QSqlQuery *query)> functor)>(&DBWrapper::executeQuery));
+//    QObject::connect(WThread,static_cast<void (WebuiThread::*)(const QString &sql_query,
+//                                                               std::function<void(QSqlQuery /***/query)> functor)>(&WebuiThread::getSqlQuery),
+//                     andonDb, static_cast<void (DBWrapper::*)(const QString &sql_query,
+//                                                              std::function<void(QSqlQuery *query)> functor)>(&DBWrapper::executeQuery));
 
     QObject::connect(WThread,static_cast<void (WebuiThread::*)(const QString &sql_query,const QString &query_method,
                                                                std::function<void(QString jsontext)> functor)>(&WebuiThread::getSqlQuery),
@@ -203,16 +213,21 @@ int main(int argc, char *argv[])
                              QString("P:\\!Common Documents\\Andon_reports\\Простои за прошлый месяц.xlsx"),
                              "brakedowns");
         if(QDate::currentDate().dayOfWeek()<6)
+            QTimer::singleShot(0,andonDb,[andonDb,excelReport](){
             andonDb->executeQuery("SELECT LIST(EMAIL) FROM TBL_STAFF WHERE EMAIL_REPORTING=1",
-                                  [excelReport](QSqlQuery *query){
+                                  [excelReport](QSqlQuery /***/fquery){
+                QSqlQuery *query = new QSqlQuery(fquery);
                 if(query->next()){
                     QStringList rcpnts=query->value(0).toString().split(',');
                     if(!rcpnts.isEmpty()) //??? newer heppend
+                        QTimer::singleShot(0,excelReport,[excelReport,rcpnts](){
                         excelReport->queryText2Email("SELECT * REPORT_BREAKDOWNS",
                                                      QString("Простои производства %1").arg(QDate::currentDate().toString("ddd d MMMM")),rcpnts,"",
                                                      QString("Отчёт по простоям %1").arg(QDate::currentDate().toString("ddd d MMMM")),
                                                      QString("REPORT_BREAKDOWNS_%1.xlsx").arg(QDate::currentDate().toString("dd_MM_yyyy")));
+                        });
                 }
+            });
             });
         QDateTime cdt = QDateTime::currentDateTime();
         reportTimer->start(cdt.msecsTo(QDateTime(cdt.addDays(1).date(),QTime(23,50))));
@@ -262,19 +277,22 @@ int main(int argc, char *argv[])
      *****************************************/
     qDebug()<<"Start SMS Server";
     Sms_service * sms_sender = new Sms_service;
-    QThread smsSenderThread;
-    sms_sender->moveToThread(&smsSenderThread);
-    smsSenderThread.start();
     QObject::connect(serverRpcService,&ServerRpcService::SendSMS, sms_sender,
                      &Sms_service::sendSMSFECT,Qt::QueuedConnection);
-    QObject::connect(sms_sender,&Sms_service::SmsStatusUpdate,[andonDb]
+    QObject::connect(sms_sender,&Sms_service::SmsStatusUpdate,andonDb,[andonDb]
                      (int SmsLogId, int SmsId, int Status){
         andonDb->executeProc(QString("EXECUTE PROCEDURE SERVER_UPDATE_SMSSTATUS(%1, %2, %3)")
                              .arg(SmsLogId).arg(SmsId).arg(Status));
     });
-    QString sqlqueryres = andonDb->query2json("SELECT AUX_PROPERTIES_LIST "
+
+
+    QFuture<QString> future = QtConcurrent::run(andonDb,&DBWrapper::query2json, QString("SELECT AUX_PROPERTIES_LIST "
+                                                                                "FROM TBL_TCPDEVICES "
+                                                                                "WHERE DEVICE_TYPE='SMS Server' AND DEVICE_TYPE='SMS Server'"));
+    QString sqlqueryres = future.result();
+                            /*andonDb->query2json("SELECT AUX_PROPERTIES_LIST "
                                               "FROM TBL_TCPDEVICES "
-                                              "WHERE DEVICE_TYPE='SMS Server' AND DEVICE_TYPE='SMS Server'");
+                                              "WHERE DEVICE_TYPE='SMS Server' AND DEVICE_TYPE='SMS Server'");*/
     QJsonDocument jdocURL;
     if (!sqlqueryres.isEmpty()){
         jdocURL= QJsonDocument::fromJson(sqlqueryres.toUtf8());
@@ -287,10 +305,9 @@ int main(int argc, char *argv[])
         }
     } else
         sms_sender->setURL("http://10.208.98.101:81/sendmsg?user=SMS1&passwd=smssms1&cat=1&enc=%1&to=%2&text=%3");
-//    QThread* smsThread = new QThread;
-//    sms_sender->moveToThread(smsThread);
-//    smsThread->start();
-
+    QThread smsSenderThread;
+    sms_sender->moveToThread(&smsSenderThread);
+    smsSenderThread.start();
     /*****************************************
      * Start SendEmail
      *****************************************/
@@ -328,9 +345,13 @@ int main(int argc, char *argv[])
     qDebug()<<"Start ServerStartScript Evaluate";
 
     QStringList ScriptsList;
-    QJsonDocument jdocScripts(QJsonDocument::fromJson(andonDb->query2json(
+    QFuture<QString> future2 = QtConcurrent::run(andonDb,&DBWrapper::query2json, QString("SELECT SCRIPT_TEXT "
+                                                                                "FROM TBL_SCRIPTS WHERE SCRIPT_NAME='ScriptServerStart'"));
+    QString sqlqueryScripts = future2.result();
+
+    QJsonDocument jdocScripts(QJsonDocument::fromJson(/*andonDb->query2json(
                                                           QString("SELECT SCRIPT_TEXT "
-                                                                  "FROM TBL_SCRIPTS WHERE SCRIPT_NAME='ScriptServerStart'")).toUtf8()));
+                                                                  "FROM TBL_SCRIPTS WHERE SCRIPT_NAME='ScriptServerStart'"))*/sqlqueryScripts.toUtf8()));
     QJsonArray tableArray = jdocScripts.array();
     QJsonObject recordObject;
     if (!tableArray.isEmpty())
@@ -380,13 +401,17 @@ int main(int argc, char *argv[])
         sms_sender->sendSMSFECT("89657009502", "Server is running!","RU",987);
         qDebug()<<"Server running SMS";
     }
+//    QtConcurrent::run(excelReport,&ExcelReport::queryText2File,QString("SELECT * FROM REPORT_MONTH_DECLARATION"), QString("AutoDecl"),
+//                      QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_export.xlsx"),QString("AutoDecl_aria"));
+//    QtConcurrent::run(excelReport,&ExcelReport::queryText2File,QString("SELECT * FROM MNT_MOLD_REPORT"), QString("Andon_cycle_counter"),
+//                      QString("P:\\Maintenance\\Обслуживание пресс-форм\\Andon_cycle_counter.xlsx"),QString("AutoDecl_aria"));
 //    QTimer::singleShot(10000,excelReport,[excelReport](){
-        excelReport->queryText2File("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
-                         QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_export.xlsx")
-                         //.arg(QDate::currentDate().toString("MMMM_yyyy"))
-                         ,"AutoDecl_aria");
-        excelReport->queryText2File("SELECT * FROM MNT_MOLD_REPORT", "Andon_cycle_counter",
-                         "P:\\Maintenance\\Обслуживание пресс-форм\\Andon_cycle_counter.xlsx");
+//        excelReport->queryText2File("SELECT * FROM REPORT_MONTH_DECLARATION", "AutoDecl",
+//                         QString("P:\\!Common Documents\\AutomaticDeclarating\\AutoDecl_export.xlsx")
+//                         //.arg(QDate::currentDate().toString("MMMM_yyyy"))
+//                         ,"AutoDecl_aria");
+//        excelReport->queryText2File("SELECT * FROM MNT_MOLD_REPORT", "Andon_cycle_counter",
+//                         "P:\\Maintenance\\Обслуживание пресс-форм\\Andon_cycle_counter.xlsx");
 //    });
     qDebug()<<"main finish";
     return a.exec();

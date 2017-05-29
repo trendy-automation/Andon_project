@@ -17,21 +17,6 @@ include(broadcastsender/bcsender.pri)
 #include(qtxlsx/qtxlsx.pri)
 include(sendemail/sendemail.pri)
 
-
-#CONFIG(debug, debug|release): CONFIG += force_debug_info
-#QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO
-#QMAKE_LFLAGS_RELEASE = $$QMAKE_LFLAGS_RELEASE_WITH_DEBUGINFO
-## remove possible other optimization flags
-#QMAKE_CXXFLAGS_RELEASE -= -O3
-#QMAKE_CXXFLAGS_RELEASE -= -O1
-#QMAKE_CXXFLAGS_RELEASE -= -O2
-#QMAKE_CXXFLAGS_RELEASE -= -O0
-## add the desired -O0 if not present
-#QMAKE_CXXFLAGS_RELEASE += -O0
-#QMAKE_CFLAGS_RELEASE    = -O0
-
-
-
 DEFINES += DEBUG_NAME='\\"Server\\"'
 DEFINES += APP_NAME='\\"SERVER\\"'
 
@@ -51,23 +36,13 @@ DEFINES += APP_NAME='\\"SERVER\\"'
 
 #QT      += script
 #QT      += scripttools
-#QT      += concurrent
+QT      += concurrent
 QT      += gui
 QT      += widgets
 QT      += qml
 
 CONFIG += console
 CONFIG -= app_bundle
-#CONFIG += c++14
-
-#include sql_fb
-#QT       += core
-#QT       += sql
-#QT       -= gui
-#QT       += sql widgets widgets
-#QT       += sql widgets
-#CONFIG   += console
-#CONFIG   -= app_bundle
 
 TARGET = andon_server
 
@@ -76,3 +51,16 @@ TEMPLATE = app
 SOURCES += main.cpp
 
 HEADERS += main.h
+
+
+CONFIG(debug, debug|release): CONFIG += force_debug_info
+QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO
+QMAKE_LFLAGS_RELEASE = $$QMAKE_LFLAGS_RELEASE_WITH_DEBUGINFO
+# remove possible other optimization flags
+QMAKE_CXXFLAGS_RELEASE -= -O3
+QMAKE_CXXFLAGS_RELEASE -= -O1
+QMAKE_CXXFLAGS_RELEASE -= -O2
+QMAKE_CXXFLAGS_RELEASE -= -O0
+# add the desired -O0 if not present
+QMAKE_CXXFLAGS_RELEASE += -O0
+QMAKE_CFLAGS_RELEASE    = -O0

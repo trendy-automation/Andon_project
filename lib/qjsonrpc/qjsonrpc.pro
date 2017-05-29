@@ -88,4 +88,16 @@ equals(QJSONRPC_LIBRARY_TYPE, staticlib) {
 unix:QMAKE_CLEAN += -r pkgconfig lib$${TARGET}.prl
 
 
+CONFIG(debug, debug|release): CONFIG += force_debug_info
+QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO
+QMAKE_LFLAGS_RELEASE = $$QMAKE_LFLAGS_RELEASE_WITH_DEBUGINFO
+# remove possible other optimization flags
+QMAKE_CXXFLAGS_RELEASE -= -O3
+QMAKE_CXXFLAGS_RELEASE -= -O1
+QMAKE_CXXFLAGS_RELEASE -= -O2
+QMAKE_CXXFLAGS_RELEASE -= -O0
+# add the desired -O0 if not present
+QMAKE_CXXFLAGS_RELEASE += -O0
+QMAKE_CFLAGS_RELEASE    = -O0
+
 

@@ -82,8 +82,8 @@ signals:
     void sendText(const QString &sql_query,const QString &query_method);
     void getSqlQuery(const QString &sql_query,const QString &query_method,
                      std::function<void(QString jsontext)> functor=[](QString jsontext){});
-    void getSqlQuery(const QString &sql_query,
-                     std::function<void(QSqlQuery *query)> functor=[](QSqlQuery *query){});
+//    void getSqlQuery(const QString &sql_query,
+//                     std::function<void(QSqlQuery /***/query)> functor=[](QSqlQuery /***/query){});
 
     void sendReport2email(const QString &subject, const QString &message,
                           const QStringList &rcptStringList, QList<QBuffer*> *attachments=0);
@@ -180,9 +180,9 @@ public slots:
             sheet=QString("Отчёт по простоям %1").arg(QDate::currentDate().toString("ddd d MMMM"));
         }
 
-        qDebug()<<"getSqlQuery"<<report<<emails<<sql_query;
-        getSqlQuery(sql_query, [this,&subject,&sheet,&template_file,&res_file,emails]
-                        (QSqlQuery *query){
+//        qDebug()<<"getSqlQuery"<<report<<emails<<sql_query;
+//        getSqlQuery(sql_query, [this,&subject,&sheet,&template_file,&res_file,emails]
+//                        (QSqlQuery /***/query){
 //                QXlsx::Document * xlsx;
 //                if (template_file.isEmpty())
 //                    xlsx = new QXlsx::Document();
@@ -204,7 +204,7 @@ public slots:
 //                    buffer.setProperty("FILE_NAME",res_file);
 //                    emit sendReport2email(subject,"",emails,&(QList<QBuffer*>()<<&buffer));
 //                }
-            });
+//            });
     }
 
 

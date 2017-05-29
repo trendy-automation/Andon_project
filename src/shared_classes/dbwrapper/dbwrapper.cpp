@@ -74,7 +74,7 @@ bool DBWrapper::getDbState()
 
 bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
 {
-    //        qDebug() << "QSqlDatabase::drivers" << QSqlDatabase::drivers();
+    //qDebug() << "QSqlDatabase::drivers" << QSqlDatabase::drivers();
     //        IBPP::Database ibpp = IBPP::DatabaseFactory("",DB_Name,"andon","andon");
     //        ibpp->Connect();
     if(!QSqlDatabase::contains(DB_Name)){
@@ -107,8 +107,9 @@ bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
                 DB.close();
             }
         });
-        cleanTimer->start(DB_CASH_CLAEN_INTERVAL);
+        cleanTimer->start(DB_CASH_CLAEN_INTERVAL);//*/
         emit DBConnected();
+        //qDebug() << "DB connection OK";
         return true;
     }
     qDebug() << "DB connection failed" << DB.lastError().text();
@@ -438,11 +439,11 @@ void DBWrapper::executeQuery(const QString &queryText, const QString &query_meth
 }
 
 void DBWrapper::executeQuery(const QString & queryText,
-                             std::function<void(QSqlQuery *)> functor)
+                             std::function<void(QSqlQuery /***/)> functor)
 {
     queryStruct queryItem = appendQuery(queryText,"",0);
     if(queryExecute(queryItem)){
-        functor(queryItem.p_query);
+        functor(QSqlQuery(*(queryItem.p_query)));
         queryItem.p_query->finish();
         //DB.commit();
         queryMap.remove(queryItem.s_key);
@@ -453,13 +454,13 @@ void DBWrapper::executeQuery(const QString & queryText,
     return;
 }
 
-QSqlQuery *DBWrapper::sql2Query(const QString & queryText)
+QSqlQuery /***/DBWrapper::sql2Query(const QString & queryText)
 {
     queryStruct queryItem = appendQuery(queryText,"",0);
     if(queryExecute(queryItem))
-        return queryItem.p_query;
+        return QSqlQuery(*(queryItem.p_query));
     qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);
-    return 0;
+    return /*0*/QSqlQuery();
 }
 
 QString DBWrapper::str2Json(const QString & name, const QString & val)

@@ -11,6 +11,8 @@
 #include <QDebug>
 #include <QTimer>
 #include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
 #include <QApplication>
 
 //#include "qjsonrpctcpserver.h"
@@ -115,17 +117,16 @@ static void appParseInput(const QString &text)
 //    });
 //}
 
-static void appAddbcClients(QSqlQuery *query)
+static void appAddbcClients(const QString &jsonClients)
 {
     BCSender*bcSender=cfGetObject<BCSender>("bcSender");
-    //qApp->findChild<BCSender*>("bcSender");
-    if(!bcSender){
-        //qDebug()<<"object bcSender not found in App";
+    if(!bcSender)
         return;
+    for (auto row:QJsonDocument::fromJson(jsonClients.toUtf8()).array()){
+        QJsonObject clientsObject=row.toObject();
+        if(clientsObject.contains("IP_ADDRESS"))
+            bcSender->addClient(clientsObject["IP_ADDRESS"].toString());
     }
-    while(query->next())
-        bcSender->addClient(query->value(0).toString());
 }
-
 
 #endif // MAIN_H

@@ -9,6 +9,7 @@
 
 #include <QBuffer>
 #include <QTimer>
+#include <QtConcurrent>
 
 #include "xlsxworkbook.h"
 #include "xlsxworksheet.h"
@@ -30,8 +31,10 @@ bool ExcelReport::queryText2Document(const QString & queryText, Document *xlsx,
     DBWrapper *andonDb =cfGetObject<DBWrapper>("andonDb");
     if(!andonDb)
         return false;
-    QSqlQuery *query = andonDb->sql2Query(queryText);
-    if(!query)
+    QFuture<QSqlQuery /***/> future = QtConcurrent::run(andonDb,&DBWrapper::sql2Query,queryText);
+    QSqlQuery fquery = future.result();
+    QSqlQuery *query = new QSqlQuery(fquery); //andonDb->sql2Query(queryText);
+    if(/*!query*/!query->isActive())
         return false;
     QTextCodec *codec = QTextCodec::codecForName("iso8859-1");
     int i=1;

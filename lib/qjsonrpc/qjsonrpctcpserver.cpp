@@ -114,7 +114,7 @@ void QJsonRpcTcpServer::incomingConnection(int socketDescriptor)
     socket->setProperty("address",curClientIp.toString());             //my hack 170615
     //qDebug()<<"socket address" << socket->property("address").toString();      //my hack 170615
     bool firstSocket=true;                                             //my hack 170615
-    foreach(auto tcpSocket_,d->socketLookup.keys())                    //my hack 170615
+    for(auto tcpSocket_:d->socketLookup.keys())                        //my hack 170615
         if (curClientIp==tcpSocket_->peerAddress()) {                  //my hack 170615
             firstSocket=false;                                         //my hack 170615
             break;                                                     //my hack 170615
@@ -145,7 +145,7 @@ void QJsonRpcTcpServer::_q_clientDisconnected()
     tcpSocket->deleteLater();
     QHostAddress curClientIp=tcpSocket->peerAddress();                  //my hack 170615
     bool lastSocket=true;                                               //my hack 170615
-    foreach(auto tcpSocket_, d->socketLookup.keys())                    //my hack 170615
+    for(auto tcpSocket_:d->socketLookup.keys())                         //my hack 170615
         if (curClientIp==tcpSocket_->peerAddress()) {                   //my hack 170615
             lastSocket=false;                                           //my hack 170615
             break;                                                      //my hack 170615

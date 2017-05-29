@@ -2,6 +2,7 @@
 #include "qjsonrpcsocket.h"
 //#include "qjsonrpcservice.h"
 #include "common_functions.h"
+#include <QtConcurrent>
 
 QString AtIndexOf(QStringList ResList,QStringList IndexList, QString indexVal)
 {
@@ -13,7 +14,7 @@ QString AtIndexOf(QStringList ResList,QStringList IndexList, QString indexVal)
 ServerRpcService::ServerRpcService(QObject *parent)
     : QJsonRpcService(parent)
 {
-    andondb=cfGetObject<DBWrapper>("andonDb");
+    andonDb=cfGetObject<DBWrapper>("andonDb");
 }
 
 ServerRpcService::~ServerRpcService()
@@ -128,7 +129,7 @@ QString ServerRpcService::StartSms(const QString &sms_params)
         //    sqlquery.replace(":CLIENT_IP",ClientIP);
 
         qDebug() << "sqlquery" <<sqlquery;
-        //QString sqlqueryres = andondb->query2json(sqlquery);
+        //QString sqlqueryres = andonDb->query2json(sqlquery);
         QString sqlqueryres = SQLQuery2Json(sqlquery);
         //qDebug()<<"SMS sqlqueryres" << sqlqueryres;
 
@@ -278,22 +279,27 @@ QString ServerRpcService::StartSms(const QString &sms_params)
     return QString();
 }
 
-/*std::function<QString (QString)>*/ QString ServerRpcService::SQLQuery2Json(const QString &sqlquery)
+/*std::function<QString (QString)>*/ QString ServerRpcService::SQLQuery2Json(QString sqlquery)
 {
-    return [=](QString sqlquery)->QString{
+//    return [=](QString sqlquery)->QString{
     // qDebug() << sqlquery;
     if (sqlquery.isEmpty()) {
         qDebug() << "SQL query empty in SQLQuery2Json";
         return QString();
     } else{
-//        QString s;
         if (sqlquery.contains(":CLIENT_IP"))
-            /*s = QString(*/sqlquery/*)*/.replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'"));
+            sqlquery.replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'"));
         //qDebug() << sqlquery;
-        return andondb->query2json(sqlquery);
-        //return andondb->query2json(/*sqlquery*/s);
+        //return andonDb->query2json(sqlquery);
+//        QString res;
+//        QMetaObject::invokeMethod(andonDb, "query2json", Qt::BlockingQueuedConnection,
+//                                  Q_RETURN_ARG(QString, res),
+//                                  Q_ARG(QString, sqlquery));
+//        return res;
+        QFuture<QString> future = QtConcurrent::run(andonDb,&DBWrapper::query2json, sqlquery);
+        return future.result();
     }
-    }(sqlquery);
+//    }(sqlquery);
 }
 
 void ServerRpcService::executeProc(const QString & sqlquery)
@@ -303,6 +309,7 @@ void ServerRpcService::executeProc(const QString & sqlquery)
         qDebug() << "SQL query empty in executeProc";
         return;
     } else
-        andondb->executeProc(QString(sqlquery).replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'")));
+        QFuture<bool> future = QtConcurrent::run(andonDb,&DBWrapper::executeProc, QString(sqlquery).replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'")));
+        //andonDb->executeProc(QString(sqlquery).replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'")));
 }
 

@@ -2,7 +2,7 @@
 #include "qjsonrpcsocket.h"
 //#include "qjsonrpcservice.h"
 #include "common_functions.h"
-#include <QtConcurrent>
+//#include <QtConcurrent>
 
 QString AtIndexOf(QStringList ResList,QStringList IndexList, QString indexVal)
 {
@@ -124,13 +124,13 @@ QString ServerRpcService::StartSms(const QString &sms_params)
             newSms=false;
         }
     if (newSms) {
-        QString sqlquery=QString("SELECT * FROM SERVER_SELECT_SMS('%1')").arg(sms_params);//).replace(":CLIENT_IP",ClientIP);
-        //if (sqlquery.contains(":CLIENT_IP"))
-        //    sqlquery.replace(":CLIENT_IP",ClientIP);
+        QString queryText=QString("SELECT * FROM SERVER_SELECT_SMS('%1')").arg(sms_params);//).replace(":CLIENT_IP",ClientIP);
+        //if (queryText.contains(":CLIENT_IP"))
+        //    queryText.replace(":CLIENT_IP",ClientIP);
 
-        qDebug() << "sqlquery" <<sqlquery;
-        //QString sqlqueryres = andonDb->query2json(sqlquery);
-        QString sqlqueryres = SQLQuery2Json(sqlquery);
+        qDebug() << "queryText" <<queryText;
+        //QString sqlqueryres = andonDb->query2json(queryText);
+        QString sqlqueryres = SQLQuery2Json(queryText);
         //qDebug()<<"SMS sqlqueryres" << sqlqueryres;
 
         QJsonDocument jdocSms;
@@ -272,44 +272,44 @@ QString ServerRpcService::StartSms(const QString &sms_params)
                 if (ThreadsMap[ClientIP].contains(EVENT_ID))
                     if (!ThreadsMap[ClientIP][EVENT_ID]->isRunning())
                         ThreadsMap[ClientIP][EVENT_ID]->start();
-        } //else qDebug()<<"No result for query:"<<sqlquery;
+        } //else qDebug()<<"No result for query:"<<queryText;
         return sqlqueryres;
     } else qDebug()<<"newSMS="<<newSms;
     //qDebug()<<"SMS 7";
     return QString();
 }
 
-/*std::function<QString (QString)>*/ QString ServerRpcService::SQLQuery2Json(QString sqlquery)
+/*std::function<QString (QString)>*/ QString ServerRpcService::SQLQuery2Json(QString queryText)
 {
-//    return [=](QString sqlquery)->QString{
-    // qDebug() << sqlquery;
-    if (sqlquery.isEmpty()) {
+//    return [=](QString queryText)->QString{
+    // qDebug() << queryText;
+    if (queryText.isEmpty()) {
         qDebug() << "SQL query empty in SQLQuery2Json";
         return QString();
     } else{
-        if (sqlquery.contains(":CLIENT_IP"))
-            sqlquery.replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'"));
-        //qDebug() << sqlquery;
-        //return andonDb->query2json(sqlquery);
-//        QString res;
-//        QMetaObject::invokeMethod(andonDb, "query2json", Qt::BlockingQueuedConnection,
-//                                  Q_RETURN_ARG(QString, res),
-//                                  Q_ARG(QString, sqlquery));
-//        return res;
-        QFuture<QString> future = QtConcurrent::run(andonDb,&DBWrapper::query2json, sqlquery);
-        return future.result();
+        if (queryText.contains(":CLIENT_IP"))
+            queryText.replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'"));
+        //qDebug() << queryText;
+        //return andonDb->query2json(queryText);
+        QString res;
+        QMetaObject::invokeMethod(andonDb, "query2json", Qt::BlockingQueuedConnection,
+                                  Q_RETURN_ARG(QString, res),
+                                  Q_ARG(QString, queryText));
+        return res;
+//        QFuture<QString> future = QtConcurrent::run(andonDb,&DBWrapper::query2json, queryText);
+//        return future.result();
     }
-//    }(sqlquery);
+//    }(queryText);
 }
 
-void ServerRpcService::executeProc(const QString & sqlquery)
+void ServerRpcService::executeProc(const QString & queryText)
 {
-    qDebug() << sqlquery;
-    if (sqlquery.isEmpty()) {
+    qDebug() << queryText;
+    if (queryText.isEmpty()) {
         qDebug() << "SQL query empty in executeProc";
         return;
     } else
-        QFuture<bool> future = QtConcurrent::run(andonDb,&DBWrapper::executeProc, QString(sqlquery).replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'")));
-        //andonDb->executeProc(QString(sqlquery).replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'")));
+        //QFuture<bool> future = QtConcurrent::run(andonDb,&DBWrapper::executeProc, QString(queryText).replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'")));
+        andonDb->executeProc(QString(queryText).replace(":CLIENT_IP",curClientIp().append("\'").prepend("\'")));
 }
 

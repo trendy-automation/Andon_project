@@ -13,7 +13,6 @@
 
 //#include "ibpp.h"
 //using namespace std;
-#include <functional>
 struct queryStruct{
     QSqlQuery* p_query;
     QString s_key;
@@ -54,9 +53,9 @@ public slots:
     //QString query2map(const QString & queryText);
     bool ConnectDB(const QString &DB_Path,const QString &DB_Name);
     void executeQuery(const QString & queryText, const QString &query_method,
-                      std::function<void(QString)> functor=[] (QString jsontext) {});
-    void executeQuery(const QString & queryText,
-                      std::function<void(QSqlQuery)> functor=[] (QSqlQuery /***/query) {});
+                      std::function<void(const QString &)> functor=[] (const QString &jsontext) {});
+//    void executeQuery(const QString & queryText,
+//                      std::function<void(QSqlQuery)> functor=[] (QSqlQuery /***/query) {});
     bool executeProc(const QString & queryText);
     QSqlQuery /***/sql2Query(const QString & queryText);
 

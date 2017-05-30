@@ -81,7 +81,7 @@ void setEngine(QJSEngine* SharedEngine)
 signals:
     void sendText(const QString &sql_query,const QString &query_method);
     void getSqlQuery(const QString &sql_query,const QString &query_method,
-                     std::function<void(QString jsontext)> functor=[](QString jsontext){});
+                     std::function<void(const QString&)> functor=[](const QString &jsontext){});
 //    void getSqlQuery(const QString &sql_query,
 //                     std::function<void(QSqlQuery /***/query)> functor=[](QSqlQuery /***/query){});
 
@@ -146,7 +146,7 @@ public slots:
         } else {
             webuiPages.insert(sql_query,{QString(),QTime::currentTime()});
         }
-        getSqlQuery(sql_query, query_method, [this, sql_query](QString jsontext){
+        getSqlQuery(sql_query, query_method, [this, sql_query](const QString &jsontext){
             webuiPages.insert(sql_query,{jsontext,QTime::currentTime()});
             emit sendText(sql_query, jsontext);
         });

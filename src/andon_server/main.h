@@ -117,16 +117,16 @@ static void appParseInput(const QString &text)
 //    });
 //}
 
-static void appAddbcClients(const QString &jsonClients)
-{
-    BCSender*bcSender=cfGetObject<BCSender>("bcSender");
-    if(!bcSender)
-        return;
-    for (auto row:QJsonDocument::fromJson(jsonClients.toUtf8()).array()){
-        QJsonObject clientsObject=row.toObject();
-        if(clientsObject.contains("IP_ADDRESS"))
-            bcSender->addClient(clientsObject["IP_ADDRESS"].toString());
-    }
-}
+//static void appAddbcClients(const QString &jsonClients)
+//{
+//    BCSender*bcSender=cfGetObject<BCSender>("bcSender");
+//    if(!bcSender)
+//        return;
+//    for (auto row:QJsonDocument::fromJson(jsonClients.toUtf8()).array()){
+//        QJsonObject clientsObject=row.toObject();
+//        if(clientsObject.contains("IP_ADDRESS"))
+//            bcSender->addClient(clientsObject["IP_ADDRESS"].toString());
+//    }
+//}
 
 #endif // MAIN_H

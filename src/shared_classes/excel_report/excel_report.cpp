@@ -9,7 +9,10 @@
 
 #include <QBuffer>
 #include <QTimer>
-#include <QtConcurrent>
+//#include <QtConcurrent>
+#include <QJsonDocument>
+#include <QJsonObject>
+//#include <QStringList>
 
 #include "xlsxworkbook.h"
 #include "xlsxworksheet.h"
@@ -31,23 +34,36 @@ bool ExcelReport::queryText2Document(const QString & queryText, Document *xlsx,
     DBWrapper *andonDb =cfGetObject<DBWrapper>("andonDb");
     if(!andonDb)
         return false;
-    QFuture<QSqlQuery /***/> future = QtConcurrent::run(andonDb,&DBWrapper::sql2Query,queryText);
-    QSqlQuery fquery = future.result();
-    QSqlQuery *query = new QSqlQuery(fquery); //andonDb->sql2Query(queryText);
-    if(/*!query*/!query->isActive())
-        return false;
+
+
+    QString res;
+    QMetaObject::invokeMethod(andonDb, "query2json", Qt::BlockingQueuedConnection,
+                              Q_RETURN_ARG(QString, res),
+                              Q_ARG(QString, queryText));
+
+//    QFuture<QString> future = QtConcurrent::run(andonDb,&DBWrapper::query2json,queryText);
     QTextCodec *codec = QTextCodec::codecForName("iso8859-1");
     int i=1;
-    for(int j=0; j < query->record().count(); j++)
-        xlsx->write(i,j+1,QString(codec->fromUnicode(query->record().fieldName(j))));
-    while(query->next()) {
-        i++;
-        for(int j=0; j < query->record().count(); j++)
-            xlsx->write(i,j+1,query->value(j));
+    int field_count=1;
+    for (auto row:QJsonDocument::fromJson(/*future.result()*/res.toUtf8()).array()){
+        int j=1;
+        QJsonObject clientsObject=row.toObject();
+        if(i==1){
+            field_count=clientsObject.keys().count();
+            for(auto field_name:clientsObject.keys()){
+                xlsx->write(i,j,QString(codec->fromUnicode(field_name)));
+                j++;
+            }
+            j=1;
+        }
+        for(auto val:clientsObject){
+            xlsx->write(i,j,val.toVariant());
+            j++;
+        }
     }
     if(!ariaName.isEmpty())
         if(!xlsx->defineName(ariaName,QString("='%1'!$A$1:$%2$%3").arg(sheetName)
-                         .arg(QChar(QChar('A').unicode()+query->record().count()-1)).arg(i)))
+                         .arg(QChar(QChar('A').unicode()+field_count-1)).arg(i)))
            qDebug()<<"Can not define aria name"<<ariaName;
     return true;
 }
@@ -60,7 +76,7 @@ bool ExcelReport::queryText2Email(const QString & queryText, const QString &subj
         sheetName=subject;
     if(fileName.isEmpty())
         fileName=subject;
-    Document * xlsx; // = newDocument(sheetName);
+    Document * xlsx = new Document; // = newDocument(sheetName);
     if(!queryText2Document(queryText,xlsx,sheetName))
         return false;
     QBuffer *buffer = new QBuffer(new QByteArray);
@@ -131,85 +147,3 @@ qint64 ExcelReport::calcNextInterval(QTime baseTime, char unit, int interval)
         result = DEF_REPORT_INTERVAL;
     return result;
 }
-
-//bool ExcelReport::queryText2Ftp(const QString &queryText, const QString &sheetName,
-//                                 const QString &fileName,const QString &ariaName)
-//{
-//    QFtp *ftp = new QFtp(jsonRow["TCPDEVICE_IP"].toString(),jsonRow["PORT"].toInt(),
-//            jsonRow["LOGIN"].toString(),jsonRow["PASS"].toString());
-//    QBuffer *buffer=new QBuffer;
-//    QTimer *fileTimer = new QTimer;
-//    fileTimer->setTimerType(Qt::VeryCoarseTimer);
-//    QObject::connect(ftp, &QFtp::commandFinished,[ftp,buffer,serverRpc](int command,bool res){
-//        if(command==buffer->property("command").toInt()){
-//            int taskId=buffer->property("task").toInt();
-//            buffer->buffer().clear();
-//            buffer->close();
-//            if(res){
-//                taskId=-taskId;
-//                qDebug() << "Ftp: file not wirted";
-//            }
-//            serverRpc->Query2Json(QString("SELECT PART_REFERENCE, "
-//                                          "PART_COUNT FROM PRODUCTION_DECLARATING(%1)").arg(taskId),
-//                                  [](QVariant resp){
-////                                qDebug() << "PRODUCTION_DECLARATING finish" << resp.toString().size();
-////                                QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
-////                                if(!array.isEmpty()) {
-////                                    QJsonObject jsonObj0=array.at(0).toObject();
-////                                    if(jsonObj0.contains("PART_REFERENCE") && jsonObj0.contains("PART_COUNT")){
-////                                        qDebug() << "Ftp: file writed";
-////                                        for (auto object:array) {
-////                                            QJsonObject jsonObj=object.toObject();
-////                                            qDebug() << jsonObj["PART_REFERENCE"].toString()
-////                                                    << jsonObj["PART_COUNT"].toInt();
-////                                        }
-////                                    }
-////                                }
-//            });
-//        }
-//    });
-//    QObject::connect(fileTimer,&QTimer::timeout,
-//                     [serverRpc,ftp,buffer,fileTimer](){
-//        QDateTime cdt = QDateTime::currentDateTime();
-//        //int interval = qMin(FTP_INTERVAL+120,qMax(FTP_INTERVAL-120, cdt.msecsTo(QDateTime(cdt.addDays(cdt.time().hour()==23?1:0), QTime(cdt.time().hour()+1,58)))));
-//        QDateTime ndt = QDateTime::currentDateTime().addSecs(3600);
-//        int interval = cdt.msecsTo(QDateTime(ndt.date(),QTime(ndt.time().hour(),58)));
-//        //qDebug() << "fileTimer->start(" << interval << ");";
-//        fileTimer->start(interval);
-//        serverRpc->Query2Json("SELECT ID_TASK, PART_REFERENCE, PART_COUNT, MANUFACTURE_DATE "
-//                              "FROM PRODUCTION_DECLARATING",
-//                              [ftp,buffer](QVariant resp){
-//            qDebug() << "PRODUCTION_DECLARATING start" << resp.toString().size();
-//            QJsonArray array = QJsonDocument::fromJson(resp.toString().toUtf8()).array();
-//            qDebug() << "PRODUCTION_DECLARATING lambda 1";
-//            if(!array.isEmpty()) {
-//                qDebug() << "PRODUCTION_DECLARATING lambda 2";
-//                QJsonObject jsonObj0=array.at(0).toObject();
-//                qDebug() << "PRODUCTION_DECLARATING lambda 3";
-//                if(jsonObj0.contains("PART_REFERENCE") && jsonObj0.contains("ID_TASK")
-//                        && jsonObj0.contains("PART_COUNT")) {
-//                    int taskId=jsonObj0["ID_TASK"].toInt();
-//                    qDebug() << "PRODUCTION_DECLARATING lambda 4";
-//                    buffer->setProperty("task", taskId);
-//                    buffer->open(QBuffer::ReadWrite);
-//                    for (auto object = array.begin(); object != array.end(); object++) {
-//                        QJsonObject jsonObj=object->toObject();
-//                        buffer->write(jsonObj["PART_REFERENCE"].toString().toLatin1());
-//                        buffer->write("\t");
-//                        buffer->write(QString::number(jsonObj["PART_COUNT"].toInt()).toLatin1());
-//                        //buffer->write("\t");
-//                        //buffer->write(jsonObj["MANUFACTURE_DATE"].toString().toLatin1());
-//                        buffer->write("\r\n");
-//                    }
-//                    qDebug() << "PRODUCTION_DECLARATING lambda 5";
-//                    QTimer::singleShot(0,[ftp,buffer,taskId](){
-//                        qDebug() << "PRODUCTION_DECLARATING lambda 6";
-//                        buffer->setProperty("command",ftp->putBuf(buffer,
-//                                                                  QString("Decl_%1.txt").arg(QDateTime().currentDateTime().toString("ddMMyy_hh_mm")), QFtp::Binary,taskId));
-//                        qDebug() << "ftp putBuf lambda 7";
-//                    });
-//                }
-//            }
-//        });
-//    });
-//}

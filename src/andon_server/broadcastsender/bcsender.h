@@ -20,6 +20,9 @@ public:
     void stop();
     void renewInterface(const QString &ClientIp="");
 
+public slots:
+    void addClients(const QString &jsonClients);
+
 private slots:
     void startBroadcasting();
     void broadcastDatagram();

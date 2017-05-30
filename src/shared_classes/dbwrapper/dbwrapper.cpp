@@ -1,4 +1,6 @@
 #include "dbwrapper.h"
+#include <QtConcurrent>
+#include <QMetaObject>
 
 DBWrapper::DBWrapper(QObject *parent) : QObject(parent)
 {
@@ -86,7 +88,11 @@ bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
     if(DB.open()){
         qDebug() << "DB connected: " << DB.databaseName();
         dbOK=1; //TODO delete?
-        QTimer *cleanTimer = new QTimer(this);
+//        const QMetaObject *meta_object = QMetaType::metaObjectForType(QMetaType::type("QTimer"));
+//        QTimer* cleanTimer= meta_object->newInstance(Q_ARG(DBWrapper*, this));
+//        QFuture<QTimer*> futureT = QtConcurrent::run(meta_object,&QMetaObject::newInstance,Q_ARG(DBWrapper*, this));
+//        QTimer *cleanTimer = /*new QTimer(this)*/futureT.result();
+        QTimer *cleanTimer = new QTimer;
         QObject::connect(cleanTimer, &QTimer::timeout,[this,cleanTimer](){
             QMapIterator<QString,queryStruct> q(queryMap);
             while (q.hasNext()) {
@@ -107,7 +113,11 @@ bool DBWrapper::ConnectDB(const QString &DB_Path,const QString &DB_Name)
                 DB.close();
             }
         });
-        cleanTimer->start(DB_CASH_CLAEN_INTERVAL);//*/
+        //
+        //QTimer::singleShot(0,this,[cleanTimer](){cleanTimer->start();});
+        //QtConcurrent::run(cleanTimer,&QTimer::start,DB_CASH_CLAEN_INTERVAL);//*/
+        cleanTimer->start();
+        cleanTimer->moveToThread(this->thread());//*/
         emit DBConnected();
         //qDebug() << "DB connection OK";
         return true;
@@ -430,7 +440,7 @@ QString DBWrapper::query2method(const QString & queryText, const QString &queryM
 }
 
 void DBWrapper::executeQuery(const QString &queryText, const QString &query_method,
-                             std::function<void(QString jsontext)> functor)
+                             std::function<void(const QString&)> functor)
 {
     if(query_method.compare("query2json")==0)
         functor(query2json(queryText));
@@ -438,21 +448,21 @@ void DBWrapper::executeQuery(const QString &queryText, const QString &query_meth
         functor(query2fulljson(queryText));
 }
 
-void DBWrapper::executeQuery(const QString & queryText,
-                             std::function<void(QSqlQuery /***/)> functor)
-{
-    queryStruct queryItem = appendQuery(queryText,"",0);
-    if(queryExecute(queryItem)){
-        functor(QSqlQuery(*(queryItem.p_query)));
-        queryItem.p_query->finish();
-        //DB.commit();
-        queryMap.remove(queryItem.s_key);
-        emit querysChanged();
-        return;
-    }
-    qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);
-    return;
-}
+//void DBWrapper::executeQuery(const QString & queryText,
+//                             std::function<void(QSqlQuery /***/)> functor)
+//{
+//    queryStruct queryItem = appendQuery(queryText,"",0);
+//    if(queryExecute(queryItem)){
+//        functor(QSqlQuery(*(queryItem.p_query)));
+//        queryItem.p_query->finish();
+//        //DB.commit();
+//        queryMap.remove(queryItem.s_key);
+//        emit querysChanged();
+//        return;
+//    }
+//    qDebug() << QString("Error in query:\"%1\" - %2").arg(queryItem.s_sql_query).arg(queryItem.s_error);
+//    return;
+//}
 
 QSqlQuery /***/DBWrapper::sql2Query(const QString & queryText)
 {
